@@ -89,21 +89,9 @@ public class ExcMsg {
             } else {
                 e.printStackTrace();
                 message = msg;
-//                StackTraceElement[] ste = e.getStackTrace();
-//                if (ste.length > 0)
-//                    message = ste[0].getClassName() + ":" + ste[0].getLineNumber();
-//                if (ste.length > 1)
-//                    message = ste[1].getClassName() + ":" + ste[1].getLineNumber();
             }
         }
         json.put("message", "Backend Error => " + message);
     }
-
-//  public static IBaseResponse<EmptyDataResponse> call(Exception e, Connection conn) throws JSONException {
-//    JSONObject json = new JSONObject();
-//    call(json, e, conn);
-//
-//    return new ResponseError(json.getString("message"), 400);
-//  }
 
 }

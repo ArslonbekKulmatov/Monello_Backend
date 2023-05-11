@@ -54,10 +54,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**", "/api/**"};
         http.csrf().disable()
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-//                .authorizeRequests().antMatchers(pathArray).permitAll()
-//                .anyRequest().authenticated()
-//                .and()
                 .formLogin()
                 .failureForwardUrl("/api/auth/error");
 

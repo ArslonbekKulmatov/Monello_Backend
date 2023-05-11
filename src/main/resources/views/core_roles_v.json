@@ -1,0 +1,36 @@
+{
+  "start": "1",
+  "pageSize": "20",
+  "view": "Core_Roles_V",
+  "cols": [
+    {
+      "name": "Role_Id",
+      "label": "grid.ref.roleId",
+      "grid": false,
+      "num": "d1"
+    },{
+      "name": "Name",
+      "label": "grid.ref.name",
+      "grid": true,
+      "num": "d2",
+      "align": "center",
+      "ordType": "no",
+      "width": "80"
+    },{
+      "name": "State",
+      "label": "grid.ref.state",
+      "grid": true,
+      "num": "d3",
+      "align": "center",
+      "ordType": "no",
+      "width": "80"
+    }
+  ],
+  "filters": [
+    {
+      "name": "Name",
+      "label": "grid.ref.name",
+      "type": "VC"
+    }
+  ]
+}

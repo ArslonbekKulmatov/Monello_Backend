@@ -1,0 +1,215 @@
+package com.example.asaka.lnm.services;
+
+import com.example.asaka.core.services.SApp;
+import com.example.asaka.util.DB;
+import com.example.asaka.util.JbSql;
+import com.zaxxer.hikari.HikariDataSource;
+import org.apache.tomcat.util.codec.binary.Base64;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import javax.sql.rowset.serial.SerialBlob;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Blob;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+import static com.example.asaka.util.JbUtil.nvl;
+
+@Service
+public class SLnm {
+    @Autowired HikariDataSource hds;
+    @Autowired SApp sApp;
+
+    public String getFileBase64(String params) throws JSONException {
+        JSONObject json_params = new JSONObject(params);
+        JSONObject response = new JSONObject();
+        String encodedString;
+        String file_name;
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet res = null;
+        try {
+            conn = DB.con(hds);
+            String his_id = json_params.getString("history_id");
+            String loan_id = json_params.getString("loan_id");
+            ps = conn.prepareStatement("select file_name, file_data, url from lnm_judical_files where his_id = " + his_id + " and loan_id = " + loan_id);
+            res = ps.executeQuery();
+            if (res.next()) {
+                String url = nvl(res.getString("url"), "");
+                file_name = res.getString("file_name");
+                if (!url.equals("")){
+                    Path file = Paths.get(url);
+                    Resource resource = new UrlResource(file.toUri());
+                    byte[] fileContent = resource.getInputStream().readAllBytes();
+                    encodedString= Base64.encodeBase64String(fileContent);
+                    response.put("success", true);
+                    response.put("encoded_pdf", encodedString);
+                    response.put("file_name", file_name);
+                    return  response.toString();
+                }
+
+                byte[] fileContent = res.getBytes("file_data");
+                encodedString= Base64.encodeBase64String(fileContent);
+
+                response.put("success", true);
+                response.put("encoded_pdf", encodedString);
+                response.put("file_name", file_name);
+            }
+            else {
+                response.put("success", false);
+                response.put("error", "No PDF file entered.");
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            e.printStackTrace();
+        } finally {
+            DB.done(ps);
+            DB.done(res);
+            DB.done(conn);
+        }
+        return  response.toString();
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Checking for application is exist or not
+    public int checkForExistence(String loan_id, String status) throws Exception {
+        Connection conn = DB.con(hds);
+        JbSql sql;
+        int result = 0;
+        try {
+            sql = new JbSql("Lnm_Judical.Chek_For_Exsistence", conn, true);
+            sql.addParam(loan_id, 2);
+            sql.addParam(status, 3);
+            sql.exec();
+
+            result = Integer.parseInt(sql.getResult());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DB.done(conn);
+        }
+        return result;
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //inserting gibrid data into database
+    public void insertData(String loan_id, int mail_id, String mail_number, String perform_date, String file_name, String file_content, String status) throws Exception {
+        Connection conn = DB.con(hds);
+        JbSql sql;
+        sApp.setDbSession(conn);
+        try {
+            byte[] decodedByte = Base64.decodeBase64(file_content);
+            Blob aBlob = conn.createBlob();
+            aBlob.setBytes(1, decodedByte);
+            sql = new JbSql("Lnm_Judical.Add_Post_File", conn, false);
+            sql.addParam(loan_id, 1);
+            sql.addParam(mail_id, 2);
+            sql.addParam(mail_number, 3);
+            sql.addParam(perform_date, 4);
+            sql.addParam(file_name, 5);
+            sql.addParam(aBlob, 6);
+            sql.addParam(status, 7);
+            sql.exec();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DB.done(conn);
+        }
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //integrating with gibridmail
+    public void sendToGibridMail(String loan_id, String type){
+        JSONObject request = new JSONObject();
+        JSONObject response;
+        JSONObject data = new JSONObject();
+        String url = "http://172.16.50.201:8081/support/api/gibridmail/getSendMailContent";
+        String userName = "jd_user";
+        String password = "iLJr7Wu4Fk9KGV";
+        request.put("loan_id", loan_id);
+        request.put("type", type);
+
+        try{
+            String plainCreds = userName + ":" + password;
+            String base64Creds = java.util.Base64.getEncoder().encodeToString(plainCreds.getBytes());
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-type", "application/json; charset=utf-8");
+            headers.add("Authorization", "Basic " + base64Creds);
+            RestTemplate rt = new RestTemplate();
+            HttpEntity<String> entity = new HttpEntity<>(request.toString(), headers);
+            ResponseEntity<String> resEntity = rt.exchange(url, HttpMethod.POST, entity, String.class);
+            response = new JSONObject(resEntity.getBody());
+
+            if (response.has("data")){
+                data = response.getJSONObject("data");
+            }
+
+            if (response.getBoolean("success") && data.has("performDate")){
+                int mail_id = data.getInt("id");
+                String mail_number = data.getString("mailNumber");
+                String perform_date = data.getString("performDate");
+                String file_name = data.getJSONObject("content").getString("fileName");
+                String file_content = data.getJSONObject("content").getString("contentString");
+                String status;
+                if (type == "1" || type == "2"){
+                    status = "1";
+                }
+                else if (type == "3" || type == "4") {
+                    status = "2";
+                }
+                else {
+                    status = "3";
+                }
+                insertData(loan_id, mail_id, mail_number, perform_date, file_name, file_content, status);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Inserting gibrid mail files into database
+    public String sendAndInsertData(String params) throws JSONException {
+        JSONObject param = new JSONObject(params);
+        JSONObject response = new JSONObject();
+        String loan_id = param.getString("loan_id");
+        try{
+            int check = checkForExistence(loan_id, "1");
+            if (check == 0){
+                sendToGibridMail(loan_id, "1");
+                sendToGibridMail(loan_id, "2");
+            }
+            check = checkForExistence(loan_id, "2");
+            if (check == 0){
+                sendToGibridMail(loan_id, "3");
+                sendToGibridMail(loan_id, "4");
+            }
+            check = checkForExistence(loan_id, "3");
+            if (check == 0){
+                sendToGibridMail(loan_id, "5");
+                sendToGibridMail(loan_id, "6");
+            }
+            response.put("success", true);
+        }catch (Exception e){
+            response.put("error", e.getMessage());
+            response.put("success", false);
+            e.printStackTrace();
+        }
+        return response.toString();
+    }
+}

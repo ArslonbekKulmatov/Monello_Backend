@@ -1,0 +1,84 @@
+package com.example.asaka.al.services;
+
+import com.example.asaka.core.services.SApp;
+import com.example.asaka.util.DB;
+import com.example.asaka.util.JbSql;
+import com.zaxxer.hikari.HikariDataSource;
+import org.apache.tomcat.util.codec.binary.Base64;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.sql.Blob;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+@Service
+public class SAl {
+    @Autowired HikariDataSource hds;
+    @Autowired SApp sApp;
+
+    public String getImageBase64(String params) throws JSONException {
+        JSONObject json_params = new JSONObject(params);
+        JSONObject response = new JSONObject();
+        String encodedString;
+        String file_name;
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet res = null;
+        try {
+            conn = DB.con(hds);
+            String object_type = json_params.getString("object_type");
+            String sql = null;
+            int object_id;
+            float width;
+            float height;
+            if (object_type.equals("project")){
+                object_id = json_params.getInt("project_id");
+                sql = "select image, width, height from al_images where project_id = " + object_id;
+            }
+            else if(object_type.equals("building")){
+                object_id = json_params.getInt("building_id");
+                sql = "select image, width, height from al_images where building_id = " + object_id;
+            }
+            else if(object_type.equals("room")){
+                object_id = json_params.getInt("room_id");
+                sql = "select image, width, height from al_images where room_id = " + object_id;
+            }
+            ps = conn.prepareStatement(sql);
+            res = ps.executeQuery();
+            if (res.next()) {
+                width = res.getFloat("width");
+                height = res.getFloat("height");
+                byte[] imageContent = res.getBytes("image");
+                encodedString = Base64.encodeBase64String(imageContent);
+
+                response.put("success", true);
+                response.put("encoded_image", encodedString);
+                response.put("width", width);
+                response.put("height", height);
+            }
+            else {
+                response.put("success", false);
+                response.put("error", "No image entered.");
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            e.printStackTrace();
+        } finally {
+            DB.done(ps);
+            DB.done(res);
+            DB.done(conn);
+        }
+        return  response.toString();
+    }
+}

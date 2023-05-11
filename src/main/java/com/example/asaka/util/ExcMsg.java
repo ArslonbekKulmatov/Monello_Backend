@@ -1,0 +1,109 @@
+package com.example.asaka.util;
+
+import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.web.client.HttpStatusCodeException;
+//import outsourcing.demo.mobile.common.responses.EmptyDataResponse;
+//import outsourcing.demo.mobile.common.responses.IBaseResponse;
+//import outsourcing.demo.mobile.common.responses.ResponseError;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+@Slf4j
+public class ExcMsg {
+
+    public static void call(JSONObject json, Exception e, Connection conn) throws JSONException {
+        String msg = e.getMessage();
+        String message = "";
+        //
+        try {
+            JbSql sql;
+            sql = new JbSql("Insert Into LOGS_EXCEPTION(Exception, Cr_On, Cr_By, Client_Id) " +
+                    " Values('" + msg.replace("'", "''") + "', Sysdate," +
+                    " Core_Session.Get_User_Id, Core_Session.Get_User_Id) ", conn, false);
+            sql.execQuery();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        //
+        json.put("success", false);
+        if (msg == null) {
+            StackTraceElement[] ste = e.getStackTrace();
+            message = "NullPointerException";
+            if (ste.length > 0)
+                message = ste[0].getClassName() + ":" + ste[0].getLineNumber();
+            if (ste.length > 1)
+                message = ste[1].getClassName() + ":" + ste[1].getLineNumber();
+        } else {
+            if (msg.contains("Expected")) {
+                message = "JSON format syntax error";
+            } else if (msg.contains("The column name") && msg.contains("is not valid")) {
+                String name = msg.substring(16);
+                name = name.substring(0, name.indexOf("is"));
+                message = "Столбец с именем " + name + " не сушествует в запросе";
+            } else if (msg.contains(": invalid identifier")) {
+                String name = msg.substring(11);
+                name = name.substring(0, name.indexOf(":") - 1);
+                message = "Идентификатор с именем " + name + " не сушествует в запросе";
+            } else if (msg.contains("Недопустимое имя столбца")) {
+                message = msg;
+            } else if (msg.contains("SQL command not properly ended") || msg.contains("missing expression") || msg.contains("missing keyword") || msg.contains("FROM keyword not found where expected")) {
+                message = "Проверьте правильность запроса";
+            } else if (msg.contains("invalid table name") || msg.contains("table or view does not exist")) {
+                message = "Таблица в запросе не существует в БД";
+            } else if (msg.contains("class path resource") && msg.contains("cannot be resolved to URL because it does not exist")) {
+                String name = msg.substring(20);
+                name = name.substring(0, name.indexOf("cannot") - 1);
+                message = "Ошибка! Выбранный адрес " + name + " не сушествует";
+            } else if (msg.contains("class path resource") && msg.contains("cannot be opened because it does not exist")) {
+                String name = msg.substring(20);
+                name = name.substring(0, name.indexOf("cannot") - 1);
+                message = "Ошибка! Файл " + name + " не сушествует";
+            } else if (msg.contains("ORA-")) {
+                String[] errors = msg.split("\n");
+                message = "";
+                for (String error : errors) {
+                    if (!error.equals("ORA-20000: ORA-20000: ")) {
+                        if (error.indexOf("20000:  ") == 0) {
+                            error = error.replace("20000:  ", "");
+                        } else if (error.indexOf(": на  ") != -1 || error.indexOf(": at ") != -1) {
+                            error = "";
+                        } else {
+                            int occurence = error.indexOf("ORA-");
+                            while (occurence >= 0) {
+                                occurence = error.indexOf("ORA-", occurence + 1);
+                                if (error.contains("ORA-")) {
+                                    String replacement = error.substring(error.indexOf("ORA-"), error.indexOf(": ", 1) + 2);
+                                    error = error.replace(replacement, "");
+                                }
+                            }
+                        }
+                        if (!error.isEmpty()) {
+                            error.replace("\n", "").replace("\\", "");
+                            message += error;
+                        }
+                    }
+                }
+            } else {
+                e.printStackTrace();
+                message = msg;
+//                StackTraceElement[] ste = e.getStackTrace();
+//                if (ste.length > 0)
+//                    message = ste[0].getClassName() + ":" + ste[0].getLineNumber();
+//                if (ste.length > 1)
+//                    message = ste[1].getClassName() + ":" + ste[1].getLineNumber();
+            }
+        }
+        json.put("message", "Backend Error => " + message);
+    }
+
+//  public static IBaseResponse<EmptyDataResponse> call(Exception e, Connection conn) throws JSONException {
+//    JSONObject json = new JSONObject();
+//    call(json, e, conn);
+//
+//    return new ResponseError(json.getString("message"), 400);
+//  }
+
+}

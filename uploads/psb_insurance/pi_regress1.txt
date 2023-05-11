@@ -1,0 +1,2 @@
+netstat -a -o -n - port bilan ishlayotgan servicelarni topish
+taskkill /F /PID 15056 - shu portli serviceni kill qilish

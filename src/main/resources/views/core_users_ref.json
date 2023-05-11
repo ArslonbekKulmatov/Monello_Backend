@@ -1,0 +1,161 @@
+{
+  "start": "1",
+  "pageSize": "20",
+  "view": "Core_Users_Ref",
+  "cols": [
+    {
+      "name": "Emp_Id",
+      "label": "grid.ref.empId",
+      "grid": true,
+      "num": "d1",
+      "align": "right",
+      "ordType": "no",
+      "width": "50"
+    },
+    {
+      "name": "Filial",
+      "label": "grid.ref.filial",
+      "grid": true,
+      "num": "d2",
+      "align": "center",
+      "ordType": "no",
+      "width": "80"
+    },
+    {
+      "name": "Local_Code",
+      "label": "grid.ref.localCode",
+      "grid": true,
+      "num": "d3",
+      "align": "center",
+      "ordType": "no",
+      "width": "80"
+    },
+    {
+      "name": "Last_Name",
+      "label": "grid.ref.lastName",
+      "grid": true,
+      "num": "d4",
+      "align": "left",
+      "ordType": "no",
+      "width": "120"
+    },
+    {
+      "name": "First_Name",
+      "label": "grid.ref.firstName",
+      "grid": true,
+      "num": "d5",
+      "align": "left",
+      "ordType": "no",
+      "width": "120"
+    },
+    {
+      "name": "Middle_Name",
+      "label": "grid.ref.middleName",
+      "grid": true,
+      "num": "d6",
+      "align": "left",
+      "ordType": "no",
+      "width": "120"
+    },
+    {
+      "name": "Condition",
+      "label": "grid.ref.condition",
+      "grid": true,
+      "num": "d7",
+      "align": "center",
+      "ordType": "no",
+      "width": "80"
+    },
+    {
+      "name": "Pinfl",
+      "label": "grid.ref.pinfl",
+      "grid": true,
+      "num": "d8",
+      "align": "center",
+      "ordType": "no",
+      "width": "150"
+    },
+    {
+      "name": "Inn",
+      "label": "grid.ref.inn",
+      "grid": true,
+      "num": "d9",
+      "align": "center",
+      "ordType": "no",
+      "width": "100"
+    },
+    {
+      "name": "Passport_Series",
+      "label": "grid.ref.passportSeries",
+      "grid": true,
+      "num": "d10",
+      "align": "center",
+      "ordType": "no",
+      "width": "100"
+    },
+    {
+      "name": "Passport_Number",
+      "label": "grid.ref.passportNumber",
+      "grid": true,
+      "num": "d11",
+      "align": "center",
+      "ordType": "no",
+      "width": "100"
+    },
+    {
+      "name": "Phone_Number",
+      "label": "grid.ref.phoneNumber",
+      "grid": true,
+      "num": "d12",
+      "align": "center",
+      "ordType": "no",
+      "width": "100"
+    },
+    {
+      "name": "Branch_Id",
+      "label": "grid.ref.branchId",
+      "grid": true,
+      "num": "d13",
+      "align": "center",
+      "ordType": "no",
+      "width": "100"
+    }
+  ],
+  "filters": [
+    {
+      "name": "Emp_Id",
+      "label": "grid.ref.empId",
+      "type": "VC"
+    },
+    {
+      "name": "Filial",
+      "label": "grid.ref.filial",
+      "type": "VC"
+    },
+    {
+      "name": "Last_Name",
+      "label": "grid.ref.lastName",
+      "type": "VC"
+    },
+    {
+      "name": "First_Name",
+      "label": "grid.ref.firstName",
+      "type": "VC"
+    },
+    {
+      "name": "Middle_Name",
+      "label": "grid.ref.middleName",
+      "type": "VC"
+    },
+    {
+      "name": "Pinfl",
+      "label": "grid.ref.pinfl",
+      "type": "VC"
+    },
+    {
+      "name": "Inn",
+      "label": "grid.ref.inn",
+      "type": "VC"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+package com.example.asaka.pi.services;
+
+import com.example.asaka.util.DB;
+import com.zaxxer.hikari.HikariDataSource;
+import org.apache.tomcat.util.codec.binary.Base64;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+import static com.example.asaka.util.JbUtil.nvl;
+
+@Service
+public class SPi {
+    @Autowired HikariDataSource hds;
+
+    //Cr By: Arslonbek Kulmatov
+    public String getFileBase64(String params) throws JSONException {
+        JSONObject json_params = new JSONObject(params);
+        JSONObject response = new JSONObject();
+        String encodedString;
+        String file_name;
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet res = null;
+        try {
+            conn = DB.con(hds);
+            int cover_id = json_params.getInt("cover_id");
+            ps = conn.prepareStatement("select file_name, file_url from PI_COURT_REGRESSES where cover_id = " + cover_id);
+            res = ps.executeQuery();
+            if (res.next()) {
+                String url = nvl(res.getString("file_url"), "");
+                file_name = res.getString("file_name");
+                Path file = Paths.get(url);
+                Resource resource = new UrlResource(file.toUri());
+                byte[] fileContent = resource.getInputStream().readAllBytes();
+                encodedString= Base64.encodeBase64String(fileContent);
+                response.put("success", true);
+                response.put("encoded_file", encodedString);
+                response.put("file_name", file_name);
+                response.put("file_url", url);
+                return  response.toString();
+            }
+            else {
+                response.put("success", false);
+                response.put("error", "No file entered.");
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            e.printStackTrace();
+        } finally {
+            DB.done(ps);
+            DB.done(res);
+            DB.done(conn);
+        }
+        return  response.toString();
+    }
+}

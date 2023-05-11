@@ -1,0 +1,59 @@
+package com.example.asaka.lnm.services;
+
+import com.example.asaka.util.DB;
+import com.zaxxer.hikari.HikariDataSource;
+import org.apache.tomcat.util.codec.binary.Base64;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+@Service
+public class SLnm {
+    @Autowired HikariDataSource hds;
+
+    public String getFileBase64(String params) throws JSONException {
+        JSONObject json_params = new JSONObject(params);
+        JSONObject response = new JSONObject();
+        String encodedString;
+        String file_name;
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet res = null;
+        try {
+            conn = DB.con(hds);
+            String his_id = json_params.getString("history_id");
+            String loan_id = json_params.getString("loan_id");
+            ps = conn.prepareStatement("select file_name, file_data from lnm_judical_files where his_id = " + his_id + " and loan_id = " + loan_id);
+            res = ps.executeQuery();
+            if (res.next()) {
+                file_name = res.getString("file_name");
+                byte[] fileContent = res.getBytes("file_data");
+                encodedString= Base64.encodeBase64String(fileContent);
+
+                response.put("success", true);
+                response.put("encoded_pdf", encodedString);
+                response.put("file_name", file_name);
+            }
+            else {
+                response.put("success", false);
+                response.put("error", "No PDF file entered.");
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            e.printStackTrace();
+        } finally {
+            DB.done(ps);
+            DB.done(res);
+            DB.done(conn);
+        }
+        return  response.toString();
+    }
+}

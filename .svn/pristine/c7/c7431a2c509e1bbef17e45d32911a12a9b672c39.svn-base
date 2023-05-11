@@ -1,0 +1,224 @@
+package com.example.asaka.core.services;
+
+import com.example.asaka.config.Session;
+import com.example.asaka.core.models.Grid_New;
+import com.example.asaka.security.jwt.JwtUtils;
+import com.example.asaka.util.DB;
+import com.example.asaka.util.JbUtil;
+import com.example.asaka.util.Req;
+import com.zaxxer.hikari.HikariDataSource;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.servlet.http.HttpServletRequest;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+@Service
+public class SGrid_New {
+    @Autowired HikariDataSource hds;
+    @Autowired JwtUtils jwtUtils;
+    @Autowired Req req;
+    @Autowired SApp sApp;
+    @Autowired Session session;
+
+    //Cr By: Arslonbek Kulmatov
+    public Grid_New get(int grid_id,  boolean check_session) {
+        Connection conn = null;
+        Grid_New grid = new Grid_New();
+        try {
+            conn = hds.getConnection();
+            grid = get(grid_id, conn, check_session);
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            DB.done(conn);
+        }
+        return grid;
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    public Grid_New get(int grid_id, Connection conn, boolean check_session) {
+        Grid_New grid;
+
+        if (check_session){
+            grid = session.getGrid(grid_id);
+            if (grid != null) return grid;
+        }
+        grid = new Grid_New();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        PreparedStatement psCol = null;
+        ResultSet rsCol = null;
+        try{
+            ps = conn.prepareStatement("SELECT * FROM CORE_GRIDS WHERE GRID_ID = ?");
+            ps.setInt(1, grid_id);
+            ps.execute();
+            rs = ps.getResultSet();
+            if (rs.next()) {
+                grid.setHasFilter(false);
+                grid.setGrid_id(grid_id);
+                grid.setView(DB.get(rs, "view_name"));
+                grid.setPage_json(DB.get(rs, "page_json"));
+                grid.setColumns_json(DB.get(rs, "columns_json"));
+                grid.setFilter_json(DB.get(rs, "filter_json"));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            DB.done(rsCol);
+            DB.done(psCol);
+            DB.done(rs);
+            DB.done(ps);
+        }
+        return grid;
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    public JSONObject grid(String params) throws JSONException {
+
+        JSONObject grid = new JSONObject();
+        JSONObject gridParams = new JSONObject();
+        JSONObject json = new JSONObject(params);
+        JSONArray filters;
+        Grid_New grid_object;
+        Integer grid_id = json.getInt("grid_id");
+        boolean has_filter = json.isNull("filters");
+        Connection conn = null;
+        JSONArray rows = new JSONArray();
+        JSONArray cols = new JSONArray();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        PreparedStatement psCol = null;
+        ResultSet rsCol = null;
+        Long rowCount = 0L;
+        try {
+            conn = hds.getConnection();
+            sApp.setDbSession(conn);
+            sApp.setCustomDbSession(conn, json);
+            grid_object = get(grid_id, conn, true);
+            session.addSession("gridId", grid_id.toString());
+            session.setGrid(grid_object);
+            gridParams = new JSONObject(grid_object.getPage_json());
+            gridParams.put("cols", new JSONArray(grid_object.getColumns_json()));
+            gridParams.put("filters", new JSONArray(grid_object.getFilter_json()));
+            if (!has_filter){
+                filters = json.getJSONArray("filters");
+                grid_object.setFilter_json(filters.toString());
+            }
+            filters = new JSONArray(grid_object.getFilter_json());
+            cols = gridParams.getJSONArray("cols");
+            rowCount = grid_object.setRowCount(gridParams, conn, filters, params);
+            ps = conn.prepareStatement(grid_object.getSql(gridParams, filters, params, rowCount));
+            ps.execute();
+            rs = ps.getResultSet();
+            while (rs.next()) {
+                JSONObject row = new JSONObject();
+                for (int i = 0; i < cols.length(); i++) {
+                    JSONObject col = cols.getJSONObject(i);
+                    String colNum = col.getString("num");
+                    row.put(colNum, JbUtil.nvl(rs.getString(colNum)));
+                }
+                rows.put(row);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DB.done(rs);
+            DB.done(ps);
+            DB.done(psCol);
+            DB.done(rsCol);
+            DB.done(conn);
+        }
+        //
+        Long pageSize = json.isNull("pageSize") ? gridParams.getLong("pageSize") : json.getLong("pageSize");
+        Long tail = rowCount % pageSize;
+        Integer maxPage = tail == 0 ? Math.round(rowCount / pageSize) : Math.round(rowCount / pageSize) + 1;
+        //
+        grid.put("pageSize", pageSize);
+        grid.put("maxPage", maxPage);
+        grid.put("rowCount", rowCount);
+        grid.put("numbering", !gridParams.isNull("numbering") ? gridParams.getBoolean("numbering") : false);
+        grid.put("checkbox", !gridParams.isNull("checkbox") ? gridParams.getBoolean("checkbox") : false);
+        if (json.isNull("cols")) {
+            grid.put("cols", cols);
+        }
+        grid.put("rows", rows);
+        return grid;
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    public JSONObject getFilter(String params, HttpServletRequest request){
+        JSONObject response = new JSONObject();
+        JSONObject json = new JSONObject(params);
+        Integer grid_id =  json.getInt("grid_id");
+        boolean check_session = json.getBoolean("check_session");
+        Grid_New grid = get(grid_id, check_session);
+        JSONArray filters = new JSONArray(grid.getFilter_json());
+        Connection conn = null;
+        PreparedStatement psCol = null;
+        ResultSet rsCol = null;
+        try {
+            conn = hds.getConnection();
+            for (int n = 0; n < filters.length(); n++) {
+                JSONObject obj = filters.getJSONObject(n);
+                if (obj.getString("type").equals("SL")) {
+                    JSONArray dicts = new JSONArray();
+                    String view = obj.isNull("view") ? null : obj.getString("view");
+                    if (view != null) {
+                        psCol = conn.prepareStatement(obj.getString("view"));
+                        psCol.execute();
+                        rsCol = psCol.getResultSet();
+                        while (rsCol.next()) {
+                            JSONObject dict = new JSONObject();
+                            dict.put("label", rsCol.getString(1));
+                            dict.put("value", rsCol.getString(2));
+                            dicts.put(dict);
+                        }
+                    }
+                    JSONArray values = obj.isNull("values") ? null : obj.getJSONArray("values");
+                    if (values != null) {
+                        for (int i = 0; i < values.length(); i++) {
+                            JSONObject val = values.getJSONObject(i);
+                            JSONObject dict = new JSONObject();
+                            dict.put("label", val.getString("label"));
+                            dict.put("value", val.getString("value"));
+                            dicts.put(dict);
+                        }
+                    }
+                    obj.put("rows", dicts);
+                }
+                filters.put(n, obj);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            DB.done(psCol);
+            DB.done(rsCol);
+            DB.done(conn);
+        }
+        response.put("filters", filters);
+        return response;
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    public JSONObject removeGridSession(String params){
+        JSONObject response = new JSONObject();
+        JSONObject json = new JSONObject(params);
+        Integer grid_id =  json.getInt("grid_id");
+        try{
+            session.removeGrid(grid_id);
+            response.put("sucess", true);
+        }catch (Exception e){
+            e.printStackTrace();
+            response.put("sucess", false);
+            response.put("error", e.getMessage());
+        }
+
+        return response;
+    }
+}

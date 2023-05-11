@@ -1,0 +1,82 @@
+package com.example.asaka.core.controllers;
+
+import com.example.asaka.core.models.Grid_New;
+import com.example.asaka.core.services.SGrid_New;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import com.example.asaka.core.services.SApp;
+import com.example.asaka.core.services.SGrid;
+
+import javax.servlet.http.HttpServletRequest;
+
+
+@CrossOrigin(origins = "*", maxAge = 3600)
+@RestController
+@RequestMapping("/api/app")
+
+public class CApp {
+
+    @Autowired SApp sApp;
+    @Autowired SGrid sGrid;
+
+    @Autowired SGrid_New sGrid_new;
+
+    //	@PreAuthorize("hasRole('ROLE_USER')")
+    @RequestMapping(value = "/request", produces = "application/json")
+    public ResponseEntity setMethod(@RequestBody String params) throws Exception {
+        return ResponseEntity.ok(sApp.post(params));
+    }
+
+    // Grid
+    @RequestMapping(value = "/grid", produces = "application/json")
+//	@PreAuthorize("hasRole('ROLE_USER')")
+    public String userStr(@RequestBody String params) throws JSONException {
+        JSONObject rows = sGrid.grid(params);
+        return rows.toString();
+    }
+
+    //	@PreAuthorize("hasRole('ROLE_USER')")
+    @RequestMapping(value = "/execSelect", produces = "application/json")
+    public ResponseEntity execSelect(@RequestBody String params) throws Exception {
+        return ResponseEntity.ok(sApp.execSelect(params));
+    }
+
+    @RequestMapping(value = "/requestFile")
+    public ResponseEntity setMethodWithFile(@RequestParam("params") String params, @RequestParam(value = "file", required = false) MultipartFile multipartFile) throws Exception {
+        return ResponseEntity.ok(sApp.postFile(params, multipartFile));
+    }
+
+    // Without token Method
+    @RequestMapping(value = "/wtrequest", produces = "application/json")
+    public ResponseEntity setMethod2(@RequestBody String params) throws Exception {
+        return ResponseEntity.ok(sApp.wtpost(params));
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Grid working with session scope
+    @RequestMapping(value = "/grid/new", produces = "application/json")
+    public String grid(@RequestBody String params, HttpServletRequest request) throws JSONException {
+        System.out.println("session_id:"  + request.getSession().getId());
+        JSONObject rows = sGrid_new.grid(params);
+        return rows.toString();
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Grid filter working with session scope
+    @RequestMapping(value = "/grid/get_filter", produces = "application/json")
+    public String getFilter(@RequestBody String params, HttpServletRequest request) throws JSONException {
+        return sGrid_new.getFilter(params, request).toString();
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Grid filter working with session scope
+    @RequestMapping(value = "/grid/remove_session", produces = "application/json")
+    public String removeSession(@RequestBody String params) throws JSONException {
+        return sGrid_new.removeGridSession(params).toString();
+    }
+
+}

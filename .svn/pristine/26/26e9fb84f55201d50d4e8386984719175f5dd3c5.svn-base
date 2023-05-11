@@ -1,0 +1,50 @@
+package com.example.asaka.al.controllers;
+
+import com.example.asaka.al.services.SAl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@CrossOrigin(origins = "*", maxAge = 3600)
+@RestController
+@RequestMapping("/al")
+public class CAl {
+    //Cr By: Arslonbek Kulmatov
+    //Getting images by id
+    @Autowired private SAl sAl;
+    @RequestMapping(value = "/getImage", produces = "application/json")
+    public String getImageBase64(@RequestBody String params) {
+        return sAl.getImageBase64(params);
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Getting user projects
+    @RequestMapping(value = "/getUserProjects", produces = "application/json")
+    public String getUserProjectsWithImage(@RequestBody String params) {
+        return sAl.getUserProjectsWithImage(params);
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Getting project buildings
+    @RequestMapping(value = "/getProjectBuildings", produces = "application/json")
+    public String getProjectBuildings(@RequestBody String params) {
+        return sAl.getProjectBuildings(params);
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Getting building floors
+    @RequestMapping(value = "/getBuildingFloors", produces = "application/json")
+    public String getBuildingFloors(@RequestBody String params) {
+        return sAl.getBuildingFloors(params);
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Getting building rooms
+    @RequestMapping(value = "/getBuildingRooms", produces = "application/json")
+    public String getBuildingRooms(@RequestBody String params) {
+        return sAl.getBuildingRooms(params);
+    }
+
+}

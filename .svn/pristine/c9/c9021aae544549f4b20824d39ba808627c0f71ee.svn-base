@@ -1,0 +1,249 @@
+{
+  "start": "1",
+  "pageSize": "20",
+  "view": "lnm_judical_loans_v",
+  "cols": [
+    {
+      "name": "loan_id",
+      "label": "grid.judical.loan_id",
+      "grid": true,
+      "num": "d1",
+      "align": "left",
+      "ordType": "",
+      "width": "150"
+    },
+    {
+      "name": "oper_day",
+      "label": "grid.judical.oper_day",
+      "grid": false,
+      "num": "d2",
+      "align": "center",
+      "ordType": "",
+      "width": "100"
+    },
+    {
+      "name": "filial_code",
+      "label": "grid.judical.filial_code",
+      "grid": true,
+      "num": "d3",
+      "align": "left",
+      "ordType": "",
+      "width": "150"
+    },
+    {
+      "name": "filial_name",
+      "label": "grid.judical.filial_name",
+      "grid": true,
+      "num": "d4",
+      "align": "left",
+      "ordType": "",
+      "width": "250"
+    },
+    {
+      "name": "client_name",
+      "label": "grid.judical.client_name",
+      "grid": true,
+      "num": "d5",
+      "align": "left",
+      "ordType": "",
+      "width": "300"
+    },
+    {
+      "name": "status_name",
+      "label": "grid.judical.status_name",
+      "grid": true,
+      "num": "d6",
+      "align": "left",
+      "ordType": "",
+      "width": "200"
+    },
+    {
+      "name": "max_filed_on",
+      "label": "grid.judical.filed_on",
+      "grid": true,
+      "num": "d7",
+      "align": "left",
+      "ordType": "",
+      "width": "120"
+    },
+    {
+      "name": "total_summ",
+      "label": "grid.judical.total_summ",
+      "grid": true,
+      "num": "d8",
+      "align": "left",
+      "ordType": "",
+      "width": "150",
+      "col_type": "sum"
+    },
+    {
+      "name": "max_status_day",
+      "label": "grid.judical.perform_day",
+      "grid": true,
+      "num": "d9",
+      "align": "left",
+      "ordType": "",
+      "width": "150"
+    },
+    {
+      "name": "perform_delay_date_count",
+      "label": "grid.judical.perform_delay_date_count",
+      "grid": true,
+      "num": "d10",
+      "align": "left",
+      "ordType": "",
+      "width": "200"
+    },
+    {
+      "name": "loan_type",
+      "label": "grid.judical.loan_type",
+      "grid": true,
+      "num": "d11",
+      "align": "left",
+      "ordType": "",
+      "width": "400"
+    },
+    {
+      "name": "currency",
+      "label": "grid.judical.currency",
+      "grid": true,
+      "num": "d12",
+      "align": "left",
+      "ordType": "",
+      "width": "130"
+    },
+    {
+      "name": "saldo1",
+      "label": "grid.judical.saldo1",
+      "grid": true,
+      "num": "d13",
+      "align": "left",
+      "ordType": "",
+      "width": "250",
+      "col_type": "sum"
+    },
+    {
+      "name": "saldo5",
+      "label": "grid.judical.saldo5",
+      "grid": true,
+      "num": "d14",
+      "align": "left",
+      "ordType": "",
+      "width": "150",
+      "col_type": "sum"
+    },
+    {
+      "name": "saldo46",
+      "label": "grid.judical.saldo46",
+      "grid": true,
+      "num": "d15",
+      "align": "left",
+      "ordType": "",
+      "width": "250",
+      "col_type": "sum"
+    },
+    {
+      "name": "saldo8",
+      "label": "grid.judical.saldo8",
+      "grid": true,
+      "num": "d16",
+      "align": "left",
+      "ordType": "",
+      "width": "250",
+      "col_type": "sum"
+    },
+    {
+      "name": "delay_date_count",
+      "label": "grid.judical.delay_date_count",
+      "grid": true,
+      "num": "d17",
+      "align": "left",
+      "ordType": "",
+      "width": "250"
+    },
+    {
+      "name": "client_type",
+      "label": "grid.judical.client_type",
+      "grid": true,
+      "num": "d18",
+      "align": "left",
+      "ordType": "",
+      "width": "150"
+    },
+    {
+      "name": "department",
+      "label": "grid.judical.department",
+      "grid": true,
+      "num": "d19",
+      "align": "left",
+      "ordType": "",
+      "width": "200"
+    },
+    {
+      "name": "status_code",
+      "label": "grid.judical.status_code",
+      "grid": false,
+      "num": "d20"
+    },
+    {
+      "name": "client_type_code",
+      "label": "grid.judical.client_type_code",
+      "grid": false,
+      "num": "d21"
+    },
+    {
+      "name": "comments",
+      "label": "grid.judical.comments",
+      "grid": true,
+      "num": "d22",
+      "align": "left",
+      "ordType": "",
+      "width": "250"
+    }
+  ],
+  "filters": [
+    {
+      "name": "loan_id",
+      "label": "grid.judical.loan_id",
+      "type": "VC"
+    },
+    {
+      "name": "filial_code",
+      "label": "grid.judical.filial_code",
+      "type": "VC"
+    },
+    {
+      "name": "client_type_code",
+      "filterName": "client_type_code",
+      "label": "grid.judical.client_type",
+      "type": "SL",
+      "view": "select t.name, t.code from lnm_judical_s_client_types t where t.condition = 'A'"
+    },
+    {
+      "name": "delay_date_count",
+      "label": "grid.judical.delay_date_count",
+      "type": "VC"
+    },
+    {
+      "name": "status_code",
+      "filterName": "status_code",
+      "label": "grid.judical.status_name",
+      "type": "SL",
+      "view": "select t.name, t.code from LNM_JUDICAL_S_STATUS t where t.condition = 'A' order by t.code"
+    },
+    {
+      "name": "department",
+      "filterName": "department",
+      "label": "grid.judical.department",
+      "type": "SL",
+      "view": "select t.name, t.name from LNM_JUDICAL_S_DEPS t where t.condition = 'A'"
+    },
+    {
+      "name": "filial_code",
+      "filterName": "filial_code",
+      "label": "grid.judical.filial_name",
+      "type": "SL",
+      "view": "select t.name, t.code_bank from filials_v t"
+    }
+  ]
+}

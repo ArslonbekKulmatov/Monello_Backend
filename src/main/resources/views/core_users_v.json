@@ -1,0 +1,108 @@
+{
+  "start": "1",
+  "pageSize": "20",
+  "view": "Core_Users_V",
+  "cols": [
+    {
+      "name": "User_Id",
+      "label": "grid.ref.userId",
+      "grid": false,
+      "num": "d1"
+    },
+    {
+      "name": "Emp_Id",
+      "label": "grid.ref.empId",
+      "grid": true,
+      "num": "d2",
+      "align": "center",
+      "ordType": "no",
+      "width": "80"
+    },
+    {
+      "name": "Filial",
+      "label": "grid.ref.filial",
+      "grid": true,
+      "num": "d3",
+      "align": "center",
+      "ordType": "no",
+      "width": "100"
+    },
+    {
+      "name": "Last_Name",
+      "label": "grid.ref.lastName",
+      "grid": true,
+      "num": "d4",
+      "align": "center",
+      "ordType": "no",
+      "width": "120"
+    },
+    {
+      "name": "First_Name",
+      "label": "grid.ref.firstName",
+      "grid": true,
+      "num": "d5",
+      "align": "center",
+      "ordType": "no",
+      "width": "120"
+    },
+    {
+      "name": "Middle_Name",
+      "label": "grid.ref.middleName",
+      "grid": true,
+      "num": "d6",
+      "align": "center",
+      "ordType": "no",
+      "width": "120"
+    },
+    {
+      "name": "Login",
+      "label": "grid.ref.login",
+      "grid": true,
+      "num": "d7",
+      "align": "center",
+      "ordType": "no",
+      "width": "100"
+    },
+    {
+      "name": "State",
+      "label": "grid.ref.state",
+      "grid": true,
+      "num": "d8",
+      "align": "center",
+      "ordType": "no",
+      "width": "80"
+    }
+  ],
+  "filters": [
+    {
+      "name": "Emp_Id",
+      "label": "grid.ref.empId",
+      "type": "VC"
+    },
+    {
+      "name": "Filial",
+      "label": "grid.ref.filial",
+      "type": "VC"
+    },
+    {
+      "name": "Last_Name",
+      "label": "grid.ref.lastName",
+      "type": "VC"
+    },
+    {
+      "name": "First_Name",
+      "label": "grid.ref.firstName",
+      "type": "VC"
+    },
+    {
+      "name": "Middle_Name",
+      "label": "grid.ref.middleName",
+      "type": "VC"
+    },
+    {
+      "name": "login",
+      "label": "grid.ref.login",
+      "type": "VC"
+    }
+  ]
+}

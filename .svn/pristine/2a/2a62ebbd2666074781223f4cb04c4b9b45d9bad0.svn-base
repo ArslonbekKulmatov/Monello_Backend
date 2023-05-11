@@ -1,0 +1,189 @@
+package com.example.asaka.security.jwt;
+
+import com.zaxxer.hikari.HikariDataSource;
+import io.jsonwebtoken.*;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import com.example.asaka.core.models.JwtResponse;
+import com.example.asaka.core.models.User;
+import com.example.asaka.security.services.UserDetailsImpl;
+import com.example.asaka.util.DB;
+import com.example.asaka.util.Req;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+
+@Component
+public class JwtUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+    @Autowired
+    Req req;
+
+    @Value("${jwt.expirationMs}")
+    Integer jwtExpirationMs;
+    @Autowired
+    HikariDataSource hds;
+
+    // Generation token
+    public String generateJwtToken(Authentication authentication) {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userPrincipal.getId());
+        claims.put("login", userPrincipal.getLogin());
+        claims.put("password", userPrincipal.getPassword());
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject((userPrincipal.getLogin()))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
+    }
+
+    // Generation token with clientId
+    public String generateJwtToken(String params, JwtResponse jwtResponse) throws JSONException {
+        JSONObject json = new JSONObject(params);
+        String headerAuth = req.getHeader("Authorization");
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
+            headerAuth = headerAuth.substring(7, headerAuth.length());
+        }
+        Claims claims = getAllClaimsFromToken(headerAuth);
+        claims.put("userId", claims.get("userId").toString());
+        claims.put("login", claims.get("login").toString());
+        claims.put("password", claims.get("password").toString());
+        claims.put("clientId", json.getString("clientId"));
+        String token = Jwts.builder()
+                .setClaims(claims)
+                .setSubject((claims.get("login").toString()))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
+        jwtResponse.setExpiresIn(jwtExpirationMs.toString());
+        jwtResponse.setToken(token);
+        jwtResponse.setClientName(getClientName(json.getString("clientId")));
+        jwtResponse.setLogin(claims.get("login").toString());
+        jwtResponse.setId(Long.valueOf(claims.get("userId").toString()));
+        return token;
+    }
+
+    public JwtResponse generateJwtToken(User user) {
+        System.out.println("user: " + user.toString());
+        JwtResponse jwtResponse = new JwtResponse();
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("login", user.getLogin());
+        if (user.getClientId() != null) {
+            claims.put("clientId", user.getClientId());
+            jwtResponse.setClientName(getClientName(user.getClientId().toString()));
+        }
+
+        String token = Jwts.builder()
+                .setClaims(claims)
+                .setSubject(user.getLogin())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
+        jwtResponse.setExpiresIn(jwtExpirationMs.toString());
+        jwtResponse.setToken(token);
+        jwtResponse.setLogin(user.getLogin());
+        jwtResponse.setId(user.getId());
+        jwtResponse.setRefresh_token(user.getRefresh_token());
+        jwtResponse.setFirstName(user.getFirstName());
+        jwtResponse.setLastName(user.getLastName());
+        jwtResponse.setId(user.getId());
+        jwtResponse.setPatronymicName(user.getPatronymicName());
+        return jwtResponse;
+    }
+
+    public String getClientName(String clientId) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        String clientName = "";
+        try {
+            conn = DB.con(hds);
+            ps = conn.prepareStatement("Select * From Client_Current_Ibs Where id = " + clientId + " And Condition = 'A'");
+            ps.execute();
+            rs = ps.getResultSet();
+            if (rs.next()) {
+                clientName = rs.getString("Name");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DB.done(conn);
+            DB.done(ps);
+            DB.done(rs);
+        }
+        return clientName;
+    }
+
+    public String getUserNameFromJwtToken(String token) {
+        return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
+    }
+
+    public boolean validateJwtToken(String authToken) {
+        try {
+            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
+            return true;
+        } catch (SignatureException e) {
+            logger.error("Invalid JWT signature: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            logger.error("Invalid JWT token: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            logger.error("JWT token is expired: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            logger.error("JWT token is unsupported: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.error("JWT claims string is empty: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    public Claims getAllClaimsFromToken(String token) {
+        Claims claims;
+        try {
+            claims = Jwts.parser()
+                    .setSigningKey(jwtSecret)
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            logger.error("JWT token is unsupported: {}", e.getMessage());
+            claims = null;
+        }
+        return claims;
+    }
+
+
+    public String getJwtTokenFromHeaderString(String tokenWithBearer) {
+        if (StringUtils.hasText(tokenWithBearer) && tokenWithBearer.startsWith("Bearer ")) {
+            return tokenWithBearer.substring(7);
+        }
+
+        return null;
+    }
+
+    public Claims getClaimsFromHeaderString(String tokenWithBearer) {
+        return getAllClaimsFromToken(getJwtTokenFromHeaderString(tokenWithBearer));
+    }
+
+}
+

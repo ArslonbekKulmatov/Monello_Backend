@@ -79,8 +79,14 @@ public class Grid_New {
                 JSONObject col = filters.getJSONObject(i);
                 String colName = col.getString("name");
 //				boolean hasFilter = col.isNull("hasFilter") ? false : col.getBoolean("hasFilter");
-                String filterValue = JbUtil.nvl(col.isNull("filterValue") ? "" : col.getString("filterValue"), "");
                 String filterType = col.getString("type");
+                String filterValue = "";
+                if(filterType.equals("CHECKBOX")){
+                    filterValue = JbUtil.nvl(col.isNull("filterValue") ? "[]" : col.getJSONArray("filterValue").toString(), "[]");
+                }
+                else {
+                    filterValue = JbUtil.nvl(col.isNull("filterValue") ? "" : col.getString("filterValue"), "");
+                }
                 if (!"".equals(filterValue)) {
                     if (filterType.equals("VC"))
                         fltr += " lower(" + colName + ") Like '%" + filterValue.toLowerCase() + "%' And";
@@ -105,6 +111,13 @@ public class Grid_New {
                         } else {
                             fltr += " trunc(to_date(substr(" + colName + ", 1, 10), 'dd.mm.yyyy')) >= to_date('" + fromDate + "', 'dd.mm.yyyy') And trunc(to_date(substr(" + colName + ", 1, 10), 'dd.mm.yyyy')) <= to_date('" + toDate + "', 'dd.mm.yyyy') And";
                         }
+                    }
+                }
+                if (filterType.equals("CHECKBOX")) {
+                    if (col.getJSONArray("filterValue").length() != 0){
+                        String filterName = col.getString("filterName");
+                        if (!filterValue.equals("") && !filterValue.equals("0"))
+                            fltr += " to_char(" + filterName + ") in (select value from json_table('"+ filterValue +"', '$[*]' COLUMNS (value PATH '$'))) And";
                     }
                 }
             }

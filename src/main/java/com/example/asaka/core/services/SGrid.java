@@ -181,6 +181,14 @@ public class SGrid {
                         if (!fValue.equals("") && !fValue.equals("0"))
                             fltr += " to_char(" + filterName + ") = '" + fValue + "' And";
                     }
+                    if (filterType.equals("CHECKBOX")) {
+                        JSONArray checked_values = col.getJSONArray("filterValue");
+
+                        String fValue = JbUtil.nvl(checked_values.toString(), "[]");
+                        String filterName = col.getString("filterName");
+                        if (!fValue.equals("") && !fValue.equals("0"))
+                            fltr += " to_char(" + filterName + ") in (select value from json_table('"+ fValue +"', '$[*]' COLUMNS (value PATH '$'))) And";
+                    }
                 }
                 if (filterType.equals("DT")) {
                     String fromDate = col.isNull("fromDate") ? null : col.getString("fromDate");

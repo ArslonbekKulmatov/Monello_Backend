@@ -46,8 +46,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 user.setPatronymicName(rs.getString("Patronymic_Name"));
                 user.setUserState(rs.getString("State"));
                 user.setFirstLogon(rs.getString("First_Logon").equals("Y"));
-//                user.setCheckSign(rs.getString("Check_Sign_Onlogon"));
-//                user.setEkeyId(rs.getString("Ekey_Id"));
             }
         } catch (Exception e) {
             e.printStackTrace();

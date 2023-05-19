@@ -9,10 +9,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.example.asaka.security.jwt.AuthEntryPointJwt;
 import com.example.asaka.security.jwt.AuthTokenFilter;
 import com.example.asaka.security.services.UserDetailsServiceImpl;
@@ -24,8 +22,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     UserDetailsServiceImpl userDetailsService;
-    @Autowired
-    AuthEntryPointJwt unauthorizedHandler;
+    @Autowired AuthEntryPointJwt unauthorizedHandler;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -51,11 +48,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         String[] pathArray = new String[]{"/swagger-ui.html", "/api/auth/**", "/api/ekey/**", "/api/app/wtrequest", "/favicon.ico", "/images/**", "/fidoapi/**", "/api/mobile/v1/auth/**",
-                "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**", "/api/**"};
+        "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**", "/api/**"};
         http.csrf().disable()
-                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-                .formLogin()
-                .failureForwardUrl("/api/auth/error");
+        .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
+        .formLogin()
+        .failureForwardUrl("/api/auth/error");
 
     }
 

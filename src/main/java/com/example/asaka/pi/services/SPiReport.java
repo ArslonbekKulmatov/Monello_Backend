@@ -2,17 +2,29 @@ package com.example.asaka.pi.services;
 
 import com.example.asaka.core.services.SApp;
 import com.example.asaka.util.DB;
+import com.microsoft.schemas.office.visio.x2012.main.SheetType;
 import com.zaxxer.hikari.HikariDataSource;
 import oracle.jdbc.proxy.annotation.Pre;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class SPiReport {
@@ -23,7 +35,7 @@ public class SPiReport {
         JSONObject response = null;
         JSONObject debtor;
         JSONObject payment;
-        JSONArray payments = new JSONArray();
+        JSONArray payments;
         JSONArray debtors = new JSONArray();
         String begin_date = json_params.getString("begin_date");
         String end_date = json_params.getString("end_date");

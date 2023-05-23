@@ -1,86 +1,315 @@
-2023-05-19 09:09:29.742  INFO 9992 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 9992 (F:\Projects\Monello_Backend\target\classes started by Arslonbek in F:\Projects\Monello_Backend)
-2023-05-19 09:09:29.746  INFO 9992 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
-2023-05-19 09:09:29.819  INFO 9992 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
-2023-05-19 09:09:29.820  INFO 9992 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
-2023-05-19 09:09:29.820  INFO 9992 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
-2023-05-19 09:09:30.902  INFO 9992 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
-2023-05-19 09:09:30.925  INFO 9992 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 17 ms. Found 0 JDBC repository interfaces.
-2023-05-19 09:09:31.698  INFO 9992 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
-2023-05-19 09:09:31.708  INFO 9992 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2023-05-19 09:09:31.709  INFO 9992 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
-2023-05-19 09:09:31.846  INFO 9992 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2023-05-19 09:09:31.846  INFO 9992 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2025 ms
-2023-05-19 09:09:32.857  INFO 9992 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
-2023-05-19 09:09:32.971  INFO 9992 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
-2023-05-19 09:09:32.975  WARN 9992 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
-2023-05-19 09:09:33.405  INFO 9992 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
-2023-05-19 09:09:34.349  INFO 9992 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
-2023-05-19 09:09:34.396  INFO 9992 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
-2023-05-19 09:09:34.410  INFO 9992 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 5.142 seconds (JVM running for 6.163)
-2023-05-19 09:09:47.956  INFO 9992 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
-2023-05-19 09:09:48.030  INFO 9992 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
-2023-05-19 09:09:51.684  INFO 20268 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 20268 (F:\Projects\Monello_Backend\target\classes started by Arslonbek in F:\Projects\Monello_Backend)
-2023-05-19 09:09:51.686  INFO 20268 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
-2023-05-19 09:09:51.732  INFO 20268 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
-2023-05-19 09:09:51.732  INFO 20268 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
-2023-05-19 09:09:51.732  INFO 20268 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
-2023-05-19 09:09:52.397  INFO 20268 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
-2023-05-19 09:09:52.415  INFO 20268 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 14 ms. Found 0 JDBC repository interfaces.
-2023-05-19 09:09:53.051  INFO 20268 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
-2023-05-19 09:09:53.059  INFO 20268 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2023-05-19 09:09:53.059  INFO 20268 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
-2023-05-19 09:09:53.170  INFO 20268 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2023-05-19 09:09:53.170  INFO 20268 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1437 ms
-2023-05-19 09:09:54.019  INFO 20268 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
-2023-05-19 09:09:54.106  INFO 20268 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
-2023-05-19 09:09:54.110  WARN 20268 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
-2023-05-19 09:09:54.409  INFO 20268 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
-2023-05-19 09:09:55.191  INFO 20268 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
-2023-05-19 09:09:55.235  INFO 20268 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
-2023-05-19 09:09:55.248  INFO 20268 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 3.942 seconds (JVM running for 4.81)
-2023-05-19 09:38:46.708  INFO 20268 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
-2023-05-19 09:38:47.095  INFO 20268 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
-2023-05-19 09:38:50.855  INFO 13008 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 13008 (F:\Projects\Monello_Backend\target\classes started by Arslonbek in F:\Projects\Monello_Backend)
-2023-05-19 09:38:50.856  INFO 13008 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
-2023-05-19 09:38:50.905  INFO 13008 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
-2023-05-19 09:38:50.905  INFO 13008 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
-2023-05-19 09:38:50.905  INFO 13008 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
-2023-05-19 09:38:51.633  INFO 13008 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
-2023-05-19 09:38:51.651  INFO 13008 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 15 ms. Found 0 JDBC repository interfaces.
-2023-05-19 09:38:52.267  INFO 13008 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
-2023-05-19 09:38:52.274  INFO 13008 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2023-05-19 09:38:52.274  INFO 13008 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
-2023-05-19 09:38:52.395  INFO 13008 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2023-05-19 09:38:52.396  INFO 13008 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1490 ms
-2023-05-19 09:38:53.232  INFO 13008 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
-2023-05-19 09:38:53.317  WARN 13008 --- [restartedMain] com.zaxxer.hikari.HikariConfig           : SpringBootJPAHikariCP - leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.
-2023-05-19 09:38:53.319  INFO 13008 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
-2023-05-19 09:38:53.321  WARN 13008 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
-2023-05-19 09:38:53.881  INFO 13008 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
-2023-05-19 09:38:54.612  INFO 13008 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
-2023-05-19 09:38:54.659  INFO 13008 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
-2023-05-19 09:38:54.672  INFO 13008 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 4.228 seconds (JVM running for 5.186)
-2023-05-19 09:39:00.371  INFO 13008 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
-2023-05-19 09:39:00.622  INFO 13008 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
-2023-05-19 09:45:03.825  INFO 13796 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 13796 (F:\Projects\Monello_Backend\target\classes started by Arslonbek in F:\Projects\Monello_Backend)
-2023-05-19 09:45:03.826  INFO 13796 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
-2023-05-19 09:45:03.885  INFO 13796 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
-2023-05-19 09:45:03.885  INFO 13796 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
-2023-05-19 09:45:03.885  INFO 13796 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
-2023-05-19 09:45:04.724  INFO 13796 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
-2023-05-19 09:45:04.745  INFO 13796 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 16 ms. Found 0 JDBC repository interfaces.
-2023-05-19 09:45:05.557  INFO 13796 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
-2023-05-19 09:45:05.565  INFO 13796 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2023-05-19 09:45:05.565  INFO 13796 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
-2023-05-19 09:45:05.695  INFO 13796 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2023-05-19 09:45:05.695  INFO 13796 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1809 ms
-2023-05-19 09:45:06.664  INFO 13796 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
-2023-05-19 09:45:07.847  WARN 13796 --- [restartedMain] com.zaxxer.hikari.HikariConfig           : SpringBootJPAHikariCP - leakDetectionThreshold is less than 2000ms or more than maxLifetime, disabling it.
-2023-05-19 09:45:07.849  INFO 13796 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
-2023-05-19 09:45:07.853  WARN 13796 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
-2023-05-19 09:45:08.287  INFO 13796 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
-2023-05-19 09:45:09.420  INFO 13796 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
-2023-05-19 09:45:09.476  INFO 13796 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
-2023-05-19 09:45:09.490  INFO 13796 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 6.09 seconds (JVM running for 6.988)
-2023-05-19 09:47:09.378  INFO 13796 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
-2023-05-19 09:47:09.574  INFO 13796 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
+2023-05-23 08:46:44.627  INFO 11268 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 11268 (F:\Projects\Monello\target\classes started by Arslonbek in F:\Projects\Monello)
+2023-05-23 08:46:44.636  INFO 11268 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
+2023-05-23 08:46:44.707  INFO 11268 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
+2023-05-23 08:46:44.709  INFO 11268 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-23 08:46:44.709  INFO 11268 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-23 08:46:45.638  INFO 11268 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
+2023-05-23 08:46:45.659  INFO 11268 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 16 ms. Found 0 JDBC repository interfaces.
+2023-05-23 08:46:46.370  INFO 11268 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
+2023-05-23 08:46:46.379  INFO 11268 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-23 08:46:46.380  INFO 11268 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
+2023-05-23 08:46:46.505  INFO 11268 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-23 08:46:46.505  INFO 11268 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1795 ms
+2023-05-23 08:46:47.450  INFO 11268 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
+2023-05-23 08:46:47.540  INFO 11268 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
+2023-05-23 08:46:47.544  WARN 11268 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
+2023-05-23 08:46:47.970  INFO 11268 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
+2023-05-23 08:46:48.939  INFO 11268 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-23 08:46:48.989  INFO 11268 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
+2023-05-23 08:46:49.003  INFO 11268 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 4.814 seconds (JVM running for 5.803)
+2023-05-23 08:59:34.724  INFO 11268 --- [http-nio-9999-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-05-23 08:59:34.724  INFO 11268 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-05-23 08:59:34.726  INFO 11268 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-05-23 08:59:34.771 ERROR 11268 --- [http-nio-9999-exec-1] com.example.asaka.security.jwt.JwtUtils  : JWT token is expired: JWT expired at 2023-05-09T14:57:59Z. Current time: 2023-05-23T08:59:34Z, a difference of 1188095771 milliseconds.  Allowed clock skew: 0 milliseconds.
+2023-05-23 09:01:25.934  INFO 11268 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
+2023-05-23 09:01:25.993  INFO 11268 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
+2023-05-23 09:01:32.074  INFO 21312 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 21312 (F:\Projects\Monello\target\classes started by Arslonbek in F:\Projects\Monello)
+2023-05-23 09:01:32.076  INFO 21312 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
+2023-05-23 09:01:32.143  INFO 21312 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
+2023-05-23 09:01:32.143  INFO 21312 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-23 09:01:32.143  INFO 21312 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-23 09:01:32.975  INFO 21312 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
+2023-05-23 09:01:32.996  INFO 21312 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 16 ms. Found 0 JDBC repository interfaces.
+2023-05-23 09:01:33.916  INFO 21312 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
+2023-05-23 09:01:33.927  INFO 21312 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-23 09:01:33.928  INFO 21312 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
+2023-05-23 09:01:34.056  INFO 21312 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-23 09:01:34.056  INFO 21312 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1912 ms
+2023-05-23 09:01:35.202  INFO 21312 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
+2023-05-23 09:01:35.338  INFO 21312 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
+2023-05-23 09:01:35.344  WARN 21312 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
+2023-05-23 09:01:35.776  INFO 21312 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
+2023-05-23 09:01:36.978  INFO 21312 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-23 09:01:37.050  INFO 21312 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
+2023-05-23 09:01:37.066  INFO 21312 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 5.588 seconds (JVM running for 7.322)
+2023-05-23 09:01:41.262  INFO 21312 --- [http-nio-9999-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-05-23 09:01:41.263  INFO 21312 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-05-23 09:01:41.264  INFO 21312 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-05-23 09:02:19.003  INFO 21312 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
+2023-05-23 09:02:19.079  INFO 21312 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
+2023-05-23 09:02:21.727  INFO 20552 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 20552 (F:\Projects\Monello\target\classes started by Arslonbek in F:\Projects\Monello)
+2023-05-23 09:02:21.728  INFO 20552 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
+2023-05-23 09:02:21.783  INFO 20552 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
+2023-05-23 09:02:21.783  INFO 20552 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-23 09:02:21.783  INFO 20552 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-23 09:02:22.541  INFO 20552 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
+2023-05-23 09:02:22.565  INFO 20552 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 18 ms. Found 0 JDBC repository interfaces.
+2023-05-23 09:02:23.260  INFO 20552 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
+2023-05-23 09:02:23.266  INFO 20552 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-23 09:02:23.266  INFO 20552 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
+2023-05-23 09:02:23.398  INFO 20552 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-23 09:02:23.398  INFO 20552 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1614 ms
+2023-05-23 09:02:24.403  INFO 20552 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
+2023-05-23 09:02:24.508  INFO 20552 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
+2023-05-23 09:02:24.513  WARN 20552 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
+2023-05-23 09:02:24.887  INFO 20552 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
+2023-05-23 09:02:25.667  INFO 20552 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-23 09:02:25.711  INFO 20552 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
+2023-05-23 09:02:25.723  INFO 20552 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 4.396 seconds (JVM running for 5.216)
+2023-05-23 09:03:13.793  INFO 20552 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
+2023-05-23 09:03:13.849  INFO 20552 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
+2023-05-23 09:03:19.053  INFO 22376 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 22376 (F:\Projects\Monello\target\classes started by Arslonbek in F:\Projects\Monello)
+2023-05-23 09:03:19.055  INFO 22376 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
+2023-05-23 09:03:19.120  INFO 22376 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
+2023-05-23 09:03:19.121  INFO 22376 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-23 09:03:19.121  INFO 22376 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-23 09:03:19.833  INFO 22376 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
+2023-05-23 09:03:19.852  INFO 22376 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 15 ms. Found 0 JDBC repository interfaces.
+2023-05-23 09:03:20.572  INFO 22376 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
+2023-05-23 09:03:20.580  INFO 22376 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-23 09:03:20.580  INFO 22376 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
+2023-05-23 09:03:20.689  INFO 22376 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-23 09:03:20.690  INFO 22376 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1569 ms
+2023-05-23 09:03:21.698  INFO 22376 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
+2023-05-23 09:03:21.794  INFO 22376 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
+2023-05-23 09:03:21.798  WARN 22376 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
+2023-05-23 09:03:22.240  INFO 22376 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
+2023-05-23 09:03:23.135  INFO 22376 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-23 09:03:23.183  INFO 22376 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
+2023-05-23 09:03:23.196  INFO 22376 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 4.577 seconds (JVM running for 5.499)
+2023-05-23 09:03:23.415  INFO 22376 --- [http-nio-9999-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-05-23 09:03:23.415  INFO 22376 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-05-23 09:03:23.416  INFO 22376 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-05-23 09:03:23.781 ERROR 22376 --- [http-nio-9999-exec-1] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed; nested exception is java.lang.NullPointerException: Cannot invoke "Object.toString()" because "inputStream" is null] with root cause
+
+java.lang.NullPointerException: Cannot invoke "Object.toString()" because "inputStream" is null
+	at com.example.asaka.pi.services.SPiReport.accountingReportExcel(SPiReport.java:108) ~[classes/:na]
+	at com.example.asaka.pi.controllers.CPiReport.accountingReportExcel(CPiReport.java:23) ~[classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:577) ~[na:na]
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:205) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:150) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117) ~[spring-webmvc-5.3.18.jar:5.3.18]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:895) ~[spring-webmvc-5.3.18.jar:5.3.18]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:808) ~[spring-webmvc-5.3.18.jar:5.3.18]
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87) ~[spring-webmvc-5.3.18.jar:5.3.18]
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1067) ~[spring-webmvc-5.3.18.jar:5.3.18]
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:963) ~[spring-webmvc-5.3.18.jar:5.3.18]
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1006) ~[spring-webmvc-5.3.18.jar:5.3.18]
+	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:909) ~[spring-webmvc-5.3.18.jar:5.3.18]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:681) ~[tomcat-embed-core-9.0.60.jar:4.0.FR]
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:883) ~[spring-webmvc-5.3.18.jar:5.3.18]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:764) ~[tomcat-embed-core-9.0.60.jar:4.0.FR]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:227) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53) ~[tomcat-embed-websocket-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at com.example.asaka.security.jwt.AuthTokenFilter.doFilterInternal(AuthTokenFilter.java:44) ~[classes/:na]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:327) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:122) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:116) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:336) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:126) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:81) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:336) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:109) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:336) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:149) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:336) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:336) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter.doFilter(AbstractAuthenticationProcessingFilter.java:219) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter.doFilter(AbstractAuthenticationProcessingFilter.java:213) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:336) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:103) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:89) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:336) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:336) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.context.SecurityContextPersistenceFilter.doFilter(SecurityContextPersistenceFilter.java:110) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.context.SecurityContextPersistenceFilter.doFilter(SecurityContextPersistenceFilter.java:80) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:336) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:55) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:336) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:211) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:183) ~[spring-security-web-5.6.2.jar:5.6.2]
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:354) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:267) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.18.jar:5.3.18]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:197) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:97) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:541) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:135) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:78) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:360) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:399) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:65) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:889) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1743) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61) ~[tomcat-embed-core-9.0.60.jar:9.0.60]
+	at java.base/java.lang.Thread.run(Thread.java:833) ~[na:na]
+
+2023-05-23 09:05:02.382  INFO 22376 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
+2023-05-23 09:05:02.445  INFO 22376 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
+2023-05-23 09:05:07.966  INFO 4816 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 4816 (F:\Projects\Monello\target\classes started by Arslonbek in F:\Projects\Monello)
+2023-05-23 09:05:07.967  INFO 4816 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
+2023-05-23 09:05:08.017  INFO 4816 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
+2023-05-23 09:05:08.017  INFO 4816 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-23 09:05:08.017  INFO 4816 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-23 09:05:08.736  INFO 4816 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
+2023-05-23 09:05:08.754  INFO 4816 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 14 ms. Found 0 JDBC repository interfaces.
+2023-05-23 09:05:09.417  INFO 4816 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
+2023-05-23 09:05:09.423  INFO 4816 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-23 09:05:09.424  INFO 4816 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
+2023-05-23 09:05:09.526  INFO 4816 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-23 09:05:09.526  INFO 4816 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1508 ms
+2023-05-23 09:05:10.368  INFO 4816 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
+2023-05-23 09:05:10.457  INFO 4816 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
+2023-05-23 09:05:10.461  WARN 4816 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
+2023-05-23 09:05:11.479  INFO 4816 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
+2023-05-23 09:05:12.284  INFO 4816 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-23 09:05:12.330  INFO 4816 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
+2023-05-23 09:05:12.341  INFO 4816 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 4.782 seconds (JVM running for 5.898)
+2023-05-23 09:05:18.545  INFO 4816 --- [http-nio-9999-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-05-23 09:05:18.545  INFO 4816 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-05-23 09:05:18.546  INFO 4816 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2023-05-23 09:05:56.634  INFO 4816 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
+2023-05-23 09:05:56.717  INFO 4816 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
+2023-05-23 09:06:01.749  INFO 21092 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 21092 (F:\Projects\Monello\target\classes started by Arslonbek in F:\Projects\Monello)
+2023-05-23 09:06:01.750  INFO 21092 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
+2023-05-23 09:06:01.805  INFO 21092 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
+2023-05-23 09:06:01.806  INFO 21092 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-23 09:06:01.806  INFO 21092 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-23 09:06:02.561  INFO 21092 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
+2023-05-23 09:06:02.578  INFO 21092 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 13 ms. Found 0 JDBC repository interfaces.
+2023-05-23 09:06:03.333  INFO 21092 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
+2023-05-23 09:06:03.345  INFO 21092 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-23 09:06:03.346  INFO 21092 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
+2023-05-23 09:06:03.472  INFO 21092 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-23 09:06:03.472  INFO 21092 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1665 ms
+2023-05-23 09:06:04.465  INFO 21092 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
+2023-05-23 09:06:04.561  INFO 21092 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
+2023-05-23 09:06:04.565  WARN 21092 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
+2023-05-23 09:06:05.586  INFO 21092 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
+2023-05-23 09:06:06.369  INFO 21092 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-23 09:06:06.418  INFO 21092 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
+2023-05-23 09:06:06.429  INFO 21092 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 5.139 seconds (JVM running for 5.996)
+2023-05-23 09:06:06.679  INFO 21092 --- [http-nio-9999-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-05-23 09:06:06.679  INFO 21092 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-05-23 09:06:06.680  INFO 21092 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2023-05-23 09:06:15.331  INFO 21092 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
+2023-05-23 09:06:15.582  INFO 21092 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
+2023-05-23 09:06:20.452  INFO 9464 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 9464 (F:\Projects\Monello\target\classes started by Arslonbek in F:\Projects\Monello)
+2023-05-23 09:06:20.453  INFO 9464 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
+2023-05-23 09:06:20.511  INFO 9464 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
+2023-05-23 09:06:20.511  INFO 9464 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-23 09:06:20.512  INFO 9464 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-23 09:06:21.157  INFO 9464 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
+2023-05-23 09:06:21.175  INFO 9464 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 15 ms. Found 0 JDBC repository interfaces.
+2023-05-23 09:06:21.810  INFO 9464 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
+2023-05-23 09:06:21.817  INFO 9464 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-23 09:06:21.817  INFO 9464 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
+2023-05-23 09:06:21.920  INFO 9464 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-23 09:06:21.920  INFO 9464 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1408 ms
+2023-05-23 09:06:22.790  INFO 9464 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
+2023-05-23 09:06:22.939  INFO 9464 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
+2023-05-23 09:06:22.943  WARN 9464 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
+2023-05-23 09:06:23.569  INFO 9464 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
+2023-05-23 09:06:24.464  INFO 9464 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-23 09:06:24.517  INFO 9464 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
+2023-05-23 09:06:24.529  INFO 9464 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 4.504 seconds (JVM running for 5.335)
+2023-05-23 09:06:26.193  INFO 9464 --- [http-nio-9999-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-05-23 09:06:26.193  INFO 9464 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-05-23 09:06:26.194  INFO 9464 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-05-23 09:29:02.010  INFO 9464 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
+2023-05-23 09:29:02.101  INFO 9464 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
+2023-05-23 09:29:23.712  INFO 20860 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 20860 (F:\Projects\Monello\target\classes started by Arslonbek in F:\Projects\Monello)
+2023-05-23 09:29:23.713  INFO 20860 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
+2023-05-23 09:29:23.778  INFO 20860 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
+2023-05-23 09:29:23.778  INFO 20860 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-23 09:29:23.778  INFO 20860 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-23 09:29:24.460  INFO 20860 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
+2023-05-23 09:29:24.479  INFO 20860 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 14 ms. Found 0 JDBC repository interfaces.
+2023-05-23 09:29:25.203  INFO 20860 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
+2023-05-23 09:29:25.211  INFO 20860 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-23 09:29:25.211  INFO 20860 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
+2023-05-23 09:29:25.326  INFO 20860 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-23 09:29:25.326  INFO 20860 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1548 ms
+2023-05-23 09:29:26.398  INFO 20860 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
+2023-05-23 09:29:26.517  INFO 20860 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
+2023-05-23 09:29:26.521  WARN 20860 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
+2023-05-23 09:29:27.043  INFO 20860 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
+2023-05-23 09:29:27.866  INFO 20860 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-23 09:29:27.916  INFO 20860 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
+2023-05-23 09:29:27.931  INFO 20860 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 4.655 seconds (JVM running for 5.511)
+2023-05-23 09:29:31.180  INFO 20860 --- [http-nio-9999-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-05-23 09:29:31.180  INFO 20860 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-05-23 09:29:31.181  INFO 20860 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-05-23 09:29:31.662  WARN 20860 --- [http-nio-9999-exec-1] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.io.ByteArrayInputStream] with preset Content-Type 'null']
+2023-05-23 09:29:38.800  WARN 20860 --- [http-nio-9999-exec-2] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.io.ByteArrayInputStream] with preset Content-Type 'null']
+2023-05-23 09:34:04.928  INFO 20860 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
+2023-05-23 09:34:05.094  INFO 20860 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.
+2023-05-23 09:34:10.370  INFO 16832 --- [restartedMain] com.example.asaka.AsakaApplication       : Starting AsakaApplication using Java 18.0.1.1 on DESKTOP-7345ME8 with PID 16832 (F:\Projects\Monello\target\classes started by Arslonbek in F:\Projects\Monello)
+2023-05-23 09:34:10.372  INFO 16832 --- [restartedMain] com.example.asaka.AsakaApplication       : No active profile set, falling back to 1 default profile: "default"
+2023-05-23 09:34:10.429  INFO 16832 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\Asus\.m2\repository\com\oracle\database\jdbc\ojdbc8\19.7.0.0\ojdbc8-19.7.0.0.jar referenced one or more files that do not exist: file:/C:/Users/Asus/.m2/repository/com/oracle/database/jdbc/ojdbc8/19.7.0.0/oraclepki.jar
+2023-05-23 09:34:10.429  INFO 16832 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-23 09:34:10.429  INFO 16832 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-23 09:34:11.095  INFO 16832 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
+2023-05-23 09:34:11.113  INFO 16832 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 14 ms. Found 0 JDBC repository interfaces.
+2023-05-23 09:34:11.818  INFO 16832 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9999 (http)
+2023-05-23 09:34:11.825  INFO 16832 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-23 09:34:11.825  INFO 16832 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.60]
+2023-05-23 09:34:11.950  INFO 16832 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-23 09:34:11.950  INFO 16832 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1521 ms
+2023-05-23 09:34:12.895  INFO 16832 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure any request
+2023-05-23 09:34:12.988  INFO 16832 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Starting...
+2023-05-23 09:34:12.993  WARN 16832 --- [restartedMain] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=oracle.jdbc.driver.OracleDriver was not found, trying direct instantiation.
+2023-05-23 09:34:13.600  INFO 16832 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Start completed.
+2023-05-23 09:34:14.419  INFO 16832 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-23 09:34:14.467  INFO 16832 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9999 (http) with context path ''
+2023-05-23 09:34:14.481  INFO 16832 --- [restartedMain] com.example.asaka.AsakaApplication       : Started AsakaApplication in 4.535 seconds (JVM running for 5.388)
+2023-05-23 09:34:16.694  INFO 16832 --- [http-nio-9999-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-05-23 09:34:16.694  INFO 16832 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-05-23 09:34:16.695  INFO 16832 --- [http-nio-9999-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-05-23 09:34:17.182  WARN 16832 --- [http-nio-9999-exec-1] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.io.ByteArrayInputStream] with preset Content-Type 'null']
+2023-05-23 09:34:22.671  WARN 16832 --- [http-nio-9999-exec-2] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.io.ByteArrayInputStream] with preset Content-Type 'null']
+2023-05-23 09:40:57.011  INFO 16832 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown initiated...
+2023-05-23 09:40:57.086  INFO 16832 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SpringBootJPAHikariCP - Shutdown completed.

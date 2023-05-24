@@ -46,7 +46,7 @@ public class SApp {
 
     private @Autowired SUser sUser;
 
-    public String post(String params) throws Exception {
+    public String post(String params, Boolean use_session) throws Exception {
         Connection conn = DB.con(hds);
         JSONObject pars = new JSONObject(params);
         String method = pars.getString("method");
@@ -54,7 +54,9 @@ public class SApp {
         JSONObject res = new JSONObject();
         res.put("success", true);
         try {
-            setDbSession(conn);
+            if(use_session){
+                setDbSession(conn);
+            }
             sql = new JbSql("Core_App.Set_Method", conn, false);
             sql.addParam(params, 1);
             sql.addOut(Types.CLOB, 2);

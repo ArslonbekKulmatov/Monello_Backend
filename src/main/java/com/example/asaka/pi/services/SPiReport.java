@@ -2,29 +2,26 @@ package com.example.asaka.pi.services;
 
 import com.example.asaka.core.services.SApp;
 import com.example.asaka.util.DB;
-import com.microsoft.schemas.office.visio.x2012.main.SheetType;
 import com.zaxxer.hikari.HikariDataSource;
-import oracle.jdbc.proxy.annotation.Pre;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class SPiReport {
@@ -92,5 +89,158 @@ public class SPiReport {
         }
 
         return response.toString();
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Accounting report to excel
+    public ResponseEntity<InputStreamResource> accountingReportExcel(String params){
+        JSONObject pars = new JSONObject(params);
+        InputStreamResource resource = null;
+        byte[] data;
+        ByteArrayOutputStream bos = null;
+        ByteArrayInputStream bis = null;
+        JSONObject request = new JSONObject();
+        String response_data;
+        JSONObject response_data_json;
+        SXSSFWorkbook wb = new SXSSFWorkbook(100); // keep 100 rows in memory, exceeding rows will be flushed to disk
+        try{
+            request.put("method", "pi.accountingReport");
+            request.put("params", pars);
+
+            response_data = sApp.post(request.toString(), false);
+            response_data_json = new JSONObject(response_data);
+
+            Sheet sheet = wb.createSheet("accounting_report");
+            Font font = wb.createFont();
+            Font headerFont = wb.createFont();
+            headerFont.setBold(true);
+            headerFont.setColor(IndexedColors.WHITE.index);
+            font.setFontName("Times New Roman");
+
+            XSSFCellStyle noBorderStyle = (XSSFCellStyle) wb.createCellStyle();
+            XSSFCellStyle textStyle = (XSSFCellStyle) wb.createCellStyle();
+            XSSFCellStyle centerStyle = (XSSFCellStyle) wb.createCellStyle();
+            XSSFCellStyle decimalStyle = (XSSFCellStyle) wb.createCellStyle();
+            XSSFCellStyle headerStyle = (XSSFCellStyle) wb.createCellStyle();
+
+            noBorderStyle.setFont(font);
+
+            headerStyle.setFont(headerFont);
+            headerStyle.setBorderLeft(BorderStyle.THIN);
+            headerStyle.setBorderTop(BorderStyle.THIN);
+            headerStyle.setBorderRight(BorderStyle.THIN);
+            headerStyle.setBorderBottom(BorderStyle.THIN);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+            headerStyle.setFillForegroundColor(new XSSFColor(new java.awt.Color(58, 106, 135)));
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setRightBorderColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setBottomBorderColor(IndexedColors.GREY_25_PERCENT.getIndex());
+
+            textStyle.setFont(font);
+            textStyle.setBorderLeft(BorderStyle.THIN);
+            textStyle.setBorderTop(BorderStyle.THIN);
+            textStyle.setBorderRight(BorderStyle.THIN);
+            textStyle.setBorderBottom(BorderStyle.THIN);
+
+            centerStyle.setFont(font);
+            centerStyle.setBorderLeft(BorderStyle.THIN);
+            centerStyle.setBorderTop(BorderStyle.THIN);
+            centerStyle.setBorderRight(BorderStyle.THIN);
+            centerStyle.setBorderBottom(BorderStyle.THIN);
+            centerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            XSSFDataFormat format = (XSSFDataFormat) wb.createDataFormat();
+            decimalStyle.setDataFormat(format.getFormat("### ### ### ### ### ### ##0.00"));
+            decimalStyle.setFont(font);
+            decimalStyle.setBorderLeft(BorderStyle.THIN);
+            decimalStyle.setBorderTop(BorderStyle.THIN);
+            decimalStyle.setBorderRight(BorderStyle.THIN);
+            decimalStyle.setBorderBottom(BorderStyle.THIN);
+            decimalStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            // Setting columns width (256 = width of one character)
+            sheet.setColumnWidth(0, 256 * 10);
+            sheet.setColumnWidth(1, 225 * 100);
+            sheet.setColumnWidth(2, 256 * 30);
+            sheet.setColumnWidth(3, 256 * 30);
+            sheet.setColumnWidth(4, 256 * 30);
+            sheet.setColumnWidth(5, 256 * 30);
+            sheet.setColumnWidth(6, 256 * 30);
+            sheet.setColumnWidth(7, 256 * 30);
+
+            int rowCount = 0;
+            Row row = sheet.createRow(0);
+            row.createCell(0).setCellValue("№");
+            row.getCell(0).setCellStyle(headerStyle);
+            row.createCell(1).setCellValue("ФИО должника");
+            row.getCell(1).setCellStyle(headerStyle);
+            row.createCell(2).setCellValue("Сумма задолженности");
+            row.getCell(2).setCellStyle(headerStyle);
+            row.createCell(3).setCellValue("Собранные средства");
+            row.getCell(3).setCellStyle(headerStyle);
+            row.createCell(4).setCellValue("Сумма");
+            row.getCell(4).setCellStyle(headerStyle);
+            row.createCell(5).setCellValue("Дата оплата");
+            row.getCell(5).setCellStyle(headerStyle);
+            row.createCell(6).setCellValue("Вид оплата");
+            row.getCell(6).setCellStyle(headerStyle);
+
+            JSONArray debtors = response_data_json.getJSONObject("data").getJSONArray("payments");
+            for(int debtor = 0; debtor < debtors.length(); debtor++) {
+                JSONObject object = debtors.getJSONObject(debtor);
+                JSONArray paid_amounts = object.getJSONArray("paid_amounts");
+                JSONArray paid_dates = object.getJSONArray("paid_dates");
+                JSONArray pay_types = object.getJSONArray("pay_types");
+                for (int i = 0; i < paid_amounts.length(); i++) {
+                    sheet.createRow(++rowCount);
+                    sheet.getRow(rowCount).createCell(4).setCellValue(paid_amounts.getDouble(i));
+                    sheet.getRow(rowCount).getCell(4).setCellStyle(decimalStyle);
+
+                    sheet.getRow(rowCount).createCell(5).setCellValue(paid_dates.getString(i));
+                    sheet.getRow(rowCount).getCell(5).setCellStyle(centerStyle);
+
+                    sheet.getRow(rowCount).createCell(6).setCellValue(pay_types.getString(i));
+                    sheet.getRow(rowCount).getCell(6).setCellStyle(centerStyle);
+                }
+
+                sheet.getRow(rowCount).createCell(0).setCellValue(debtor + 1);
+                sheet.getRow(rowCount).getCell(0).setCellStyle(centerStyle);
+
+                sheet.getRow(rowCount).createCell(1).setCellValue(object.getString("debtor_name"));
+                sheet.getRow(rowCount).getCell(1).setCellStyle(centerStyle);
+
+                sheet.getRow(rowCount).createCell(2).setCellValue(object.getDouble("regres_sum"));
+                sheet.getRow(rowCount).getCell(2).setCellStyle(decimalStyle);
+
+                sheet.getRow(rowCount).createCell(3).setCellValue(object.getDouble("debited_sum"));
+                sheet.getRow(rowCount).getCell(3).setCellStyle(decimalStyle);
+
+            }
+            bos = new ByteArrayOutputStream();
+            wb.write(bos);
+            data = bos.toByteArray();
+            bis = new ByteArrayInputStream(data);
+            resource = new InputStreamResource(bis);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                bos.flush();
+                bos.close();
+                bis.close();
+                wb.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=accounting_report.xlsx");
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .headers(headers)
+                .body(resource);
     }
 }

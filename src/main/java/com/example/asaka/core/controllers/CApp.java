@@ -35,7 +35,7 @@ public class CApp {
     //	@PreAuthorize("hasRole('ROLE_USER')")
     @RequestMapping(value = "/request", produces = "application/json")
     public ResponseEntity setMethod(@RequestBody String params) throws Exception {
-        JSONObject resp = new JSONObject(sApp.post(params));
+        JSONObject resp = new JSONObject(sApp.post(params, true));
         if (!resp.getBoolean("success")){
             if (resp.getString("message").contains("403 FORBIDDEN")){
                 return sUser.jwtExpired("JWT token has been expired");

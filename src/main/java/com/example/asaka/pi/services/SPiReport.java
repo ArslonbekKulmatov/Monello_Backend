@@ -117,11 +117,17 @@ public class SPiReport {
             headerFont.setColor(IndexedColors.WHITE.index);
             font.setFontName("Times New Roman");
 
+            Font footerFont = wb.createFont();
+            footerFont.setBold(true);
+            footerFont.setFontName("Times New Roman");
+
             XSSFCellStyle noBorderStyle = (XSSFCellStyle) wb.createCellStyle();
             XSSFCellStyle textStyle = (XSSFCellStyle) wb.createCellStyle();
             XSSFCellStyle centerStyle = (XSSFCellStyle) wb.createCellStyle();
             XSSFCellStyle decimalStyle = (XSSFCellStyle) wb.createCellStyle();
             XSSFCellStyle headerStyle = (XSSFCellStyle) wb.createCellStyle();
+            XSSFCellStyle footerStyle = (XSSFCellStyle) wb.createCellStyle();
+            XSSFCellStyle numStyle = (XSSFCellStyle) wb.createCellStyle();
 
             noBorderStyle.setFont(font);
 
@@ -158,6 +164,25 @@ public class SPiReport {
             decimalStyle.setBorderBottom(BorderStyle.THIN);
             decimalStyle.setAlignment(HorizontalAlignment.CENTER);
 
+            footerStyle.setDataFormat(format.getFormat("### ### ### ### ### ### ##0.00"));
+            footerStyle.setFont(footerFont);
+            footerStyle.setBorderLeft(BorderStyle.THIN);
+            footerStyle.setBorderTop(BorderStyle.THIN);
+            footerStyle.setBorderRight(BorderStyle.THIN);
+            footerStyle.setBorderBottom(BorderStyle.THIN);
+            footerStyle.setAlignment(HorizontalAlignment.CENTER);
+            footerStyle.setFillForegroundColor(new XSSFColor(new java.awt.Color(204, 203, 200)));
+            footerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            numStyle.setFont(footerFont);
+            numStyle.setBorderLeft(BorderStyle.THIN);
+            numStyle.setBorderTop(BorderStyle.THIN);
+            numStyle.setBorderRight(BorderStyle.THIN);
+            numStyle.setBorderBottom(BorderStyle.THIN);
+            numStyle.setAlignment(HorizontalAlignment.CENTER);
+            numStyle.setFillForegroundColor(new XSSFColor(new java.awt.Color(204, 203, 200)));
+            numStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
             // Setting columns width (256 = width of one character)
             sheet.setColumnWidth(0, 256 * 10);
             sheet.setColumnWidth(1, 225 * 100);
@@ -186,6 +211,7 @@ public class SPiReport {
             row.getCell(6).setCellStyle(headerStyle);
 
             JSONArray debtors = response_data_json.getJSONObject("data").getJSONArray("payments");
+            JSONObject total = response_data_json.getJSONObject("data").getJSONObject("total");
             for(int debtor = 0; debtor < debtors.length(); debtor++) {
                 JSONObject object = debtors.getJSONObject(debtor);
                 JSONArray paid_amounts = object.getJSONArray("paid_amounts");
@@ -204,7 +230,7 @@ public class SPiReport {
                 }
 
                 sheet.getRow(rowCount).createCell(0).setCellValue(debtor + 1);
-                sheet.getRow(rowCount).getCell(0).setCellStyle(centerStyle);
+                sheet.getRow(rowCount).getCell(0).setCellStyle(numStyle);
 
                 sheet.getRow(rowCount).createCell(1).setCellValue(object.getString("debtor_name"));
                 sheet.getRow(rowCount).getCell(1).setCellStyle(centerStyle);
@@ -216,6 +242,19 @@ public class SPiReport {
                 sheet.getRow(rowCount).getCell(3).setCellStyle(decimalStyle);
 
             }
+
+            sheet.createRow(++rowCount).createCell(1).setCellValue("Общий");
+            sheet.getRow(rowCount).getCell(1).setCellStyle(footerStyle);
+
+            sheet.getRow(rowCount).createCell(2).setCellValue(total.getDouble("regres_sum"));
+            sheet.getRow(rowCount).getCell(2).setCellStyle(footerStyle);
+
+            sheet.getRow(rowCount).createCell(3).setCellValue(total.getDouble("debited_sum"));
+            sheet.getRow(rowCount).getCell(3).setCellStyle(footerStyle);
+
+            sheet.getRow(rowCount).createCell(4).setCellValue(total.getDouble("paid_amounts"));
+            sheet.getRow(rowCount).getCell(4).setCellStyle(footerStyle);
+
             bos = new ByteArrayOutputStream();
             wb.write(bos);
             data = bos.toByteArray();

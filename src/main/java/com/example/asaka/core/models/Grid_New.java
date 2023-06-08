@@ -66,6 +66,19 @@ public class Grid_New {
     }
 
     //Cr By: Arslonbek Kulmatov
+    //getting column sums
+    public String getSqlColSum(String colName, JSONObject grid, JSONArray filters, String params) {
+        JSONObject json = new JSONObject(params);
+        Integer page = json.getInt("page");
+        Integer pageSize = json.isNull("pageSize") ? grid.getInt("pageSize") : json.getInt("pageSize");
+        Integer start = !page.equals(1) ? ((page - 1) * pageSize + 1) : 1;
+        Integer end = pageSize + start - 1;
+        String view = getView();
+        String sql = "Select colSum ";
+        return sql.substring(0, sql.length() - 1) + " From (Select a.*, ROWNUM rnum From (Select Sum(" + colName + ") colSum From " + view + getWhere(grid, filters, params) + getOrder(grid, params) + ") a Where Rownum <= " + end + ") Where rnum >= " + start;
+    }
+
+    //Cr By: Arslonbek Kulmatov
     public String getWhere(JSONObject grid, JSONArray filters, String params) throws JSONException {
         JSONObject json = new JSONObject(params);
         String wh = grid.isNull("wh") ? "" : grid.getString("wh");

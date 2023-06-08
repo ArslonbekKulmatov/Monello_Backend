@@ -110,7 +110,7 @@ public class SPiReport {
             response_data = sApp.post(request.toString(), false);
             response_data_json = new JSONObject(response_data);
 
-            Sheet sheet = wb.createSheet("accounting_report");
+            Sheet sheet = wb.createSheet("Бухгалтерский отчет");
             Font font = wb.createFont();
             Font headerFont = wb.createFont();
             headerFont.setBold(true);
@@ -276,7 +276,7 @@ public class SPiReport {
         }
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attachment; filename=accounting_report.xlsx");
+        headers.add("Content-Disposition", "attachment; filename=Buxgalterskiy_Otchet.xlsx");
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .headers(headers)

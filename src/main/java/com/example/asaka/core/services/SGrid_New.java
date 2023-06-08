@@ -103,6 +103,8 @@ public class SGrid_New {
         Connection conn = null;
         JSONArray rows = new JSONArray();
         JSONArray cols = new JSONArray();
+        JSONArray col_sums_arr = new JSONArray();
+        JSONObject col_sums;
         PreparedStatement ps = null;
         ResultSet rs = null;
         PreparedStatement psCol = null;
@@ -137,6 +139,22 @@ public class SGrid_New {
                 }
                 rows.put(row);
             }
+            for (int i = 0; i < cols.length(); i++) {
+                JSONObject col = cols.getJSONObject(i);
+                String colNum = col.getString("num");
+                String colName = col.getString("name");
+                if (col.has("show_col_sum")){
+                    boolean show_col_sum = col.getBoolean("show_col_sum");
+                    if (show_col_sum){
+                        col_sums = new JSONObject();
+                        String col_sum = getColumnSum(colName, gridParams, filters, params, grid_object);
+                        col_sums.put("col_sum", JbUtil.nvl(col_sum, "0"));
+                        col_sums.put("num", colNum);
+                        col_sums.put("name", colName);
+                        col_sums_arr.put(col_sums);
+                    }
+                }
+            }
             grid.put("success", true);
         } catch (Exception e) {
             ExcMsg.call(grid, e, conn);
@@ -161,6 +179,7 @@ public class SGrid_New {
             grid.put("cols", cols);
         }
         grid.put("rows", rows);
+        grid.put("col_sums", col_sums_arr);
         return grid;
     }
 
@@ -258,6 +277,31 @@ public class SGrid_New {
             DB.done(conn);
         }
         return translation;
+    }
+
+    //Cr By: Arslonbek Kulmatov
+    //Get grid column translation
+    public String getColumnSum(String column_name, JSONObject grid, JSONArray filters, String params, Grid_New grid_object) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet res = null;
+        String col_sum = "";
+        try {
+            conn = DB.con(hds);
+            sApp.setDbSession(conn);
+            ps = conn.prepareStatement(grid_object.getSqlColSum(column_name, grid, filters, params));
+            res = ps.executeQuery();
+            if (res.next()) {
+                col_sum = res.getString("colSum");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DB.done(ps);
+            DB.done(res);
+            DB.done(conn);
+        }
+        return col_sum;
     }
 
     //Cr By: Arslonbek Kulmatov

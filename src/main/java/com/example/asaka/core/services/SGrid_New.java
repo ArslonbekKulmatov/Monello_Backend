@@ -104,7 +104,7 @@ public class SGrid_New {
         JSONArray rows = new JSONArray();
         JSONArray cols = new JSONArray();
         JSONArray col_sums_arr = new JSONArray();
-        JSONObject col_sums;
+        JSONObject col_sums = new JSONObject();
         PreparedStatement ps = null;
         ResultSet rs = null;
         PreparedStatement psCol = null;
@@ -143,15 +143,12 @@ public class SGrid_New {
                 JSONObject col = cols.getJSONObject(i);
                 String colNum = col.getString("num");
                 String colName = col.getString("name");
+                col_sums.put(colNum, "");
                 if (col.has("show_col_sum")){
                     boolean show_col_sum = col.getBoolean("show_col_sum");
                     if (show_col_sum){
-                        col_sums = new JSONObject();
                         String col_sum = getColumnSum(colName, gridParams, filters, params, grid_object);
-                        col_sums.put("col_sum", JbUtil.nvl(col_sum, "0"));
-                        col_sums.put("num", colNum);
-                        col_sums.put("name", colName);
-                        col_sums_arr.put(col_sums);
+                        col_sums.put(colNum, col_sum);
                     }
                 }
             }
@@ -179,7 +176,7 @@ public class SGrid_New {
             grid.put("cols", cols);
         }
         grid.put("rows", rows);
-        grid.put("col_sums", col_sums_arr);
+        grid.put("col_sums", col_sums);
         return grid;
     }
 

@@ -322,6 +322,9 @@ public class SGrid_New {
             grid_req.put("pageSize", 15000);
             grid_req.put("page", 1);
             grid_req.put("wh", wh);
+            if(pars.has("filters")){
+                grid_req.put("filters", pars.getJSONArray("filters"));
+            }
 
             grid_data = grid(grid_req.toString());
             XSSFSheet sheet = workbook.createSheet("Report");

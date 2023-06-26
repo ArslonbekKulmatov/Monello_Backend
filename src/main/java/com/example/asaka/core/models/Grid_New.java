@@ -75,7 +75,8 @@ public class Grid_New {
         Integer end = pageSize + start - 1;
         String view = getView();
         String sql = "Select colSum ";
-        return sql.substring(0, sql.length() - 1) + " From (Select a.*, ROWNUM rnum From (Select Sum(" + colName + ") colSum From " + view + getWhere(grid, filters, params) + getOrder(grid, params) + ") a Where Rownum <= " + end + ") Where rnum >= " + start;
+        return sql.substring(0, sql.length() - 1) + " From (Select a.*, ROWNUM rnum From (Select Sum(" + colName + ") colSum From " + view + getWhere(grid, filters, params) + getOrder(grid, params) + ") a)";
+//        Where Rownum <= " + end + ") Where rnum >= " + start;
     }
 
     //Cr By: Arslonbek Kulmatov

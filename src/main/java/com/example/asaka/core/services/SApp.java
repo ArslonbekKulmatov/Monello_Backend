@@ -502,6 +502,31 @@ public class SApp {
         response = new JSONObject(result);
         return response;
     }
+
+    //Cr By: Arslonbek Kulmatov
+    //Updating login and password
+    public String updateLoginPassword(String params) throws Exception {
+        JSONObject req_param = new JSONObject(params);
+        JSONObject res = new JSONObject();
+        Connection conn = DB.con(hds);
+        JbSql sql;
+        setDbSession(conn);
+        try {
+            sql = new JbSql("Core_User.Edit_Login_Password", conn, false);
+            sql.addParam(req_param.getInt("user_id"), 1);
+            sql.addParam(req_param.getString("new_login"), 2);
+            sql.addParam(encoder.encode(req_param.getString("new_password")), 3);
+            sql.exec();
+            res.put("success", true);
+            res.put("message", "Successfully updated.");
+        } catch (Exception e) {
+            ExcMsg.call(res, e, conn);
+            res.put("success", false);
+        } finally {
+            DB.done(conn);
+        }
+        return res.toString();
+    }
 }
 
 

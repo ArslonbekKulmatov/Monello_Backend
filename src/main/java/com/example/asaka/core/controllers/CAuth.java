@@ -121,5 +121,12 @@ public class CAuth {
   public ResponseEntity<?> confirmCode(@RequestBody String params) throws Exception {
     return ResponseEntity.ok(sApp.confirmCode(params));
   }
+
+  //Cr By: Arslonbek Kulmatov
+  //Updating login and password
+  @RequestMapping(value = "/updateLoginPassword", produces = "application/json")
+  public ResponseEntity<?> updateLoginPassword(@RequestBody String params) throws Exception {
+    return ResponseEntity.ok(sApp.updateLoginPassword(params));
+  }
 }
 

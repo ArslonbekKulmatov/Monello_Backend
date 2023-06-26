@@ -504,8 +504,8 @@ public class SApp {
         try {
             sql = new JbSql("Core_User.Edit_Login_Password", conn, false);
             sql.addParam(req_param.getInt("user_id"), 1);
-            sql.addParam(req_param.getString("new_login"), 2);
-            sql.addParam(encoder.encode(req_param.getString("new_password")), 3);
+            sql.addParam(req_param.getString("login"), 2);
+            sql.addParam(encoder.encode(req_param.getString("password")), 3);
             sql.exec();
             res.put("success", true);
             res.put("message", "Successfully updated.");

@@ -322,7 +322,7 @@ public class SGrid_New {
             grid_req.put("pageSize", 15000);
             grid_req.put("page", 1);
             grid_req.put("wh", wh);
-            if(pars.has("filters")){
+            if(pars.has("filters") && pars.getJSONArray("filters").length() > 0){
                 grid_req.put("filters", pars.getJSONArray("filters"));
             }
 

@@ -81,7 +81,7 @@ public class CAuth {
 
   // Select Filial
   @RequestMapping(value = "/selectFilial", produces = "application/json")
-  public ResponseEntity<?> selectFilial(@RequestBody String params) throws JSONException {
+  public ResponseEntity<?> selectFilial() throws JSONException {
     JwtResponse jwtResponse = new JwtResponse();
     return ResponseEntity.ok(jwtResponse);
   }
@@ -89,7 +89,7 @@ public class CAuth {
   //signOut
   @PostMapping("/signout")
   @ResponseBody
-  public void signout() throws Exception {
+  public void signout() {
     sApp.logOutLog();
     //jwtUtils.generateJwtToken(authentication);
   }

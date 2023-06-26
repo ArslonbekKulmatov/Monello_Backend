@@ -1,9 +1,16 @@
 package com.example.asaka.core.services;
 
+import com.example.asaka.security.jwt.JwtUtils;
+import com.example.asaka.security.services.UserDetailsServiceImpl;
+import com.example.asaka.util.DB;
+import com.example.asaka.util.ExcMsg;
+import com.example.asaka.util.JbSql;
+import com.example.asaka.util.Req;
 import com.zaxxer.hikari.HikariDataSource;
 import io.jsonwebtoken.Claims;
 import oracle.jdbc.OracleConnection;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -13,14 +20,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.json.JSONObject;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.multipart.MultipartFile;
-import com.example.asaka.security.jwt.JwtUtils;
-import com.example.asaka.security.services.UserDetailsImpl;
-import com.example.asaka.security.services.UserDetailsServiceImpl;
-import com.example.asaka.util.*;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,7 +68,7 @@ public class SApp {
                     String url = outObj.getString("url");
                     storageService.delete(url);
                 }
-                isOper = outObj.has("oper") && !outObj.isNull("oper") ? outObj.getBoolean("oper") : false;
+                isOper = outObj.has("oper") && !outObj.isNull("oper") && outObj.getBoolean("oper");
                 String message = outObj.has("message") && !outObj.isNull("message") ? outObj.getString("message") : "";
                 if (outObj.has("message") && !outObj.isNull("message")) {
                     res.put("message", message);
@@ -102,7 +104,7 @@ public class SApp {
             String outAddStr = (String) sql.getOutVal(2);
             if (outAddStr != null) {
                 JSONObject outObj = new JSONObject(outAddStr);
-                isOper = outObj.has("oper") && !outObj.isNull("oper") ? outObj.getBoolean("oper") : false;
+                isOper = outObj.has("oper") && !outObj.isNull("oper") && outObj.getBoolean("oper");
                 String message = outObj.has("message") && !outObj.isNull("message") ? outObj.getString("message") : "";
                 if (outObj.has("message") && !outObj.isNull("message")) {
                     res.put("message", message);
@@ -355,7 +357,7 @@ public class SApp {
     public void setDbSession(Connection connection) throws Exception {
         String headerAuth = req.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            headerAuth = headerAuth.substring(7, headerAuth.length());
+            headerAuth = headerAuth.substring(7);
         }
         Claims claims = jwtUtils.getAllClaimsFromToken(headerAuth);
         if (claims == null){
@@ -389,7 +391,7 @@ public class SApp {
     public void setDbSession(Connection connection, JSONObject json) throws Exception {
         String headerAuth = req.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            headerAuth = headerAuth.substring(7, headerAuth.length());
+            headerAuth = headerAuth.substring(7);
         }
         Claims claims = jwtUtils.getAllClaimsFromToken(headerAuth);
         if (claims == null){
@@ -454,7 +456,7 @@ public class SApp {
     public void logOutLog() {
         String headerAuth = req.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            headerAuth = headerAuth.substring(7, headerAuth.length());
+            headerAuth = headerAuth.substring(7);
         }
         Claims claims = jwtUtils.getAllClaimsFromToken(headerAuth);
         Authentication authentication = authenticationManager.authenticate(

@@ -83,7 +83,6 @@ public class CAuth {
   @RequestMapping(value = "/selectFilial", produces = "application/json")
   public ResponseEntity<?> selectFilial(@RequestBody String params) throws JSONException {
     JwtResponse jwtResponse = new JwtResponse();
-    String jwt = jwtUtils.generateJwtToken(params, jwtResponse);
     return ResponseEntity.ok(jwtResponse);
   }
 

@@ -43,8 +43,6 @@ public class SApp {
     @Value("${jwt.expirationMs}") Integer jwtExpirationMs;
     @Autowired private FilesStorageService storageService;
 
-    private @Autowired SUser sUser;
-
     public String post(String params, Boolean use_session) throws Exception {
         Connection conn = DB.con(hds);
         JSONObject pars = new JSONObject(params);
@@ -92,7 +90,7 @@ public class SApp {
 
     public String wtpost(String params) throws Exception {
         Connection conn = DB.con(hds);
-        JbSql sql = null;
+        JbSql sql;
         JSONObject res = new JSONObject();
         res.put("success", true);
         try {
@@ -100,7 +98,7 @@ public class SApp {
             sql.addParam(params, 1);
             sql.addOut(Types.CLOB, 2);
             sql.exec();
-            boolean isOper = false;
+            boolean isOper;
             String outAddStr = (String) sql.getOutVal(2);
             if (outAddStr != null) {
                 JSONObject outObj = new JSONObject(outAddStr);
@@ -176,7 +174,7 @@ public class SApp {
 
             JSONObject outObj = new JSONObject(outAddStr);
             boolean isOper = outObj.getBoolean("oper");
-            String message = "";
+            String message;
             message = isOper ? outObj.getString("message") : "";
 
             if (multipartFile != null) {
@@ -232,7 +230,7 @@ public class SApp {
         JSONObject jo = new JSONObject(params);
         JSONObject res = new JSONObject();
         Connection conn = DB.con(hds);
-        JbSql sql = null;
+        JbSql sql;
         String method = jo.getString("method");
         res.put("success", true);
         try {
@@ -246,7 +244,6 @@ public class SApp {
                 Authentication authentication = authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(obj.getString("login"), obj.getString("password")));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
                 String jwt = jwtUtils.generateJwtToken(authentication);
                 res.put("userId", sql.getResult());
                 res.put("jwt", jwt);
@@ -273,7 +270,7 @@ public class SApp {
         JSONObject res = new JSONObject();
         res.put("success", true);
         Connection conn = DB.con(hds);
-        JbSql sql = null;
+        JbSql sql;
         setDbSession(conn);
         try {
             sql = new JbSql("Core_User.Add_Edit_User", conn, false);
@@ -295,7 +292,7 @@ public class SApp {
         JSONObject res = new JSONObject();
         res.put("success", true);
         Connection conn = DB.con(hds);
-        JbSql sql = null;
+        JbSql sql;
         setDbSession(conn);
         try {
             sql = new JbSql("Core_User.Edit_User_Password", conn, false);
@@ -317,7 +314,7 @@ public class SApp {
         JSONObject jo = new JSONObject(params);
         JSONObject res = new JSONObject();
         Connection conn = DB.con(hds);
-        JbSql sql = null;
+        JbSql sql;
         String method = jo.getString("method");
         res.put("success", true);
         try {
@@ -380,15 +377,9 @@ public class SApp {
         try {
             form.addParam(userId, 1);
 
-            boolean hasFilial = false;
             if (filialCode != null && !"".equals(filialCode)) {
                 form.addParam(filialCode, 2);
-                hasFilial = true;
             }
-            /*
-            if (!lang.equals(""))
-                form.addParam(lang, hasClient ? 3 : 2);
-            */
             form.exec();
         } catch (Exception e) {
             e.printStackTrace();
@@ -460,7 +451,7 @@ public class SApp {
         }
     }
 
-    public void logOutLog() throws Exception {
+    public void logOutLog() {
         String headerAuth = req.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             headerAuth = headerAuth.substring(7, headerAuth.length());
@@ -469,8 +460,6 @@ public class SApp {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(claims.get("login").toString(), claims.get("password").toString()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        String jwt = jwtUtils.generateJwtToken(authentication);
     }
 
     //Cr By: Arslonbek Kulmatov

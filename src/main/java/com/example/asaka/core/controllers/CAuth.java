@@ -10,7 +10,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.example.asaka.core.models.JwtResponse;
@@ -41,8 +40,8 @@ public class CAuth {
   @RequestMapping(value = "/signin", produces = "application/json")
   public ResponseEntity<?> authenticateUser(@RequestBody String params) throws JSONException {
     try {
-      UserDetailsImpl userDetails = null;
-      String jwt = null;
+      UserDetailsImpl userDetails;
+      String jwt;
       JSONObject json = new JSONObject(params);
       List<String> roles;
 
@@ -110,12 +109,6 @@ public class CAuth {
   public ResponseEntity<?> updatePassword(@RequestBody String params) throws Exception {
     return ResponseEntity.ok(sApp.updatePassword(params));
   }
-
-    /*
-	@RequestMapping(value = "/updateEmail", produces = "application/json")
-	public ResponseEntity<?> updateEmail(@RequestBody String params) throws Exception {
-		return ResponseEntity.ok(sApp.updateEmail(params));
-	}*/
 
   @RequestMapping(value = "/confirmCode", produces = "application/json")
   public ResponseEntity<?> confirmCode(@RequestBody String params) throws Exception {

@@ -9,9 +9,7 @@ import com.example.asaka.util.JbUtil;
 import com.example.asaka.util.Req;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
-import org.apache.tomcat.util.codec.binary.Base64;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -98,12 +96,11 @@ public class SGrid_New {
         JSONObject json = new JSONObject(params);
         JSONArray filters;
         Grid_New grid_object;
-        Integer grid_id = json.getInt("grid_id");
+        int grid_id = json.getInt("grid_id");
         boolean has_filter = json.isNull("filters");
         Connection conn = null;
         JSONArray rows = new JSONArray();
         JSONArray cols = new JSONArray();
-        JSONArray col_sums_arr = new JSONArray();
         JSONObject col_sums = new JSONObject();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -115,7 +112,7 @@ public class SGrid_New {
             sApp.setDbSession(conn);
             sApp.setCustomDbSession(conn, json);
             grid_object = get(grid_id, conn, true);
-            session.addSession("gridId", grid_id.toString());
+            session.addSession("gridId", Integer.toString(grid_id));
             session.setGrid(grid_object);
             gridParams = new JSONObject(grid_object.getPage_json());
             gridParams.put("cols", new JSONArray(grid_object.getColumns_json()));
@@ -164,7 +161,7 @@ public class SGrid_New {
         }
         //
         Long pageSize = json.isNull("pageSize") ? gridParams.getLong("pageSize") : json.getLong("pageSize");
-        Long tail = rowCount % pageSize;
+        long tail = rowCount % pageSize;
         Integer maxPage = tail == 0 ? Math.round(rowCount / pageSize) : Math.round(rowCount / pageSize) + 1;
         //
         grid.put("pageSize", pageSize);

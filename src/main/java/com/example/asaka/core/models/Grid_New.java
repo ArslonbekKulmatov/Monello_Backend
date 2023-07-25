@@ -103,7 +103,7 @@ public class Grid_New {
                 }
                 if (!"".equals(filterValue)) {
                     if (filterType.equals("VC"))
-                        fltr += " lower(" + colName + ") Like '%" + filterValue.toLowerCase() + "%' And";
+                        fltr += " lower(" + colName + ") = '" + filterValue.toLowerCase() + "' And";
                     if (filterType.equals("SL")) {
                         String fValue = JbUtil.nvl(filterValue, "");
                         String filterName = col.getString("filterName");

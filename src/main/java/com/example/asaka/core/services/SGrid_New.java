@@ -323,6 +323,10 @@ public class SGrid_New {
                 grid_req.put("filters", pars.getJSONArray("filters"));
             }
 
+            if(pars.has("search") && !pars.getString("search").equals("")){
+                grid_req.put("search", pars.getString("search"));
+            }
+
             grid_data = grid(grid_req.toString());
             XSSFSheet sheet = workbook.createSheet("Report");
             XSSFCellStyle cellStyle = workbook.createCellStyle();

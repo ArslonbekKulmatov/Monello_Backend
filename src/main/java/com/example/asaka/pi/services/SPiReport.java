@@ -193,6 +193,7 @@ public class SPiReport {
             sheet.setColumnWidth(6, 256 * 30);
             sheet.setColumnWidth(7, 256 * 30);
             sheet.setColumnWidth(8, 256 * 30);
+            sheet.setColumnWidth(9, 256 * 30);
 
             int rowCount = 0;
             Row row = sheet.createRow(0);
@@ -212,6 +213,8 @@ public class SPiReport {
             row.getCell(6).setCellStyle(headerStyle);
             row.createCell(7).setCellValue("Номер контракта");
             row.getCell(7).setCellStyle(headerStyle);
+            row.createCell(8).setCellValue("ПИНФЛ");
+            row.getCell(8).setCellStyle(headerStyle);
 
             JSONArray debtors = response_data_json.getJSONObject("data").getJSONArray("payments");
             JSONObject total = response_data_json.getJSONObject("data").getJSONObject("total");
@@ -246,6 +249,9 @@ public class SPiReport {
 
                 sheet.getRow(rowCount).createCell(7).setCellValue(object.getString("contract_num"));
                 sheet.getRow(rowCount).getCell(7).setCellStyle(centerStyle);
+
+                sheet.getRow(rowCount).createCell(8).setCellValue(object.getString("pinfl"));
+                sheet.getRow(rowCount).getCell(8).setCellStyle(centerStyle);
 
             }
 

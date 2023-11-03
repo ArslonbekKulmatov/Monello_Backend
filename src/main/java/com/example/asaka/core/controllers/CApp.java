@@ -93,7 +93,7 @@ public class CApp {
   //Cr By: Arslonbek Kulmatov
   //Grid working with session scope
   @RequestMapping(value = "/grid/new", produces = "application/json")
-  public ResponseEntity<?> grid(@RequestBody String params, HttpServletRequest request) throws JSONException {
+  public ResponseEntity<?> grid(@RequestBody String params) throws JSONException {
     JSONObject rows = sGrid_new.grid(params);
     if (!rows.getBoolean("success")) {
       if (rows.getString("message").contains("403 FORBIDDEN")) {

@@ -15,13 +15,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 
-
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/app")
-
 public class CApp {
-
   @Autowired
   SApp sApp;
   @Autowired
@@ -35,9 +32,8 @@ public class CApp {
 
   private @Autowired SUser sUser;
 
-  //	@PreAuthorize("hasRole('ROLE_USER')")
   @RequestMapping(value = "/request", produces = "application/json")
-  public ResponseEntity setMethod(@RequestBody String params) throws Exception {
+  public ResponseEntity<?> setMethod(@RequestBody String params) throws Exception {
     JSONObject resp = new JSONObject(sApp.post(params, true));
     if (!resp.getBoolean("success")) {
       if (resp.getString("message").contains("403 FORBIDDEN")) {
@@ -47,10 +43,8 @@ public class CApp {
     return ResponseEntity.ok(resp.toString());
   }
 
-  // Grid
   @RequestMapping(value = "/grid", produces = "application/json")
-//	@PreAuthorize("hasRole('ROLE_USER')")
-  public ResponseEntity userStr(@RequestBody String params) throws JSONException {
+  public ResponseEntity<?> userStr(@RequestBody String params) throws JSONException {
     JSONObject rows = sGrid.grid(params);
     if (!rows.getBoolean("success")) {
       if (rows.getString("message").contains("403 FORBIDDEN")) {
@@ -60,9 +54,8 @@ public class CApp {
     return ResponseEntity.ok(rows.toString());
   }
 
-  //	@PreAuthorize("hasRole('ROLE_USER')")
   @RequestMapping(value = "/execSelect", produces = "application/json")
-  public ResponseEntity execSelect(@RequestBody String params) throws Exception {
+  public ResponseEntity<?> execSelect(@RequestBody String params) throws Exception {
     JSONObject object = new JSONObject(params);
     String view = object.getString("view");
     if (view.equalsIgnoreCase("lnm_judical_history_v")) {
@@ -72,7 +65,6 @@ public class CApp {
       req.put("loan_id", loan_id);
       sLnm.sendAndInsertData(req.toString());
     }
-
     JSONObject resp = new JSONObject(sApp.execSelect(params));
     if (!resp.getBoolean("success")) {
       if (resp.getString("message").contains("403 FORBIDDEN")) {
@@ -83,7 +75,7 @@ public class CApp {
   }
 
   @RequestMapping(value = "/requestFile")
-  public ResponseEntity setMethodWithFile(@RequestParam("params") String params, @RequestParam(value = "file", required = false) MultipartFile multipartFile) throws Exception {
+  public ResponseEntity<?> setMethodWithFile(@RequestParam("params") String params, @RequestParam(value = "file", required = false) MultipartFile multipartFile) throws Exception {
     JSONObject resp = new JSONObject(sApp.postFile(params, multipartFile));
     if (!resp.getBoolean("success")) {
       if (resp.getString("message").contains("403 FORBIDDEN")) {
@@ -93,16 +85,15 @@ public class CApp {
     return ResponseEntity.ok(resp.toString());
   }
 
-  // Without token Method
   @RequestMapping(value = "/wtrequest", produces = "application/json")
-  public ResponseEntity setMethod2(@RequestBody String params) throws Exception {
+  public ResponseEntity<?> setMethod2(@RequestBody String params) throws Exception {
     return ResponseEntity.ok(sApp.wtpost(params));
   }
 
   //Cr By: Arslonbek Kulmatov
   //Grid working with session scope
   @RequestMapping(value = "/grid/new", produces = "application/json")
-  public ResponseEntity grid(@RequestBody String params, HttpServletRequest request) throws JSONException {
+  public ResponseEntity<?> grid(@RequestBody String params, HttpServletRequest request) throws JSONException {
     JSONObject rows = sGrid_new.grid(params);
     if (!rows.getBoolean("success")) {
       if (rows.getString("message").contains("403 FORBIDDEN")) {
@@ -115,7 +106,7 @@ public class CApp {
   //Cr By: Arslonbek Kulmatov
   //Grid filter working with session scope
   @RequestMapping(value = "/grid/get_filter", produces = "application/json")
-  public ResponseEntity getFilter(@RequestBody String params, HttpServletRequest request) throws JSONException {
+  public ResponseEntity<?> getFilter(@RequestBody String params, HttpServletRequest request) throws JSONException {
     JSONObject resp = sGrid_new.getFilter(params, request);
     return ResponseEntity.ok(resp.toString());
   }
@@ -134,4 +125,14 @@ public class CApp {
     return sGrid_new.toExcel(params);
   }
 
+  //Cr By: Saidazim,
+  @RequestMapping(value = "/get-http-token", produces = "application/json")
+  public String getHttpAuthToken(@RequestBody String params) {
+    return sApp.getHttpToken(params);
+  }
+
+  @RequestMapping(value = "/send-http-request", produces = "application/json")
+  public String sendHttpRequest(@RequestBody String params) {
+    return sApp.sendHttpRequest(params);
+  }
 }

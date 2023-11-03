@@ -29,16 +29,6 @@ public class CHybridPost {
     return sHybridPost.auth();
   }
 
-  @RequestMapping(value = "/get-http-token", produces = "application/json")
-  public String getHttpAuthToken(@RequestBody String params) {
-    return sHybridPost.getHttpToken(params);
-  }
-
-  @RequestMapping(value = "/send-http-request", produces = "application/json")
-  public String sendHttpRequest(@RequestBody String params) {
-    return sHybridPost.sendHttpRequest(params);
-  }
-
   @RequestMapping(value = "/create-mail", produces = "application/json")
   public String createMail(@RequestBody String params) {
     JSONObject result = new JSONObject(sHybridPost.checkCreatingMail(params));

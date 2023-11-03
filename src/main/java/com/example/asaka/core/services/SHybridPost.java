@@ -64,42 +64,6 @@ public class SHybridPost {
     }
   }
 
-  public String getHttpToken(String params) {
-    try {
-      JSONObject payload = new JSONObject(params);
-      String endpoint = payload.getString("url");
-      String request = payload.getString("body");
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-      RestTemplate rt = new RestTemplate();
-      HttpEntity<String> entity = new HttpEntity<>(request, headers);
-      ResponseEntity<String> response = rt.exchange(endpoint, HttpMethod.POST, entity, String.class);
-      return response.getBody();
-    } catch (Exception e) {
-      log.error(e.getMessage());
-      return e.getMessage();
-    }
-  }
-
-  public String sendHttpRequest(String params) {
-    try {
-      JSONObject payload = new JSONObject(params);
-      String endpoint = payload.getString("url");
-      String body = payload.getString("body");
-      String token = payload.getString("token");
-      HttpHeaders headers = new HttpHeaders();
-      headers.add("Content-type", "application/json");
-      headers.add("Authorization", "Bearer " + token);
-      RestTemplate rt = new RestTemplate();
-      HttpEntity<String> entity = new HttpEntity<>(body, headers);
-      ResponseEntity<String> response = rt.exchange(endpoint, HttpMethod.POST, entity, String.class);
-      return response.getBody();
-    } catch (Exception e) {
-      log.error(e.getMessage());
-      return e.getMessage();
-    }
-  }
-
   public String checkSendingMail(String params) {
     try {
       JSONObject result = new JSONObject();

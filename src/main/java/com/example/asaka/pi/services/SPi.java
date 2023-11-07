@@ -120,7 +120,7 @@ public class SPi {
                 HttpHost proxy = new HttpHost(proxy_ip, proxy_port);
                 HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
                 SSLContext sslcontext = SSLContexts.custom() .loadTrustMaterial(null, (chain, authType) -> true).build();
-                SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, new String[]{"TLSv1"}, null, new NoopHostnameVerifier());
+                SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, new String[]{"TLSv1", "TLSv1.2", "TLSv1.3"}, null, new NoopHostnameVerifier());
                 CloseableHttpClient httpClient = HttpClients.custom()
                         .setSSLSocketFactory(sslsf)
                         .setRoutePlanner(new DefaultProxyRoutePlanner(proxy) {

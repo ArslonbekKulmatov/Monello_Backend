@@ -555,7 +555,8 @@ public class SApp {
       RestTemplate rt = new RestTemplate();
       HttpEntity<String> entity = new HttpEntity<>(body, headers);
       ResponseEntity<String> response = rt.exchange(endpoint, HttpMethod.POST, entity, String.class);
-      System.out.println("response " + response);
+      System.out.println("http params " + params);
+      System.out.println("http response " + response);
       return response.getBody();
     } catch (Exception e) {
       log.error(e.getMessage());

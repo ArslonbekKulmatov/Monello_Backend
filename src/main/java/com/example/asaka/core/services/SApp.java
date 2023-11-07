@@ -548,10 +548,10 @@ public class SApp {
       JSONObject payload = new JSONObject(params);
       String endpoint = payload.getString("url");
       String body = payload.getString("body");
-      String token = payload.getString("token");
+      String authToken = payload.getString("token");
       HttpHeaders headers = new HttpHeaders();
       headers.add("Content-type", "application/json");
-      headers.add("Authorization", "Bearer " + token);
+      headers.add("Authorization", authToken);
       RestTemplate rt = new RestTemplate();
       HttpEntity<String> entity = new HttpEntity<>(body, headers);
       ResponseEntity<String> response = rt.exchange(endpoint, HttpMethod.POST, entity, String.class);

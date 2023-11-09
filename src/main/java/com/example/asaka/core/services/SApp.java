@@ -33,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
 
+import static com.example.asaka.util.JbUtil.getMethodType;
 import static com.example.asaka.util.JbUtil.nvl;
 
 @Slf4j
@@ -544,24 +545,29 @@ public class SApp {
   }
 
   public String sendHttpRequest(String params) {
+    JSONObject response = new JSONObject();
     try {
       JSONObject payload = new JSONObject(params);
       String endpoint = payload.getString("url");
       String body = payload.getString("body");
       String authToken = payload.getString("token");
+      String methodType = payload.getString("method_type"); // POST, PUT, GET, DELETE,
       HttpHeaders headers = new HttpHeaders();
       headers.add("Content-type", "application/json");
       headers.add("Authorization", authToken);
       RestTemplate rt = new RestTemplate();
       HttpEntity<String> entity = new HttpEntity<>(body, headers);
-      ResponseEntity<String> response = rt.exchange(endpoint, HttpMethod.POST, entity, String.class);
+      ResponseEntity<String> resp = rt.exchange(endpoint, getMethodType(methodType), entity, String.class);
       System.out.println("http params " + params);
+      response.put("success", true);
+      response.put("data", new JSONObject(resp.getBody()));
       System.out.println("http response " + response);
-      return response.getBody();
     } catch (Exception e) {
       log.error(e.getMessage());
-      return e.getMessage();
+      response.put("success", false);
+      response.put("error", e.getMessage());
     }
+    return response.toString();
   }
 }
 

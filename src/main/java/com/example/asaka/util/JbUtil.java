@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpMethod;
 import org.springframework.util.FileCopyUtils;
 
 import java.io.FileNotFoundException;
@@ -63,5 +64,14 @@ public class JbUtil {
     JsonNode jsonNode = objectMapper.readTree(jsonString);
     ObjectNode object = (ObjectNode) jsonNode;
     return objectMapper.writeValueAsString(object);
+  }
+
+  public static HttpMethod getMethodType(String methodType) {
+    return switch (methodType) {
+      case "PUT" -> HttpMethod.PUT;
+      case "GET" -> HttpMethod.GET;
+      case "DELETE" -> HttpMethod.DELETE;
+      default -> HttpMethod.POST;
+    };
   }
 }

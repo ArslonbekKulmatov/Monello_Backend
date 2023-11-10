@@ -563,7 +563,6 @@ public class SApp {
       ResponseEntity<String> resp = rt.exchange(endpoint, getMethodType(methodType), entity, String.class);
       response.put("success", true);
       response.put("data", new JSONObject(resp.getBody()));
-      log.info("Response: {}", response);
     } catch (Exception e) {
       e.printStackTrace();
       log.error(e.getMessage());
@@ -596,7 +595,6 @@ public class SApp {
       ResponseEntity<String> resp = rt.exchange(builder.toUriString(), HttpMethod.GET, entity, String.class, paramMap);
       response.put("success", true);
       response.put("data", new JSONObject(resp.getBody()));
-      log.info("Response: {}", response);
     } catch (Exception e) {
       e.printStackTrace();
       log.error(e.getMessage());

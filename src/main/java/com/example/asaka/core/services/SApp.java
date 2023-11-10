@@ -25,6 +25,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,6 +33,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.example.asaka.util.JbUtil.getMethodType;
 import static com.example.asaka.util.JbUtil.nvl;
@@ -558,11 +561,44 @@ public class SApp {
       RestTemplate rt = new RestTemplate();
       HttpEntity<String> entity = new HttpEntity<>(body, headers);
       ResponseEntity<String> resp = rt.exchange(endpoint, getMethodType(methodType), entity, String.class);
-      System.out.println("http params " + params);
       response.put("success", true);
       response.put("data", new JSONObject(resp.getBody()));
-      System.out.println("http response " + response);
+      log.info("Response: {}", response);
     } catch (Exception e) {
+      e.printStackTrace();
+      log.error(e.getMessage());
+      response.put("success", false);
+      response.put("error", e.getMessage());
+    }
+    return response.toString();
+  }
+
+  public String getHttpRequest(String params) {
+    JSONObject response = new JSONObject();
+    try {
+      JSONObject payload = new JSONObject(params);
+      Map<String, Object> paramMap = new HashMap<>();
+      String endpoint = payload.getString("url");
+      JSONObject body = payload.getJSONObject("body");
+      String authToken = payload.getString("token");
+      HttpHeaders headers = new HttpHeaders();
+      headers.add("Content-type", "application/json");
+      headers.add("Authorization", authToken);
+      RestTemplate rt = new RestTemplate();
+      HttpEntity<String> entity = new HttpEntity<>(headers);
+      UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
+      for (int i = 0; i < body.names().length(); ++i) {
+        String key = body.names().getString(i);
+        String value = body.getString(key);
+        builder.queryParam(key, value);
+        paramMap.put(key, value);
+      }
+      ResponseEntity<String> resp = rt.exchange(builder.toUriString(), HttpMethod.GET, entity, String.class, paramMap);
+      response.put("success", true);
+      response.put("data", new JSONObject(resp.getBody()));
+      log.info("Response: {}", response);
+    } catch (Exception e) {
+      e.printStackTrace();
       log.error(e.getMessage());
       response.put("success", false);
       response.put("error", e.getMessage());

@@ -135,4 +135,9 @@ public class CApp {
   public String sendHttpRequest(@RequestBody String params) {
     return sApp.sendHttpRequest(params);
   }
+
+  @RequestMapping(value = "/get-http-request", produces = "application/json")
+  public String getHttpRequest(@RequestBody String params) {
+    return sApp.getHttpRequest(params);
+  }
 }

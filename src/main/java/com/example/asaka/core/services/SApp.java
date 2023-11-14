@@ -33,6 +33,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -592,9 +593,15 @@ public class SApp {
         builder.queryParam(key, value);
         paramMap.put(key, value);
       }
-      ResponseEntity<String> resp = rt.exchange(builder.toUriString(), HttpMethod.GET, entity, String.class, paramMap);
+      if (payload.optBoolean("is_file")) {
+        ResponseEntity<byte[]> resp = rt.exchange(builder.toUriString(), HttpMethod.GET, entity, byte[].class, paramMap);
+        byte[] encoded = Base64.getEncoder().encode(resp.getBody());
+        response.put("data", new String(encoded));
+      } else {
+        ResponseEntity<String> resp = rt.exchange(builder.toUriString(), HttpMethod.GET, entity, String.class, paramMap);
+        response.put("data", new JSONObject(resp.getBody()));
+      }
       response.put("success", true);
-      response.put("data", new JSONObject(resp.getBody()));
     } catch (Exception e) {
       e.printStackTrace();
       log.error(e.getMessage());

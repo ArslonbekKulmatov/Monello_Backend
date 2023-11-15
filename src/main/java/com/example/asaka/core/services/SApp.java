@@ -37,8 +37,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.example.asaka.util.JbUtil.getMethodType;
-import static com.example.asaka.util.JbUtil.nvl;
+import static com.example.asaka.util.JbUtil.*;
 
 @Slf4j
 @Service
@@ -599,7 +598,11 @@ public class SApp {
         response.put("data", new String(encoded));
       } else {
         ResponseEntity<String> resp = rt.exchange(builder.toUriString(), HttpMethod.GET, entity, String.class, paramMap);
-        response.put("data", new JSONObject(resp.getBody()));
+        if (isValidJson(resp.getBody())) {
+          response.put("data", new JSONObject(resp.getBody()));
+        } else {
+          response.put("data", removeDoubleQuote(resp.getBody()));
+        }
       }
       response.put("success", true);
     } catch (Exception e) {

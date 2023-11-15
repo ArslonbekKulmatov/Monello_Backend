@@ -47,8 +47,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        String[] pathArray = new String[]{"/swagger-ui.html", "/api/auth/**", "/api/ekey/**", "/api/app/wtrequest", "/favicon.ico", "/images/**", "/fidoapi/**", "/api/mobile/v1/auth/**",
-        "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**", "/api/**"};
         http.csrf().disable()
         .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
         .formLogin()

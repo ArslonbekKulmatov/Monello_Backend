@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -535,9 +538,39 @@ public class SApp {
       JSONObject payload = new JSONObject(params);
       String endpoint = payload.getString("url");
       String request = payload.getString("body");
+      boolean isProxy = payload.optBoolean("is_proxy");
+      RestTemplate rt;
+      if (isProxy) {
+        String proxyIp = payload.getString("proxy_ip");
+        int proxyPort = payload.getInt("proxy_port");
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyIp, proxyPort));
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setProxy(proxy);
+        rt = new RestTemplate(requestFactory);
+      } else {
+        rt = new RestTemplate();
+      }
+//      if (isProxy) {
+//        String proxyIp = payload.getString("proxy_ip");
+//        int proxyPort = payload.getInt("proxy_port");
+//        HttpHost proxy = new HttpHost(proxyIp, proxyPort);
+//        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+//        SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(null, (chain, authType) -> true).build();
+//        SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslcontext, new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"}, null, new NoopHostnameVerifier());
+//        CloseableHttpClient httpClient = HttpClients.custom()
+//                                                    .setSSLSocketFactory(sslSocketFactory)
+//                                                    .setRoutePlanner(new DefaultProxyRoutePlanner(proxy) {
+//                                                      @Override
+//                                                      public HttpHost determineProxy(HttpHost target, org.apache.http.HttpRequest request, HttpContext context) throws HttpException {
+//                                                        return super.determineProxy(target, request, context);
+//                                                      }
+//                                                    })
+//                                                    .build();
+//        requestFactory.setHttpClient(httpClient);
+//        rt = new RestTemplate(requestFactory);
+//      }
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-      RestTemplate rt = new RestTemplate();
       HttpEntity<String> entity = new HttpEntity<>(request, headers);
       ResponseEntity<String> response = rt.exchange(endpoint, HttpMethod.POST, entity, String.class);
       return response.getBody();

@@ -539,36 +539,9 @@ public class SApp {
       String endpoint = payload.getString("url");
       String request = payload.getString("body");
       boolean isProxy = payload.optBoolean("is_proxy");
-      RestTemplate rt;
-      if (isProxy) {
-        String proxyIp = payload.getString("proxy_ip");
-        int proxyPort = payload.getInt("proxy_port");
-        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyIp, proxyPort));
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setProxy(proxy);
-        rt = new RestTemplate(requestFactory);
-      } else {
-        rt = new RestTemplate();
-      }
-//      if (isProxy) {
-//        String proxyIp = payload.getString("proxy_ip");
-//        int proxyPort = payload.getInt("proxy_port");
-//        HttpHost proxy = new HttpHost(proxyIp, proxyPort);
-//        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-//        SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(null, (chain, authType) -> true).build();
-//        SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslcontext, new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"}, null, new NoopHostnameVerifier());
-//        CloseableHttpClient httpClient = HttpClients.custom()
-//                                                    .setSSLSocketFactory(sslSocketFactory)
-//                                                    .setRoutePlanner(new DefaultProxyRoutePlanner(proxy) {
-//                                                      @Override
-//                                                      public HttpHost determineProxy(HttpHost target, org.apache.http.HttpRequest request, HttpContext context) throws HttpException {
-//                                                        return super.determineProxy(target, request, context);
-//                                                      }
-//                                                    })
-//                                                    .build();
-//        requestFactory.setHttpClient(httpClient);
-//        rt = new RestTemplate(requestFactory);
-//      }
+      String proxyIp = payload.getString("proxy_ip");
+      int proxyPort = payload.getInt("proxy_port");
+      RestTemplate rt = getRestTemplate(isProxy, proxyIp, proxyPort);
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
       HttpEntity<String> entity = new HttpEntity<>(request, headers);
@@ -588,10 +561,13 @@ public class SApp {
       String body = payload.getString("body");
       String authToken = payload.getString("token");
       String methodType = payload.getString("method_type"); // POST, PUT, GET, DELETE,
+      boolean isProxy = payload.optBoolean("is_proxy");
+      String proxyIp = payload.getString("proxy_ip");
+      int proxyPort = payload.getInt("proxy_port");
       HttpHeaders headers = new HttpHeaders();
       headers.add("Content-type", "application/json");
       headers.add("Authorization", authToken);
-      RestTemplate rt = new RestTemplate();
+      RestTemplate rt = getRestTemplate(isProxy, proxyIp, proxyPort);
       HttpEntity<String> entity = new HttpEntity<>(body, headers);
       ResponseEntity<String> resp = rt.exchange(endpoint, getMethodType(methodType), entity, String.class);
       response.put("success", true);
@@ -613,10 +589,13 @@ public class SApp {
       String endpoint = payload.getString("url");
       JSONObject body = payload.getJSONObject("body");
       String authToken = payload.getString("token");
+      boolean isProxy = payload.optBoolean("is_proxy");
+      String proxyIp = payload.getString("proxy_ip");
+      int proxyPort = payload.getInt("proxy_port");
       HttpHeaders headers = new HttpHeaders();
       headers.add("Content-type", "application/json");
       headers.add("Authorization", authToken);
-      RestTemplate rt = new RestTemplate();
+      RestTemplate rt = getRestTemplate(isProxy, proxyIp, proxyPort);
       HttpEntity<String> entity = new HttpEntity<>(headers);
       UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
       for (int i = 0; i < body.names().length(); ++i) {

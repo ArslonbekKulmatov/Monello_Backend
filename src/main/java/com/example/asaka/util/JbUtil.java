@@ -74,4 +74,21 @@ public class JbUtil {
       default -> HttpMethod.POST;
     };
   }
+
+  public static boolean isValidJson(String json) {
+    try {
+      new JSONObject(json);
+    } catch (JSONException e) {
+      return false;
+    }
+    return true;
+  }
+
+  public static String removeDoubleQuote(String text) {
+    if (text != null) {
+      return text.replace("\"", "");
+    } else {
+      return null;
+    }
+  }
 }

@@ -15,7 +15,6 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,8 +27,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -543,7 +540,7 @@ public class SApp {
       int proxyPort = payload.getInt("proxy_port");
       RestTemplate rt = getRestTemplate(isProxy, proxyIp, proxyPort);
       HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+      headers.add("Content-type", payload.getString("content_type"));
       HttpEntity<String> entity = new HttpEntity<>(request, headers);
       ResponseEntity<String> response = rt.exchange(endpoint, HttpMethod.POST, entity, String.class);
       return response.getBody();

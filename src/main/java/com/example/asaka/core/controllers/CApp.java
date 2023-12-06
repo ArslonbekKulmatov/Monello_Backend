@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,17 +19,14 @@ import javax.servlet.http.HttpServletRequest;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/app")
+@EnableAsync
 public class CApp {
-  @Autowired
-  SApp sApp;
-  @Autowired
-  SGrid sGrid;
+  @Autowired private SApp sApp;
+  @Autowired private SGrid sGrid;
 
-  @Autowired
-  SGrid_New sGrid_new;
+  @Autowired private SGrid_New sGrid_new;
 
-  @Autowired
-  SLnm sLnm;
+  @Autowired private SLnm sLnm;
 
   private @Autowired SUser sUser;
 

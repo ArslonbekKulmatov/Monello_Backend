@@ -4,7 +4,6 @@ import com.example.asaka.core.services.SApp;
 import com.example.asaka.util.DB;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.*;
 import org.json.JSONArray;
@@ -194,6 +193,7 @@ public class SPiReport {
             sheet.setColumnWidth(7, 256 * 30);
             sheet.setColumnWidth(8, 256 * 30);
             sheet.setColumnWidth(9, 256 * 30);
+            sheet.setColumnWidth(10, 256 * 30);
 
 
             int rowCount = 0;
@@ -216,6 +216,10 @@ public class SPiReport {
             row.getCell(7).setCellStyle(headerStyle);
             row.createCell(8).setCellValue("ПИНФЛ");
             row.getCell(8).setCellStyle(headerStyle);
+            row.createCell(9).setCellValue("Оставшийся долг");
+            row.getCell(9).setCellStyle(headerStyle);
+            row.createCell(10).setCellValue("Сумма, закрытая на этапе 1");
+            row.getCell(10).setCellStyle(headerStyle);
 
             JSONArray debtors = response_data_json.getJSONObject("data").getJSONArray("payments");
             JSONObject total = response_data_json.getJSONObject("data").getJSONObject("total");
@@ -253,6 +257,12 @@ public class SPiReport {
 
                 sheet.getRow(rowCount).createCell(8).setCellValue(object.getString("pinfl"));
                 sheet.getRow(rowCount).getCell(8).setCellStyle(centerStyle);
+
+                sheet.getRow(rowCount).createCell(9).setCellValue(object.getDouble("remaining_debt"));
+                sheet.getRow(rowCount).getCell(9).setCellStyle(decimalStyle);
+
+                sheet.getRow(rowCount).createCell(10).setCellValue(object.getDouble("first_period_paid_amount"));
+                sheet.getRow(rowCount).getCell(10).setCellStyle(decimalStyle);
 
             }
 

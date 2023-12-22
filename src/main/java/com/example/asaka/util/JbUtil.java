@@ -8,12 +8,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
-//import java.nio.file.Files;
 
 public class JbUtil {
 
@@ -73,5 +76,35 @@ public class JbUtil {
       case "DELETE" -> HttpMethod.DELETE;
       default -> HttpMethod.POST;
     };
+  }
+
+  public static boolean isValidJson(String json) {
+    try {
+      new JSONObject(json);
+    } catch (JSONException e) {
+      return false;
+    }
+    return true;
+  }
+
+  public static String removeDoubleQuote(String text) {
+    if (text != null) {
+      return text.replace("\"", "");
+    } else {
+      return null;
+    }
+  }
+
+  public static RestTemplate getRestTemplate(boolean isProxy, String ip, int port) {
+    RestTemplate restTemplate;
+    if (isProxy) {
+      Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ip, port));
+      SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+      requestFactory.setProxy(proxy);
+      restTemplate = new RestTemplate(requestFactory);
+    } else {
+      restTemplate = new RestTemplate();
+    }
+    return restTemplate;
   }
 }

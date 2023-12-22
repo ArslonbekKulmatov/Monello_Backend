@@ -33,11 +33,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.example.asaka.util.JbUtil.getMethodType;
-import static com.example.asaka.util.JbUtil.nvl;
+import static com.example.asaka.util.JbUtil.*;
 
 @Slf4j
 @Service
@@ -535,9 +535,12 @@ public class SApp {
       JSONObject payload = new JSONObject(params);
       String endpoint = payload.getString("url");
       String request = payload.getString("body");
+      boolean isProxy = payload.optBoolean("is_proxy");
+      String proxyIp = payload.getString("proxy_ip");
+      int proxyPort = payload.getInt("proxy_port");
+      RestTemplate rt = getRestTemplate(isProxy, proxyIp, proxyPort);
       HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-      RestTemplate rt = new RestTemplate();
+      headers.add("Content-type", payload.getString("content_type"));
       HttpEntity<String> entity = new HttpEntity<>(request, headers);
       ResponseEntity<String> response = rt.exchange(endpoint, HttpMethod.POST, entity, String.class);
       return response.getBody();
@@ -555,10 +558,13 @@ public class SApp {
       String body = payload.getString("body");
       String authToken = payload.getString("token");
       String methodType = payload.getString("method_type"); // POST, PUT, GET, DELETE,
+      boolean isProxy = payload.optBoolean("is_proxy");
+      String proxyIp = payload.getString("proxy_ip");
+      int proxyPort = payload.getInt("proxy_port");
       HttpHeaders headers = new HttpHeaders();
       headers.add("Content-type", "application/json");
       headers.add("Authorization", authToken);
-      RestTemplate rt = new RestTemplate();
+      RestTemplate rt = getRestTemplate(isProxy, proxyIp, proxyPort);
       HttpEntity<String> entity = new HttpEntity<>(body, headers);
       ResponseEntity<String> resp = rt.exchange(endpoint, getMethodType(methodType), entity, String.class);
       response.put("success", true);
@@ -580,10 +586,13 @@ public class SApp {
       String endpoint = payload.getString("url");
       JSONObject body = payload.getJSONObject("body");
       String authToken = payload.getString("token");
+      boolean isProxy = payload.optBoolean("is_proxy");
+      String proxyIp = payload.getString("proxy_ip");
+      int proxyPort = payload.getInt("proxy_port");
       HttpHeaders headers = new HttpHeaders();
       headers.add("Content-type", "application/json");
       headers.add("Authorization", authToken);
-      RestTemplate rt = new RestTemplate();
+      RestTemplate rt = getRestTemplate(isProxy, proxyIp, proxyPort);
       HttpEntity<String> entity = new HttpEntity<>(headers);
       UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
       for (int i = 0; i < body.names().length(); ++i) {
@@ -592,9 +601,19 @@ public class SApp {
         builder.queryParam(key, value);
         paramMap.put(key, value);
       }
-      ResponseEntity<String> resp = rt.exchange(builder.toUriString(), HttpMethod.GET, entity, String.class, paramMap);
+      if (payload.optBoolean("is_file")) {
+        ResponseEntity<byte[]> resp = rt.exchange(builder.toUriString(), HttpMethod.GET, entity, byte[].class, paramMap);
+        byte[] encoded = Base64.getEncoder().encode(resp.getBody());
+        response.put("data", new String(encoded));
+      } else {
+        ResponseEntity<String> resp = rt.exchange(builder.toUriString(), HttpMethod.GET, entity, String.class, paramMap);
+        if (isValidJson(resp.getBody())) {
+          response.put("data", new JSONObject(resp.getBody()));
+        } else {
+          response.put("data", removeDoubleQuote(resp.getBody()));
+        }
+      }
       response.put("success", true);
-      response.put("data", new JSONObject(resp.getBody()));
     } catch (Exception e) {
       e.printStackTrace();
       log.error(e.getMessage());

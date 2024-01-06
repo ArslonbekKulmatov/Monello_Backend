@@ -11,10 +11,10 @@
         <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>Asaka</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>Asaka</name>
-    <description>Asaka</description>
+    <artifactId>monello</artifactId>
+    <version>1</version>
+    <name>Monello</name>
+    <description>Monello</description>
     <properties>
         <java.version>18</java.version>
         <start-class>com.example.asaka.AsakaApplication</start-class>

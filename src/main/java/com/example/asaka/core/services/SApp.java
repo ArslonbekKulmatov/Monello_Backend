@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -41,24 +42,17 @@ import static com.example.asaka.util.JbUtil.*;
 
 @Slf4j
 @Service
+@EnableAsync
 public class SApp {
 
-  @Autowired
-  HikariDataSource hds;
-  @Autowired
-  PasswordEncoder encoder;
-  @Autowired
-  JwtUtils jwtUtils;
-  @Autowired
-  Req req;
-  @Autowired
-  UserDetailsServiceImpl userDetailsService;
-  @Autowired
-  AuthenticationManager authenticationManager;
-  @Value("${jwt.expirationMs}")
-  Integer jwtExpirationMs;
-  @Autowired
-  private FilesStorageService storageService;
+  @Autowired HikariDataSource hds;
+  @Autowired PasswordEncoder encoder;
+  @Autowired JwtUtils jwtUtils;
+  @Autowired Req req;
+  @Autowired UserDetailsServiceImpl userDetailsService;
+  @Autowired AuthenticationManager authenticationManager;
+  @Value("${jwt.expirationMs}") Integer jwtExpirationMs;
+  @Autowired private FilesStorageService storageService;
 
   public String post(String params, Boolean use_session) throws Exception {
     Connection conn = DB.con(hds);
@@ -79,10 +73,6 @@ public class SApp {
       String outAddStr = (String) sql.getOutVal(2);
       if (outAddStr != null) {
         JSONObject outObj = new JSONObject(outAddStr);
-        if (method.equals("judical.deleteData")) {
-          String url = outObj.getString("url");
-          storageService.delete(url);
-        }
         isOper = outObj.has("oper") && !outObj.isNull("oper") && outObj.getBoolean("oper");
         String message = outObj.has("message") && !outObj.isNull("message") ? outObj.getString("message") : "";
         if (outObj.has("message") && !outObj.isNull("message")) {

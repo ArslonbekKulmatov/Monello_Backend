@@ -378,6 +378,7 @@ public class SApp {
     try {
       form.addParam(userId, 1);
       form.addParam(filialCode, 2);
+
       form.addParam(lang, 3);
       form.exec();
     } catch (Exception e) {

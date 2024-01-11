@@ -383,17 +383,12 @@ public class SApp {
     OracleConnection conn = connection.unwrap(OracleConnection.class);
     JbSql form = new JbSql("Core_Session.Set_User_Session", conn, false);
     String userId = claims.get("userId").toString();
-
+    String lang = nvl(req.getHeader("lang"), "ru");
     String filialCode = claims.get("filialCode") != null ? claims.get("filialCode").toString() : null;
-        /*
-        String lang = JbUtil.nvl(req.getHeader("lang"), "");
-        */
     try {
       form.addParam(userId, 1);
-
-      if (filialCode != null && !"".equals(filialCode)) {
-        form.addParam(filialCode, 2);
-      }
+      form.addParam(filialCode, 2);
+      form.addParam(lang, 3);
       form.exec();
     } catch (Exception e) {
       e.printStackTrace();

@@ -82,7 +82,7 @@ public class SGrid_New {
         grid.setGrid_id(grid_id);
         grid.setView(DB.get(rs, "view_name"));
         grid.setPage_json(DB.get(rs, "page_json"));
-        grid.setColumns_json(replaceLabels(DB.get(rs, "columns_json")));
+        grid.setColumns_json(DB.get(rs, "columns_json"));
         grid.setFilter_json(DB.get(rs, "filter_json"));
       }
     } catch (Exception e) {

@@ -233,8 +233,6 @@ public class SPiReport {
                 JSONArray pay_types = object.getJSONArray("pay_types");
                 for (int i = 0; i < paid_amounts.length(); i++) {
                     sheet.createRow(++rowCount);
-                    sheet.getRow(rowCount).createCell(0).setCellValue(debtor + 2);
-                    sheet.getRow(rowCount).getCell(0).setCellStyle(numStyle);
 
                     sheet.getRow(rowCount).createCell(4).setCellValue(paid_amounts.getDouble(i));
                     sheet.getRow(rowCount).getCell(4).setCellStyle(decimalStyle);
@@ -245,6 +243,8 @@ public class SPiReport {
                     sheet.getRow(rowCount).createCell(6).setCellValue(pay_types.getString(i));
                     sheet.getRow(rowCount).getCell(6).setCellStyle(centerStyle);
                 }
+                sheet.getRow(rowCount).createCell(0).setCellValue(debtor + 1);
+                sheet.getRow(rowCount).getCell(0).setCellStyle(numStyle);
 
                 sheet.getRow(rowCount).createCell(1).setCellValue(object.getString("debtor_name"));
                 sheet.getRow(rowCount).getCell(1).setCellStyle(centerStyle);

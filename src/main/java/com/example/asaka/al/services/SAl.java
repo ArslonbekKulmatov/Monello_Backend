@@ -68,7 +68,7 @@ public class SAl {
                 width = res.getFloat("width");
                 height = res.getFloat("height");
                 if (!url.equals("")){
-                    Path file = Paths.get(url);
+                    Path file = Paths.get( url.replace("\\", "/"));
                     Resource resource = new UrlResource(file.toUri());
                     byte[] fileContent = resource.getInputStream().readAllBytes();
                     encodedString= Base64.encodeBase64String(fileContent);

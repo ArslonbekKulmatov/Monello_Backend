@@ -4,6 +4,7 @@ import com.example.asaka.webhook.interfaces.WebhookService;
 import com.example.asaka.webhook.models.ErrorResponse;
 import com.example.asaka.webhook.models.SuccessResponse;
 import com.example.asaka.webhook.models.WebhookRequest;
+import com.example.asaka.webhook.models.WebhookRequestIncard;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +31,18 @@ public class CWebhook {
     @RequestMapping(value = "/v1", produces = "application/json")
     public CompletableFuture<ResponseEntity<?>> proccessWebhook(@RequestBody WebhookRequest request) {
         return webhookService.proccessWebhook(request)
+                .thenApply(response -> {
+                    if (response instanceof SuccessResponse) {
+                        return new ResponseEntity<>(response, HttpStatus.OK);
+                    } else {
+                        return new ResponseEntity<>(new ErrorResponse("0", -500, "Unknown error"), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                });
+    }
+
+    @RequestMapping(value = "/v3", produces = "application/json")
+    public CompletableFuture<ResponseEntity<?>> proccessWebhookV3(@RequestBody WebhookRequestIncard request) {
+        return webhookService.proccessWebhookV3(request)
                 .thenApply(response -> {
                     if (response instanceof SuccessResponse) {
                         return new ResponseEntity<>(response, HttpStatus.OK);

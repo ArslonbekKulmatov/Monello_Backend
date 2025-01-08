@@ -270,7 +270,7 @@ public class SPiReport {
                 sheet.getRow(rowCount).createCell(11).setCellValue(object.getString("polis_num"));
                 sheet.getRow(rowCount).getCell(11).setCellStyle(centerStyle);
 
-                ++rowCount;
+//                ++rowCount;
 
             }
 

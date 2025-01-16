@@ -21,6 +21,7 @@ public class WebhookRequestIncard {
         private Integer status;
         private String payment_at;
         private String reversal_at;
+        private String card_type;
         private boolean reversal;
     }
 }

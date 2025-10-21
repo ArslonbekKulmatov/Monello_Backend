@@ -6,15 +6,25 @@ import com.example.asaka.util.DB;
 import com.example.asaka.util.ExcMsg;
 import com.example.asaka.util.JbSql;
 import com.example.asaka.util.Req;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
 import com.zaxxer.hikari.HikariDataSource;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import oracle.jdbc.OracleConnection;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.openxml4j.opc.PackagePart;
+import org.apache.poi.util.Units;
+import org.apache.poi.xwpf.usermodel.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,15 +38,21 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.example.asaka.util.JbUtil.*;
 
@@ -53,6 +69,7 @@ public class SApp {
   @Autowired AuthenticationManager authenticationManager;
   @Value("${jwt.expirationMs}") Integer jwtExpirationMs;
   @Autowired private FilesStorageService storageService;
+  @Autowired private JdbcTemplate jdbcTemplate;
 
   public String post(String params, Boolean use_session) throws Exception {
     Connection conn = DB.con(hds);
@@ -542,6 +559,7 @@ public class SApp {
       JSONObject payload = new JSONObject(params);
       String endpoint = payload.getString("url");
       String body = payload.getString("body");
+      String fileBase64 = payload.getString("file");
       String authToken = payload.getString("token");
       String methodType = payload.getString("method_type"); // POST, PUT, GET, DELETE,
       boolean isProxy = payload.optBoolean("is_proxy");

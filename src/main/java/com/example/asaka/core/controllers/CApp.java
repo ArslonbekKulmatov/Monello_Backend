@@ -138,4 +138,10 @@ public class CApp {
   public String getHttpRequest(@RequestBody String params) {
     return sApp.getHttpRequest(params);
   }
+
+  // Saidazim
+  @RequestMapping(value = "/send-form-data-request", produces = "application/json")
+  public String sendFormDataRequest(@RequestBody String params) {
+    return sApp.getHttpRequest(params);
+  }
 }

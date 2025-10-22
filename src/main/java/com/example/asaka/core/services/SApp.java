@@ -559,7 +559,6 @@ public class SApp {
       JSONObject payload = new JSONObject(params);
       String endpoint = payload.getString("url");
       String body = payload.getString("body");
-      String fileBase64 = payload.getString("file");
       String authToken = payload.getString("token");
       String methodType = payload.getString("method_type"); // POST, PUT, GET, DELETE,
       boolean isProxy = payload.optBoolean("is_proxy");

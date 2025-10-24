@@ -51,7 +51,10 @@ public class SDocument {
       JSONArray variables = payload.getJSONArray("variables");
       for (int i = 0; i < variables.length(); i++) {
         JSONObject variable = variables.getJSONObject(i);
-        map.put(variable.getString("name"), variable.getString("value"));
+        String name = variable.optString("name");
+        Object valueObj = variable.opt("value");
+        String value = (valueObj == null) ? "" : String.valueOf(valueObj);
+        map.put(name, value);
       }
       map.put("qrcode", qrcode);
 

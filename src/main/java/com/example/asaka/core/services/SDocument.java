@@ -56,9 +56,8 @@ public class SDocument {
         String value = (valueObj == null) ? "" : String.valueOf(valueObj);
         map.put(name, value);
       }
-      map.put("qrcode", qrcode);
 
-      byte[] modifiedDocument = replaceAll(templateBytes, map);
+      byte[] modifiedDocument = replaceAll(templateBytes, map, qrcode);
       String document64 = Base64.getEncoder().encodeToString(modifiedDocument);
 
       response.put("success", true);
@@ -70,23 +69,19 @@ public class SDocument {
     return response.toString();
   }
 
-  private byte[] replaceAll(byte[] inputDocx, Map<String, String> variables) {
+  private byte[] replaceAll(byte[] inputDocx, Map<String, String> variables, String qrcode) {
     try (OPCPackage pkg = OPCPackage.open(new ByteArrayInputStream(inputDocx))) {
 
-      // 1) Replace everywhere by editing raw XML parts
-      replaceAllXml(pkg, variables);   // note: now takes OPCPackage
+      replaceAllXml(pkg, variables);
 
-      // 2) Now re-open an XWPFDocument on the *modified* package to add the QR
       try (XWPFDocument doc = new XWPFDocument(pkg)) {
-        String qrCodeData = variables.get("qrcode");
-        if (qrCodeData != null && !qrCodeData.isEmpty()) {
-          BufferedImage qr = generateQr(qrCodeData);
+        if (qrcode != null && !qrcode.isEmpty()) {
+          BufferedImage qr = generateQr(qrcode);
           addQr(doc, qr);
         }
 
-        // 3) IMPORTANT: save the *package*, not document.write(...)
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        doc.getPackage().save(out);                 // <-- key line
+        doc.write(out);
         return out.toByteArray();
       }
     } catch (Exception e) {

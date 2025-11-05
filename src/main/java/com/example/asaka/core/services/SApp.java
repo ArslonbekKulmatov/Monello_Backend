@@ -23,6 +23,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -43,8 +45,10 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -624,6 +628,67 @@ public class SApp {
       response.put("error", e.getMessage());
     }
     return response.toString();
+  }
+
+  public ResponseEntity<Resource> getFile(String file) {
+    try {
+      final Path path;
+
+      path = findByFilename(file).orElse(null);
+      if (path == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+      }
+
+      if (!Files.exists(path) || !Files.isRegularFile(path)) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+      }
+
+      Resource resource = new UrlResource(path.toUri());
+
+      String contentType = Files.probeContentType(path);
+      if (contentType == null) {
+        contentType = "application/octet-stream";
+      }
+
+      return ResponseEntity.ok()
+          .contentType(MediaType.parseMediaType(contentType))
+          .header(HttpHeaders.CONTENT_DISPOSITION,
+              "inline; filename=\"" + path.getFileName().toString() + "\"")
+          .body(resource);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
+  private Optional<Path> findByFilename(String filename) {
+    String searchRootsCsv = "/opt/monello71/files/";
+    List<Path> roots = Arrays.stream(searchRootsCsv.split(","))
+        .map(String::trim)
+        .filter(s -> !s.isEmpty())
+        .map(Paths::get)
+        .toList();
+
+    Path best = null;
+    FileTime bestTime = null;
+
+    for (Path root : roots) {
+      if (!Files.exists(root) || !Files.isDirectory(root)) {
+        continue;
+      }
+      try {
+        try (var stream = Files.find(root, Integer.MAX_VALUE, (p, attrs) -> attrs.isRegularFile() && p.getFileName().toString().equals(filename))) {
+          for (Path p : (Iterable<Path>) stream::iterator) {
+            FileTime t = Files.getLastModifiedTime(p);
+            System.out.println("FileTime " + t);
+            if (best == null || t.compareTo(bestTime) > 0) {
+              best = p;
+              bestTime = t;
+            }
+          }
+        }
+      } catch (IOException ignored) {}
+    }
+    return Optional.ofNullable(best);
   }
 }
 

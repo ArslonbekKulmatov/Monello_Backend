@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.*;
@@ -143,5 +144,11 @@ public class CApp {
   @RequestMapping(value = "/send-form-data-request", produces = "application/json")
   public String sendFormDataRequest(@RequestBody String params) {
     return sApp.getHttpRequest(params);
+  }
+
+  // Saidazim
+  @GetMapping("/get-file")
+  public ResponseEntity<Resource> getFile(@RequestParam("file") String file) {
+    return sApp.getFile(file);
   }
 }

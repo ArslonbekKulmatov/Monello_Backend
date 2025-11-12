@@ -23,9 +23,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +36,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
@@ -628,6 +632,79 @@ public class SApp {
       response.put("error", e.getMessage());
     }
     return response.toString();
+  }
+
+  public ResponseEntity<String> sendFormData(String params) {
+    JSONObject responseJson = new JSONObject();
+    try {
+      JSONObject payload = new JSONObject(params);
+      String endpoint = payload.getString("url");
+      String fileName = payload.getString("file_name");
+      JSONObject formFields = payload.optJSONObject("body");
+
+      String authToken = payload.optString("token", null);
+      boolean isProxy = payload.optBoolean("is_proxy", false);
+      String proxyIp = payload.optString("proxy_ip", null);
+      int proxyPort = payload.optInt("proxy_port", 0);
+
+      RestTemplate restTemplate = getRestTemplate(isProxy, proxyIp, proxyPort);
+
+      Path base = Path.of("/opt/monello71/files/").toAbsolutePath().normalize();
+      Path target = base.resolve(fileName).normalize();
+
+      if (!target.startsWith(base)) {
+        throw new SecurityException("Invalid filename (path traversal detected).");
+      }
+      if (!Files.exists(target) || !Files.isRegularFile(target)) {
+        throw new FileNotFoundException("File not found: " + target);
+      }
+
+      FileSystemResource fileRes = new FileSystemResource(target.toFile());
+      String ct = Files.probeContentType(target);
+      MediaType fileType = (ct != null)
+          ? MediaType.parseMediaType(ct)
+          : MediaType.APPLICATION_OCTET_STREAM;
+
+      MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
+
+      HttpHeaders fileHeaders = new HttpHeaders();
+      fileHeaders.setContentType(fileType);
+      HttpEntity<FileSystemResource> filePart = new HttpEntity<>(fileRes, fileHeaders);
+
+      multipartBody.add("file", filePart); // form-data key name
+
+      if (formFields != null) {
+        Iterator<String> keys = formFields.keys();
+        while (keys.hasNext()) {
+          String key = keys.next();
+          String value = formFields.optString(key, "");
+          multipartBody.add(key, value);
+        }
+      }
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+      if (authToken != null && !authToken.isBlank()) {
+        headers.add("Authorization", authToken);
+      }
+
+      HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(multipartBody, headers);
+
+      ResponseEntity<String> externalResponse = restTemplate.postForEntity(endpoint, requestEntity, String.class);
+
+      responseJson.put("success", true);
+      responseJson.put("message", "OK");
+      responseJson.put("external_status", externalResponse.getStatusCodeValue());
+      responseJson.put("external_response", externalResponse.getBody());
+
+      return ResponseEntity.ok(responseJson.toString());
+    } catch (Exception e) {
+      responseJson.put("success", false);
+      responseJson.put("message", "Failed");
+      responseJson.put("error", e.getMessage());
+
+      return ResponseEntity.internalServerError().body(responseJson.toString());
+    }
   }
 
   public ResponseEntity<Resource> getFile(String file) {

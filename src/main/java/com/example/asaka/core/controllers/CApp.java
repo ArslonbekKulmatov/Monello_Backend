@@ -141,9 +141,9 @@ public class CApp {
   }
 
   // Saidazim
-  @RequestMapping(value = "/send-form-data-request", produces = "application/json")
-  public String sendFormDataRequest(@RequestBody String params) {
-    return sApp.getHttpRequest(params);
+  @PostMapping(value = "/send-form-data-request", produces = "application/json")
+  public ResponseEntity<String> sendFormDataRequest(@RequestBody String params) {
+    return sApp.sendFormData(params);
   }
 
   // Saidazim

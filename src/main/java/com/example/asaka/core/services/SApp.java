@@ -677,8 +677,18 @@ public class SApp {
         Iterator<String> keys = formFields.keys();
         while (keys.hasNext()) {
           String key = keys.next();
-          String value = formFields.optString(key, "");
-          multipartBody.add(key, value);
+          Object value = formFields.get(key);
+          if (value instanceof JSONArray jsonArray) {
+            for (int i = 0; i < jsonArray.length(); i++) {
+              multipartBody.add(key, jsonArray.getString(i));
+            }
+          }
+          else if (value instanceof String s) {
+            multipartBody.add(key, s);
+          }
+          else {
+            multipartBody.add(key, String.valueOf(value));
+          }
         }
       }
 

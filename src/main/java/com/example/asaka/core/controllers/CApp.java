@@ -42,6 +42,12 @@ public class CApp {
     return ResponseEntity.ok(resp.toString());
   }
 
+  @RequestMapping(value = "/request/v2", produces = "application/json")
+  public ResponseEntity<?> setMethodV2(@RequestBody String params) throws Exception {
+    JSONObject resp = new JSONObject(sApp.post_v2(params, true));
+    return ResponseEntity.ok(resp.toString());
+  }
+
   @RequestMapping(value = "/grid", produces = "application/json")
   public ResponseEntity<?> userStr(@RequestBody String params) throws JSONException {
     JSONObject rows = sGrid.grid(params);

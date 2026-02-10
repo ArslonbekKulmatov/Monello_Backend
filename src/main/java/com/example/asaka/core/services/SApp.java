@@ -120,6 +120,55 @@ public class SApp {
     return res.toString();
   }
 
+  public String post_v2(String params, Boolean use_session) throws Exception {
+    Connection conn = DB.con(hds);
+    JbSql sql;
+    JSONObject res = new JSONObject();
+    res.put("success", true);
+    try {
+      if (use_session) {
+        setDbSession(conn);
+      }
+      sql = new JbSql("Core_App.Set_Method", conn, false);
+      sql.addParam(params, 1);
+      sql.addOut(Types.CLOB, 2);
+      sql.exec();
+      boolean isOper;
+      String outAddStr = (String) sql.getOutVal(2);
+      if (outAddStr != null) {
+        JSONObject outObj = new JSONObject(outAddStr);
+        isOper = outObj.has("oper") && !outObj.isNull("oper") && outObj.getBoolean("oper");
+        String message = outObj.has("message") && !outObj.isNull("message") ? outObj.getString("message") : "";
+        if (outObj.has("message") && !outObj.isNull("message")) {
+          res.put("message", message);
+        }
+        // Agar operatsiyaligini bildiruvchi qiymati bo'lmasa
+        if (outObj.has("oper") && !outObj.isNull("oper")) {
+          res.put("oper", isOper);
+        }
+        outObj.remove("oper");
+        outObj.remove("message");
+        //res.put("data", outObj);
+        res = outObj;
+      }
+
+    } catch (Exception e) {
+      ExcMsg.call(res, e, conn);
+      JSONObject error = new JSONObject();
+      if (res.getString("message").contains("403 FORBIDDEN")) {
+        error.put("code", HttpStatus.FORBIDDEN.value());
+      } else {
+        error.put("code", 999);
+      }
+      error.put("message", res.getString("message"));
+      res.remove("message");
+      res.put("error", error);
+    } finally {
+      DB.done(conn);
+    }
+    return res.toString();
+  }
+
   public String wtpost(String params) throws Exception {
     Connection conn = DB.con(hds);
     JbSql sql;

@@ -617,18 +617,35 @@ public class SApp {
       String endpoint = payload.getString("url");
       String body = payload.getString("body");
       String authToken = payload.getString("token");
-      String methodType = payload.getString("method_type"); // POST, PUT, GET, DELETE,
+      String methodType = payload.getString("method_type"); // POST, PUT, GET, DELETE
       boolean isProxy = payload.optBoolean("is_proxy");
-      String proxyIp = payload.getString("proxy_ip");
-      int proxyPort = payload.getInt("proxy_port");
+      String proxyIp = payload.optString("proxy_ip", "");
+      int proxyPort = payload.optInt("proxy_port", 0);
+
       HttpHeaders headers = new HttpHeaders();
-      headers.add("Content-type", "application/json");
+      headers.add("Content-type", "application/json; charset=UTF-8");
       headers.add("Authorization", authToken);
+
       RestTemplate rt = getRestTemplate(isProxy, proxyIp, proxyPort);
       HttpEntity<String> entity = new HttpEntity<>(body, headers);
       ResponseEntity<String> resp = rt.exchange(endpoint, getMethodType(methodType), entity, String.class);
+
+      String respBody = resp.getBody();
       response.put("success", true);
-      response.put("data", new JSONObject(resp.getBody()));
+
+      if (respBody == null || respBody.isBlank()) {
+        response.put("data", JSONObject.NULL);
+      } else {
+        String trimmed = respBody.trim();
+        if (trimmed.startsWith("[")) {
+          response.put("data", new JSONArray(trimmed));
+        } else if (trimmed.startsWith("{")) {
+          response.put("data", new JSONObject(trimmed));
+        } else {
+          // JSON emas, oddiy matn bo'lsa
+          response.put("data", trimmed);
+        }
+      }
     } catch (Exception e) {
       e.printStackTrace();
       log.error(e.getMessage());

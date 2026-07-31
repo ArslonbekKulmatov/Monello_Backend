@@ -40,16 +40,33 @@ public class CAuth {
   @Autowired SEkey sEkey;
 
   @RequestMapping(value = "/signin", produces = "application/json")
-  public ResponseEntity<?> authenticateUser(@RequestBody String params) throws JSONException {
+  public ResponseEntity<?> authenticateUser(@RequestBody(required = false) String params,
+                                            @RequestHeader(value = "Authorization", required = false) String authorization) throws JSONException {
     try {
       UserDetailsImpl userDetails;
       String jwt;
-      JSONObject json = new JSONObject(params);
       List<String> roles;
 
+      String login;
+      String password;
+      // Basic auth option: use the Authorization header when present, otherwise the JSON body
+      if (authorization != null && authorization.regionMatches(true, 0, "Basic ", 0, 6)) {
+        String decoded = new String(Base64.getDecoder().decode(authorization.substring(6).trim()),
+          java.nio.charset.StandardCharsets.UTF_8);
+        int sep = decoded.indexOf(':');
+        if (sep < 0) {
+          return sUser.getMsgEror("login.error");
+        }
+        login = decoded.substring(0, sep);
+        password = decoded.substring(sep + 1);
+      } else {
+        JSONObject json = new JSONObject(params);
+        login = json.getString("login");
+        password = json.getString("password");
+      }
+
       try {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(json.getString("login"),
-          json.getString("password")));
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login, password));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         userDetails = (UserDetailsImpl) authentication.getPrincipal();
         jwt = jwtUtils.generateJwtToken(authentication);

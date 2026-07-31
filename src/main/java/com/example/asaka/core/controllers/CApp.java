@@ -5,17 +5,25 @@ import com.example.asaka.core.services.SGrid;
 import com.example.asaka.core.services.SGrid_New;
 import com.example.asaka.core.services.SUser;
 import com.example.asaka.lnm.services.SLnm;
+import com.example.asaka.security.services.UserDetailsImpl;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -31,6 +39,16 @@ public class CApp {
 
   private @Autowired SUser sUser;
 
+  @Autowired private AuthenticationManager authenticationManager;
+
+  @GetMapping(value = "/health", produces = "application/json")
+  public ResponseEntity<?> health() {
+    String body = sApp.healthCheck();
+    boolean up = new JSONObject(body).optString("status").equals("UP");
+    return up ? ResponseEntity.ok(body)
+              : ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
+  }
+
   @RequestMapping(value = "/request", produces = "application/json")
   public ResponseEntity<?> setMethod(@RequestBody String params) throws Exception {
     JSONObject resp = new JSONObject(sApp.post(params, true));
@@ -43,7 +61,27 @@ public class CApp {
   }
 
   @RequestMapping(value = "/request/v2", produces = "application/json")
-  public ResponseEntity<?> setMethodV2(@RequestBody String params) throws Exception {
+  public ResponseEntity<?> setMethodV2(@RequestBody String params,
+                                       @RequestHeader(value = "Authorization", required = false) String authorization) throws Exception {
+    // Basic auth option: authenticate with login:password from the Authorization header
+    if (authorization != null && authorization.regionMatches(true, 0, "Basic ", 0, 6)) {
+      String decoded = new String(Base64.getDecoder().decode(authorization.substring(6).trim()), StandardCharsets.UTF_8);
+      int sep = decoded.indexOf(':');
+      if (sep < 0) {
+        return sUser.getMsgEror("login.error");
+      }
+      String login = decoded.substring(0, sep);
+      String password = decoded.substring(sep + 1);
+      try {
+        Authentication authentication = authenticationManager.authenticate(
+          new UsernamePasswordAuthenticationToken(login, password));
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        JSONObject resp = new JSONObject(sApp.post_v2(params, true, userDetails.getId().toString()));
+        return ResponseEntity.ok(resp.toString());
+      } catch (BadCredentialsException e) {
+        return sUser.getMsgEror("login.error");
+      }
+    }
     JSONObject resp = new JSONObject(sApp.post_v2(params, true));
     return ResponseEntity.ok(resp.toString());
   }

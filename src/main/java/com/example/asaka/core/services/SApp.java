@@ -79,6 +79,25 @@ public class SApp {
   @Autowired private FilesStorageService storageService;
   @Autowired private JdbcTemplate jdbcTemplate;
 
+  // Health check: verifies the app is up and the DB is reachable.
+  public String healthCheck() {
+    JSONObject res = new JSONObject();
+    Connection conn = null;
+    try {
+      conn = DB.con(hds);
+      boolean dbUp = conn != null && conn.isValid(2);
+      res.put("status", dbUp ? "UP" : "DOWN");
+      res.put("db", dbUp ? "UP" : "DOWN");
+    } catch (Exception e) {
+      res.put("status", "DOWN");
+      res.put("db", "DOWN");
+      res.put("error", e.getMessage());
+    } finally {
+      DB.done(conn);
+    }
+    return res.toString();
+  }
+
   public String post(String params, Boolean use_session) throws Exception {
     Connection conn = DB.con(hds);
     JSONObject pars = new JSONObject(params);
@@ -121,13 +140,23 @@ public class SApp {
   }
 
   public String post_v2(String params, Boolean use_session) throws Exception {
+    return post_v2(params, use_session, null);
+  }
+
+  // Basic auth variant: when basicAuthUserId is supplied the DB session is set from it
+  // (the request has no Bearer JWT), otherwise the JWT-based session is used.
+  public String post_v2(String params, Boolean use_session, String basicAuthUserId) throws Exception {
     Connection conn = DB.con(hds);
     JbSql sql;
     JSONObject res = new JSONObject();
     res.put("success", true);
     try {
       if (use_session) {
-        setDbSession(conn);
+        if (basicAuthUserId != null) {
+          setDbSessionForUser(conn, basicAuthUserId);
+        } else {
+          setDbSession(conn);
+        }
       }
       sql = new JbSql("Core_App.Set_Method", conn, false);
       sql.addParam(params, 1);
@@ -453,6 +482,22 @@ public class SApp {
       form.addParam(userId, 1);
       form.addParam(filialCode, 2);
 
+      form.addParam(lang, 3);
+      form.exec();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  // Sets the DB session directly from an already-authenticated user id (Basic auth flow,
+  // where there is no Bearer JWT to read claims from). Filial is left unset.
+  public void setDbSessionForUser(Connection connection, String userId) throws Exception {
+    OracleConnection conn = connection.unwrap(OracleConnection.class);
+    JbSql form = new JbSql("Core_Session.Set_User_Session", conn, false);
+    String lang = nvl(req.getHeader("lang"), "ru");
+    try {
+      form.addParam(userId, 1);
+      form.addParam(null, 2);
       form.addParam(lang, 3);
       form.exec();
     } catch (Exception e) {

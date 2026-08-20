@@ -681,13 +681,14 @@ public class SApp {
       if (respBody == null || respBody.isBlank()) {
         response.put("data", JSONObject.NULL);
       } else {
-        String trimmed = respBody.trim();
+        // BOM va boshqa ko'rinmas bo'shliq belgilarini olib tashlash
+        String trimmed = respBody.replace("\uFEFF", "").trim();
+
         if (trimmed.startsWith("[")) {
           response.put("data", new JSONArray(trimmed));
         } else if (trimmed.startsWith("{")) {
           response.put("data", new JSONObject(trimmed));
         } else {
-          // JSON emas, oddiy matn bo'lsa
           response.put("data", trimmed);
         }
       }

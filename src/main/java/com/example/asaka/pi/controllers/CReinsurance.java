@@ -21,21 +21,31 @@ public class CReinsurance {
 
   /**
    * Import a batch of reinsurance rows and their PDF documents.
-   * Multipart:
-   *   file        - .xlsx with the header row matching PI_FOND_REINSURANCES columns
-   *   documents   - one or more PDFs named "<reinsuranceContractUuid>.pdf"
    *
-   * Every non-blank Excel row is inserted into PI_FOND_REINSURANCES with a
-   * shared batch_id; invalid rows are stored with error_msg and skipped from
-   * the Fond call. Then Send_Reinsurance_Batch and Send_Reinsurance_File_Batch
-   * are invoked for that batch only.
+   * Multipart:
+   *   data       - JSON string. Either { "rows": [ {..}, {..} ] } or a raw JSON array.
+   *                Every row uses the header names from the Excel template:
+   *                reinsuranceContractUuid, currencyId, exchangeRate, totalDamageSum,
+   *                totalDamageInForeignCurrency, totalSharePaymentSum,
+   *                totalSharePaymentInForeignCurrency, claimUuid, contractNumber,
+   *                claimNumber, claimDate, decisionDate, paymentDate,
+   *                paymentAmountSum, paymentAmountInForeignCurrency,
+   *                insuranceCompensationSum, insuranceCompensationInForeignCurrency,
+   *                sharePaymentSum, sharePaymentInForeignCurrency, eventDateTime,
+   *                regionId, countryId, districtId, place, eventInfo
+   *   documents  - one or more PDFs named "<reinsuranceContractUuid>.pdf"
+   *
+   * Every non-blank row is inserted into PI_FOND_REINSURANCES with a shared
+   * batch_id; invalid rows are stored with error_msg and skipped from the Fond
+   * call. Then Send_Reinsurance_Batch and Send_Reinsurance_File_Batch are
+   * invoked for that batch only.
    */
   @PostMapping(value = "/import", produces = "application/json")
-  public ResponseEntity<?> importBatch(@RequestParam("file") MultipartFile file,
+  public ResponseEntity<?> importBatch(@RequestParam("data") String data,
                                        @RequestParam(value = "documents", required = false)
                                        MultipartFile[] documents) {
     try {
-      JSONObject result = sReinsurance.importBatch(file, documents);
+      JSONObject result = sReinsurance.importBatch(data, documents);
       return ResponseEntity.ok(result.toString());
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)

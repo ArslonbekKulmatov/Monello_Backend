@@ -7,12 +7,7 @@ import com.example.asaka.util.ExcMsg;
 import com.example.asaka.util.JbSql;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.DateUtil;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,9 +31,10 @@ import java.util.regex.Pattern;
 
 /**
  * Bulk import for reinsurance rows submitted through the web.
- * Excel + PDF documents in, batch inserted into PI_FOND_REINSURANCES,
- * then PI_INSURANCE_SERVICE.Send_Reinsurance_Batch and
- * Send_Reinsurance_File_Batch are called for that batch only.
+ * Front-end parses the Excel, sends rows as JSON plus the PDF documents.
+ * Rows are batch-inserted into PI_FOND_REINSURANCES, then
+ * PI_INSURANCE_SERVICE.Send_Reinsurance_Batch and Send_Reinsurance_File_Batch
+ * are called for that batch only.
  */
 @Slf4j
 @Service
@@ -105,15 +101,15 @@ public class SReinsurance {
   @Autowired HikariDataSource hds;
   @Autowired SApp sApp;
 
-  public JSONObject importBatch(MultipartFile excel, MultipartFile[] documents) throws Exception {
-    if (excel == null || excel.isEmpty()) {
-      throw new IllegalArgumentException("Excel file is required.");
+  public JSONObject importBatch(String jsonData, MultipartFile[] documents) throws Exception {
+    if (jsonData == null || jsonData.isBlank()) {
+      throw new IllegalArgumentException("data (JSON) is required.");
     }
 
     ReinsuranceImportResult result = new ReinsuranceImportResult();
     result.setBatchId(UUID.randomUUID().toString());
 
-    List<Map<String, String>> rows = parseExcel(excel);
+    List<Map<String, String>> rows = parseJson(jsonData);
     result.setTotalRows(rows.size());
 
     Map<String, MultipartFile> docsByUuid = indexDocumentsByUuid(documents);
@@ -126,26 +122,19 @@ public class SReinsurance {
       Long userId = getCurrentUserId(conn);
 
       List<Map<String, String>> validRows = new ArrayList<>();
-      List<Integer> validIndexes = new ArrayList<>();
 
       for (int i = 0; i < rows.size(); i++) {
         Map<String, String> row = rows.get(i);
-        int excelRow = i + 2;
+        int rowNumber = i + 1;
         String uuid = row.get("reinsuranceContractUuid");
         String err = validateRow(row, docsByUuid);
         if (err == null) {
           validRows.add(row);
-          validIndexes.add(excelRow);
+          insertRow(conn, result.getBatchId(), userId, row, null);
         } else {
-          insertInvalidRow(conn, result.getBatchId(), userId, row, err);
-          result.addError(excelRow, uuid, err);
-          result.setInsertedRows(result.getInsertedRows() + 1);
+          insertRow(conn, result.getBatchId(), userId, row, err);
+          result.addError(rowNumber, uuid, err);
         }
-      }
-
-      for (int k = 0; k < validRows.size(); k++) {
-        Map<String, String> row = validRows.get(k);
-        insertValidRow(conn, result.getBatchId(), userId, row);
         result.setInsertedRows(result.getInsertedRows() + 1);
       }
 
@@ -168,62 +157,35 @@ public class SReinsurance {
     }
   }
 
-  // --- Excel parsing --------------------------------------------------------
+  // --- JSON parsing ---------------------------------------------------------
 
-  private List<Map<String, String>> parseExcel(MultipartFile excel) throws Exception {
+  private List<Map<String, String>> parseJson(String jsonData) {
+    JSONObject root = new JSONObject(jsonData);
+    JSONArray arr;
+    if (root.has("rows")) {
+      arr = root.getJSONArray("rows");
+    } else if (jsonData.trim().startsWith("[")) {
+      arr = new JSONArray(jsonData);
+    } else {
+      throw new IllegalArgumentException("JSON must contain a 'rows' array.");
+    }
+
     List<Map<String, String>> out = new ArrayList<>();
-    try (InputStream is = excel.getInputStream();
-         XSSFWorkbook wb = new XSSFWorkbook(is)) {
-
-      Sheet sheet = wb.getSheetAt(0);
-      if (sheet == null) return out;
-
-      int lastRow = sheet.getLastRowNum();
-      for (int r = 1; r <= lastRow; r++) {
-        Row row = sheet.getRow(r);
-        if (row == null) continue;
-
-        boolean allBlank = true;
-        Map<String, String> m = new HashMap<>();
-        for (int c = 0; c < COLUMNS.length; c++) {
-          String val = cellString(row.getCell(c));
-          if (val != null && !val.isEmpty()) allBlank = false;
-          m.put(COLUMNS[c], val);
+    for (int i = 0; i < arr.length(); i++) {
+      JSONObject o = arr.getJSONObject(i);
+      Map<String, String> m = new HashMap<>();
+      boolean allBlank = true;
+      for (String col : COLUMNS) {
+        String v = null;
+        if (o.has(col) && !o.isNull(col)) {
+          v = safeTrim(String.valueOf(o.get(col)));
         }
-        if (allBlank) continue;
-        out.add(m);
+        if (v != null) allBlank = false;
+        m.put(col, v);
       }
+      if (!allBlank) out.add(m);
     }
     return out;
-  }
-
-  private String cellString(Cell cell) {
-    if (cell == null) return null;
-    CellType type = cell.getCellTypeEnum();
-    if (type == CellType.STRING) {
-      return safeTrim(cell.getStringCellValue());
-    }
-    if (type == CellType.NUMERIC) {
-      if (DateUtil.isCellDateFormatted(cell)) {
-        return DateUtil.getJavaDate(cell.getNumericCellValue()).toString();
-      }
-      double d = cell.getNumericCellValue();
-      if (d == Math.floor(d) && !Double.isInfinite(d)) {
-        return String.format(Locale.US, "%.0f", d);
-      }
-      return String.format(Locale.US, "%s", d);
-    }
-    if (type == CellType.BOOLEAN) {
-      return Boolean.toString(cell.getBooleanCellValue());
-    }
-    if (type == CellType.FORMULA) {
-      try {
-        return safeTrim(cell.getStringCellValue());
-      } catch (Exception e) {
-        return String.valueOf(cell.getNumericCellValue());
-      }
-    }
-    return null;
   }
 
   private String safeTrim(String s) {
@@ -293,16 +255,6 @@ public class SReinsurance {
   }
 
   // --- Insert ---------------------------------------------------------------
-
-  private void insertValidRow(Connection conn, String batchId, Long userId,
-                              Map<String, String> row) throws Exception {
-    insertRow(conn, batchId, userId, row, null);
-  }
-
-  private void insertInvalidRow(Connection conn, String batchId, Long userId,
-                                Map<String, String> row, String errorMsg) throws Exception {
-    insertRow(conn, batchId, userId, row, errorMsg);
-  }
 
   private void insertRow(Connection conn, String batchId, Long userId,
                          Map<String, String> row, String errorMsg) throws Exception {

@@ -18,7 +18,7 @@ tushirilmagan, ma'lumot to'ldirilmagan, frontend qilinmagan.
 | `/api/catalog/*` endpointlari (Java) | ✅ kompilyatsiya o'tdi |
 | Rasmlarni serverga yuklash | ✅ yozildi |
 | Sayt jamoasiga javob xati + API spetsifikatsiyasi | ✅ tayyor |
-| Web jamoasiga spetsifikatsiya | ⚠️ yangilanishi kerak, 4.6 ga qarang |
+| Web jamoasiga spetsifikatsiya | ✅ yangilandi |
 | Bazada ishga tushirish | ❌ |
 | Ma'lumot to'ldirish (~800 pozitsiya) | ❌ |
 | Frontend | ❌ |
@@ -165,11 +165,6 @@ ko'z bilan tekshirish kerak, aks holda xato vitrinaga chiqadi.
 
       select module_id, code, name from core_modules where state = 'A';
 
-### 4.6 Hujjatni yangilash
-- [ ] Web spetsifikatsiyasida `catalogSaveImages` metodi bor edi — u olib
-      tashlandi, o'rniga `catalogUploadImage` / `catalogSaveImage` /
-      `catalogDeleteImage`. Yangi maydonlar ham qo'shilishi kerak.
-
 ---
 
 ## 5. Sayt jamoasi bilan
@@ -193,10 +188,10 @@ ko'z bilan tekshirish kerak, aks holda xato vitrinaga chiqadi.
       va sayt bir marta qayta bog'lashi kerak bo'ladi — **ulanishdan oldin
       hal qilish kerak**, keyin qimmatroq.
 
-### 5.3 Rasmlar — javob
+### 5.3 Rasmlar — javob berildi
 Sayt jamoasiga «rasmlarni kim joylashtiradi» degan savol yuborilgan edi.
-Endi javob bor: **serverda o'zimizda saqlaymiz**, ular hech narsa qilmaydi.
-Xatni shunga qarab yangilash kerak.
+Javob: **serverda o'zimizda saqlaymiz**, ular hech narsa qilmaydi.
+API spetsifikatsiyasining 5-bo'limi shunga qarab yangilandi.
 
 ---
 

@@ -62,13 +62,18 @@ public class SCatalog {
   }
 
   //Cr By: Arslonbek Kulmatov
-  //Metodni Core_App.Set_Method orqali chaqirish
-  public String call(JSONObject params, Long userId) throws Exception {
+  //Metodni Core_App.Set_Method orqali chaqirish.
+  //So'rov tizimdagi barcha metodlar kabi {"method":.., "params":{..}} ko'rinishida.
+  public String call(String method, JSONObject params, Long userId) throws Exception {
+    JSONObject request = new JSONObject();
+    request.put("method", method);
+    request.put("params", params);
+
     Connection conn = DB.con(hds);
     try {
       sApp.setDbSessionForUser(conn, userId.toString());
       JbSql sql = new JbSql("Core_App.Set_Method", conn, false);
-      sql.addParam(params.toString(), 1);
+      sql.addParam(request.toString(), 1);
       sql.addOut(Types.CLOB, 2);
       sql.exec();
       return (String) sql.getOutVal(2);

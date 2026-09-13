@@ -37,13 +37,12 @@ public class CCatalog {
     }
 
     JSONObject params = new JSONObject();
-    params.put("method", "catalogProducts");
     params.put("page", page);
     params.put("per_page", perPage);
     if (updatedSince != null && !updatedSince.isBlank()) {
       params.put("updated_since", updatedSince);
     }
-    return call(params, userId);
+    return call("catalogProducts", params, userId);
   }
 
   //Cr By: Arslonbek Kulmatov
@@ -57,9 +56,7 @@ public class CCatalog {
       return error(HttpStatus.UNAUTHORIZED, "Invalid or missing API token");
     }
 
-    JSONObject params = new JSONObject();
-    params.put("method", "catalogStock");
-    return call(params, userId);
+    return call("catalogStock", new JSONObject(), userId);
   }
 
   // page=abc kabi noto'g'ri parametrlar 500 emas, 400 qaytarishi kerak
@@ -68,11 +65,11 @@ public class CCatalog {
     return error(HttpStatus.BAD_REQUEST, "Invalid value for parameter '" + e.getName() + "'");
   }
 
-  private ResponseEntity<String> call(JSONObject params, Long userId) {
+  private ResponseEntity<String> call(String method, JSONObject params, Long userId) {
     try {
-      String body = sCatalog.call(params, userId);
+      String body = sCatalog.call(method, params, userId);
       if (body == null) {
-        log.error("Katalog metodi bo'sh javob qaytardi: {}", params.getString("method"));
+        log.error("Katalog metodi bo'sh javob qaytardi: {}", method);
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error");
       }
       return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(body);

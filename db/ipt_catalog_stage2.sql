@@ -81,6 +81,10 @@ create or replace package Ipt_Catalog is
   --Faqat narx va qoldiq — tez-tez so'raladigan yengil metod
   Procedure Get_Stock(iParams clob, oResponse out clob);
 
+  --Cr By: Arslonbek Kulmatov
+  --Katalog maydonlarini to'ldirish (ichki, operatorlar uchun)
+  Procedure Save_Product(iParams clob, oResponse out clob);
+
 end Ipt_Catalog;
 /
 
@@ -91,6 +95,26 @@ create or replace package body Ipt_Catalog is
 
   -- Sahifa hajmi chegaralari. Sayt 100-500 oralig'ini so'ragan.
   cMax_Per_Page constant number := 500;
+
+  --Cr By: Arslonbek Kulmatov
+  --Parametrlar obyekti. Tizimdagi barcha metodlar kabi {"method":..,"params":{..}}
+  --ko'rinishida keladi; "params" bo'lmasa bo'sh obyekt qaytadi, chunki
+  --get_Number null obyektda xato beradi.
+  Function Get_Params(iParams clob) return json_object_t
+  is
+    vJson   json_object_t := json_object_t.parse(iParams);
+    vParams json_object_t;
+  begin
+    if vJson.has('params') then
+      vParams := vJson.get_Object('params');
+    end if;
+
+    if vParams is null then
+      vParams := json_object_t();
+    end if;
+
+    return vParams;
+  end;
 
   --Cr By: Arslonbek Kulmatov
   --Vitrina shourum kodlari ro'yxati
@@ -169,7 +193,7 @@ create or replace package body Ipt_Catalog is
   --To'liq katalog, sahifalab
   Procedure Get_Products(iParams clob, oResponse out clob)
   is
-    vParams   json_object_t := json_object_t.parse(iParams);
+    vParams   json_object_t := Get_Params(iParams);
     vResponse json_object_t := json_object_t();
     vItems    json_array_t  := json_array_t();
     vItem     json_object_t;
@@ -272,6 +296,177 @@ create or replace package body Ipt_Catalog is
     oResponse := vResponse.to_clob();
   end;
 
+  --Cr By: Arslonbek Kulmatov
+  --Katalog maydonlarini to'ldirish
+  --
+  --Product_Action ga ataylab tegilmadi: u investor saldosini debetlaydi,
+  --refund qiladi va balans loglarini yozadi. Katalog maydonlari esa pulga
+  --umuman aloqador emas — ikkalasini bitta protsedurada aralashtirish
+  --xavfli va keraksiz.
+  --
+  --"ids" massiv, chunki bitta model bo'yicha o'nlab qator bir xil
+  --model_code / category_code / brand_code oladi (yuklamada "iPhone 16 Pro
+  --Max" 34 marta uchraydi) — ularni bittalab tahrirlash ma'nosiz.
+  --
+  --FAQAT kelgan maydonlar yangilanadi. Kelmagan maydon NULL bilan
+  --ustidan yozilmaydi — aks holda eski frontend har saqlashda katalog
+  --ma'lumotini o'chirib yuborardi.
+  --
+  --retail_price_uzs SOMDA keladi (tiyinsiz), bazada tiyinda saqlanadi.
+  Procedure Save_Product(iParams clob, oResponse out clob)
+  is
+    vParams       json_object_t := Get_Params(iParams);
+    vResponse     json_object_t := json_object_t();
+    vIds          json_array_t;
+    vSession_User number := core_session.Get_User_Id;
+    vId           number;
+    vCount        pls_integer;
+    vUpdated      pls_integer := 0;
+
+    vModel_Code varchar2(200);
+    vModel_Name varchar2(1000);
+    vCategory   varchar2(30);
+    vBrand      varchar2(30);
+    vCondition  varchar2(10);
+    vPhys_Fil   varchar2(10);
+    vPrice      number;
+
+    -- SQL ichida ishlatilgani uchun boolean EMAS
+    vHas_Model_Code varchar2(1) := case when vParams.has('model_code')       then 'Y' else 'N' end;
+    vHas_Model_Name varchar2(1) := case when vParams.has('model_name')       then 'Y' else 'N' end;
+    vHas_Category   varchar2(1) := case when vParams.has('category_code')    then 'Y' else 'N' end;
+    vHas_Brand      varchar2(1) := case when vParams.has('brand_code')       then 'Y' else 'N' end;
+    vHas_Condition  varchar2(1) := case when vParams.has('item_condition')   then 'Y' else 'N' end;
+    vHas_Phys_Fil   varchar2(1) := case when vParams.has('phys_filial_code') then 'Y' else 'N' end;
+    vHas_Price      varchar2(1) := case when vParams.has('retail_price_uzs') then 'Y' else 'N' end;
+  begin
+    Ipt_Methods.Check_For_Seller;
+
+    if not vParams.has('ids') then
+      Ipt_Methods.Raise_Error('"ids" ko''rsatilmagan.');
+    end if;
+
+    vIds := vParams.get_Array('ids');
+
+    if vIds.get_size = 0 then
+      Ipt_Methods.Raise_Error('"ids" bo''sh bo''lishi mumkin emas.');
+    end if;
+
+    if vHas_Model_Code  = 'N' and vHas_Model_Name = 'N' and vHas_Category = 'N'
+       and vHas_Brand   = 'N' and vHas_Condition = 'N' and vHas_Phys_Fil = 'N'
+       and vHas_Price   = 'N' then
+      Ipt_Methods.Raise_Error('Yangilash uchun birorta ham maydon berilmagan.');
+    end if;
+
+    -- Qiymatlarni o'qish va tekshirish: sikldan OLDIN, bir marta
+    if vHas_Model_Code = 'Y' then
+      vModel_Code := lower(trim(vParams.get_String('model_code')));
+
+      if vModel_Code is not null and not regexp_like(vModel_Code, '^[a-z0-9]+(-[a-z0-9]+)*$') then
+        Ipt_Methods.Raise_Error('"model_code" faqat kichik lotin harflari, raqam va "-" dan iborat bo''lishi kerak: iphone-16-pro-max');
+      end if;
+    end if;
+
+    if vHas_Model_Name = 'Y' then
+      vModel_Name := trim(vParams.get_String('model_name'));
+    end if;
+
+    if vHas_Category = 'Y' then
+      vCategory := trim(vParams.get_String('category_code'));
+
+      if vCategory is not null then
+        select count(*) into vCount
+          from ipt_s_categories c
+         where c.code = vCategory
+           and c.condition = 'A';
+
+        if vCount = 0 then
+          Ipt_Methods.Raise_Error('Bunday kategoriya yo''q yoki faol emas: '||vCategory);
+        end if;
+      end if;
+    end if;
+
+    if vHas_Brand = 'Y' then
+      vBrand := trim(vParams.get_String('brand_code'));
+
+      if vBrand is not null then
+        select count(*) into vCount
+          from ipt_s_brands b
+         where b.code = vBrand
+           and b.condition = 'A';
+
+        if vCount = 0 then
+          Ipt_Methods.Raise_Error('Bunday brend yo''q yoki faol emas: '||vBrand);
+        end if;
+      end if;
+    end if;
+
+    if vHas_Condition = 'Y' then
+      vCondition := lower(trim(vParams.get_String('item_condition')));
+
+      if vCondition is not null and vCondition not in ('new', 'used') then
+        Ipt_Methods.Raise_Error('"item_condition" faqat "new" yoki "used" bo''ladi.');
+      end if;
+    end if;
+
+    if vHas_Phys_Fil = 'Y' then
+      vPhys_Fil := trim(vParams.get_String('phys_filial_code'));
+
+      if vPhys_Fil is not null then
+        select count(*) into vCount
+          from ipt_s_filials f
+         where f.code = vPhys_Fil;
+
+        if vCount = 0 then
+          Ipt_Methods.Raise_Error('Bunday filial yo''q: '||vPhys_Fil);
+        end if;
+      end if;
+    end if;
+
+    if vHas_Price = 'Y' then
+      vPrice := round(vParams.get_Number('retail_price_uzs'), 2) * 100;
+
+      if vPrice is not null and vPrice <= 0 then
+        Ipt_Methods.Raise_Error('"retail_price_uzs" 0 dan katta bo''lishi kerak.');
+      end if;
+    end if;
+
+    for i in 0 .. vIds.get_size - 1
+    loop
+      vId := vIds.get_Number(i);
+
+      select count(*) into vCount
+        from ipt_products p
+       where p.id = vId;
+
+      if vCount = 0 then
+        Ipt_Methods.Raise_Error('Bunday tovar yo''q: '||vId);
+      end if;
+
+      update ipt_products t
+         set t.model_code       = case when vHas_Model_Code = 'Y' then vModel_Code else t.model_code end,
+             t.model_name       = case when vHas_Model_Name = 'Y' then vModel_Name else t.model_name end,
+             t.category_code    = case when vHas_Category   = 'Y' then vCategory   else t.category_code end,
+             t.brand_code       = case when vHas_Brand      = 'Y' then vBrand      else t.brand_code end,
+             t.item_condition   = case when vHas_Condition  = 'Y' then vCondition  else t.item_condition end,
+             t.phys_filial_code = case when vHas_Phys_Fil   = 'Y' then vPhys_Fil   else t.phys_filial_code end,
+             t.retail_price_uzs = case when vHas_Price      = 'Y' then vPrice      else t.retail_price_uzs end,
+             t.up_by            = vSession_User,
+             t.up_on            = sysdate
+       where t.id = vId;
+
+      vUpdated := vUpdated + sql%rowcount;
+
+      Ipt_Methods_Dml.Product_His(p_Product_Id => vId, p_Action => 'U');
+    end loop;
+
+    vResponse.put('oper', true);
+    vResponse.put('updated', vUpdated);
+    vResponse.put('message', vUpdated||' ta tovar yangilandi.');
+
+    oResponse := vResponse.to_clob();
+  end;
+
 end Ipt_Catalog;
 /
 
@@ -279,39 +474,87 @@ end Ipt_Catalog;
 -- =============================================================================
 -- 3. METODLARNI RO'YXATGA OLISH
 --
--- add_log = 'N': katalog soatiga bir marta, qoldiq esa 5 daqiqada bir marta
--- so'raladi. Loglasak core_api_log keraksiz to'lib ketadi.
+-- O'qish metodlarida add_log = 'N': katalog soatiga bir marta, qoldiq esa
+-- 5 daqiqada bir marta so'raladi, loglasak core_api_log keraksiz to'lib ketadi.
+-- catalogSaveProduct esa ma'lumotni o'zgartiradi va kam chaqiriladi — u loglanadi.
+--
+-- catalogProducts va catalogStock tashqariga, /api/catalog/* orqali chiqadi.
+-- catalogSaveProduct — ichki metod, oddiy /api/app/request/v2 orqali,
+-- JWT bilan ishlaydi va tokenga aloqasi yo'q.
 --
 -- Metodni vaqtincha o'chirish kerak bo'lsa: state = 'P'.
 -- =============================================================================
 
 prompt 3.1 core_methods
 
+-- seq kerak: bitta MERGE ichida max(id) hamma qator uchun bir xil o'qiladi,
+-- shuning uchun "+1" ikkala yangi metodga ham bir xil id berib, PK ni buzardi.
 merge into core_methods t
 using (
   select 'catalogProducts' method,
          'Ipt_Catalog.Get_Products' proc_name,
-         'Sayt katalogi: to''liq ro''yxat, sahifalab' details from dual
+         'N' add_log,
+         'Sayt katalogi: to''liq ro''yxat, sahifalab' details,
+         1 seq from dual
   union all
   select 'catalogStock',
          'Ipt_Catalog.Get_Stock',
-         'Sayt katalogi: narx va qoldiq' from dual
+         'N',
+         'Sayt katalogi: narx va qoldiq',
+         2 from dual
+  union all
+  select 'catalogSaveProduct',
+         'Ipt_Catalog.Save_Product',
+         'Y',
+         'Katalog maydonlarini to''ldirish (ichki)',
+         3 from dual
 ) s
 on (lower(t.method) = lower(s.method))
 when matched then
   update set t.proc_name = s.proc_name,
              t.details   = s.details,
+             t.add_log   = s.add_log,
              t.state     = 'A'
 when not matched then
   insert (id, method, proc_name, state, has_out_param, is_func, add_log, details, cr_on)
-  values ((select nvl(max(m.id), 0) + 1 from core_methods m),
-          s.method, s.proc_name, 'A', 'Y', 'N', 'N', s.details, sysdate);
+  values ((select nvl(max(m.id), 0) from core_methods m) + s.seq,
+          s.method, s.proc_name, 'A', 'Y', 'N', s.add_log, s.details, sysdate);
 
 commit;
 
 
 -- =============================================================================
--- 4. TOKEN YARATISH
+-- 4. catalogSaveProduct — chaqirish namunasi
+--
+-- POST /api/app/request/v2  (oddiy JWT bilan, tokenga aloqasi yo'q)
+--
+--   {
+--     "method": "catalogSaveProduct",
+--     "params": {
+--       "ids": [101, 102, 103],
+--       "model_code": "iphone-16-pro-max",
+--       "model_name": "iPhone 16 Pro Max",
+--       "category_code": "iphone",
+--       "brand_code": "apple",
+--       "item_condition": "new",
+--       "retail_price_uzs": 19500000,
+--       "phys_filial_code": "01025"
+--     }
+--   }
+--
+-- "ids" dan boshqa hamma maydon ixtiyoriy. Berilmagan maydon TEGILMAYDI —
+-- ya'ni faqat model_code ni yuborib, narxni joyida qoldirish mumkin.
+--
+-- Bir nechta id birdaniga: bitta model bo'yicha o'nlab qator bir xil
+-- model_code/category/brand oladi, ularni bittalab tahrirlash ma'nosiz.
+-- Narx ham odatda bir xil yangi apparatlarda bir xil.
+--
+-- retail_price_uzs SOMDA yuboriladi (19500000), bazada tiyinda saqlanadi.
+-- =============================================================================
+
+
+-- =============================================================================
+-- 5. TOKEN YARATISH
 --
 -- Tokenni o'zingiz o'ylab topmang — tasodifiy generatsiya qiling, masalan:
 --

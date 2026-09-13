@@ -12,6 +12,13 @@
 -- MUHIM  : Barcha summalar tizim bo'yicha TIYINDA saqlanadi (x100).
 --          View'larda /100 qilib beriladi — ipt_trades_v va boshqalar kabi.
 --
+-- ISHGA TUSHIRISH TARTIBI
+--   1. ipt_catalog_stage1.sql          <- shu fayl
+--   2. ipt_catalog_stage2.sql
+--   3. ipt_catalog_stage3.sql
+--   4. ipt_catalog_package.sql
+--   5. ipt_catalog_product_action.sql  <- Ipt_Methods ga qo'lda
+--
 -- Bo'limlar KETMA-KET bajariladi (1 -> 5), tartibni o'zgartirib bo'lmaydi:
 -- ma'lumotnomalar FK uchun oldin yaratilishi kerak.
 -- CREATE/ALTER qismlari bir marta bajariladi; ma'lumotnoma qiymatlari (3-bo'lim)

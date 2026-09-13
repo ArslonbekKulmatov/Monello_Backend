@@ -5,8 +5,12 @@
 --
 -- Bu yerda:
 --   1. CORE_API_TOKENS  — tashqi tizimlar uchun doimiy token
---   2. IPT_CATALOG      — katalog va qoldiq metodlari
+--   2. IPT_CATALOG      — katalog, qoldiq va katalog maydonlari metodlari
 --   3. CORE_METHODS     — metodlarni ro'yxatga olish
+--
+-- Shundan keyin db/ipt_catalog_product_action.sql qo'llanadi: u
+-- Ipt_Methods.Product_Action ga katalog maydonlarini ulaydi, shunda bitta
+-- mahsulotni saqlash uchun ikkinchi API chaqiruvi kerak bo'lmaydi.
 --
 -- Muallif: Arslonbek Kulmatov
 -- Sana   : 13.09.2026
@@ -74,6 +78,40 @@ create or replace package Ipt_Catalog is
   -- Purpose : ABM Store sayti uchun katalog API
 
   --Cr By: Arslonbek Kulmatov
+  --So'rovdan o'qilgan katalog maydonlari.
+  --has_* — maydon so'rovda KELGANMI degani. Kelmagan maydon tegilmaydi,
+  --kelgan va null — bilib turib tozalash. Ikkovini ajratish shart:
+  --aks holda maydonlarni yubormaydigan eski forma har saqlashda
+  --katalog ma'lumotini o'chirib yuboradi.
+  type t_catalog_fields is record(
+    has_model_code   varchar2(1),
+    has_model_name   varchar2(1),
+    has_category     varchar2(1),
+    has_brand        varchar2(1),
+    has_condition    varchar2(1),
+    has_phys_filial  varchar2(1),
+    has_price        varchar2(1),
+    model_code       varchar2(200),
+    model_name       varchar2(1000),
+    category_code    varchar2(30),
+    brand_code       varchar2(30),
+    item_condition   varchar2(10),
+    phys_filial_code varchar2(10),
+    retail_price_uzs number
+  );
+
+  --Cr By: Arslonbek Kulmatov
+  --Katalog maydonlarini o'qish va tekshirish
+  Function Read_Catalog_Fields(iParams json_object_t) return t_catalog_fields;
+
+  --Cr By: Arslonbek Kulmatov
+  --Katalog maydonlarini mahsulot qatoriga qo'yish.
+  --Ipt_Methods.Product_Action shu bitta qator orqali chaqiradi — shunda
+  --bitta mahsulotni saqlash uchun ikkinchi API chaqiruvi kerak bo'lmaydi.
+  Procedure Apply_Catalog_Fields(iParams   json_object_t,
+                                 ioProduct in out nocopy ipt_products%rowtype);
+
+  --Cr By: Arslonbek Kulmatov
   --To'liq katalog, sahifalab
   Procedure Get_Products(iParams clob, oResponse out clob);
 
@@ -82,7 +120,9 @@ create or replace package Ipt_Catalog is
   Procedure Get_Stock(iParams clob, oResponse out clob);
 
   --Cr By: Arslonbek Kulmatov
-  --Katalog maydonlarini to'ldirish (ichki, operatorlar uchun)
+  --Bir nechta tovarga bir xil katalog maydonlarini qo'yish (ommaviy).
+  --Bitta tovarni saqlash Product_Action orqali, bu esa faqat ommaviy hol
+  --uchun: bitta model bo'yicha o'nlab qator bir xil model_code oladi.
   Procedure Save_Product(iParams clob, oResponse out clob);
 
 end Ipt_Catalog;
@@ -187,6 +227,122 @@ create or replace package body Ipt_Catalog is
 
     return to_char(from_tz(cast(iDate as timestamp), sessiontimezone),
                    'YYYY-MM-DD"T"HH24:MI:SSTZH:TZM');
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --Katalog maydonlarini o'qish va tekshirish.
+  --Product_Action ham, Save_Product ham shu yerdan o'tadi — tekshiruv
+  --ikki joyda takrorlanmasligi uchun.
+  Function Read_Catalog_Fields(iParams json_object_t) return t_catalog_fields
+  is
+    vFields t_catalog_fields;
+    vCount  pls_integer;
+  begin
+    vFields.Has_Model_Code  := case when iParams.has('model_code')       then 'Y' else 'N' end;
+    vFields.Has_Model_Name  := case when iParams.has('model_name')       then 'Y' else 'N' end;
+    vFields.Has_Category    := case when iParams.has('category_code')    then 'Y' else 'N' end;
+    vFields.Has_Brand       := case when iParams.has('brand_code')       then 'Y' else 'N' end;
+    vFields.Has_Condition   := case when iParams.has('item_condition')   then 'Y' else 'N' end;
+    vFields.Has_Phys_Filial := case when iParams.has('phys_filial_code') then 'Y' else 'N' end;
+    vFields.Has_Price       := case when iParams.has('retail_price_uzs') then 'Y' else 'N' end;
+
+    if vFields.Has_Model_Code = 'Y' then
+      vFields.Model_Code := lower(trim(iParams.get_String('model_code')));
+
+      if vFields.Model_Code is not null
+         and not regexp_like(vFields.Model_Code, '^[a-z0-9]+(-[a-z0-9]+)*$') then
+        Ipt_Methods.Raise_Error('"model_code" faqat kichik lotin harflari, raqam va "-" dan '||
+                                'iborat bo''lishi kerak: iphone-16-pro-max');
+      end if;
+    end if;
+
+    if vFields.Has_Model_Name = 'Y' then
+      vFields.Model_Name := trim(iParams.get_String('model_name'));
+    end if;
+
+    if vFields.Has_Category = 'Y' then
+      vFields.Category_Code := trim(iParams.get_String('category_code'));
+
+      if vFields.Category_Code is not null then
+        select count(*) into vCount
+          from ipt_s_categories c
+         where c.code = vFields.Category_Code
+           and c.condition = 'A';
+
+        if vCount = 0 then
+          Ipt_Methods.Raise_Error('Bunday kategoriya yo''q yoki faol emas: '||vFields.Category_Code);
+        end if;
+      end if;
+    end if;
+
+    if vFields.Has_Brand = 'Y' then
+      vFields.Brand_Code := trim(iParams.get_String('brand_code'));
+
+      if vFields.Brand_Code is not null then
+        select count(*) into vCount
+          from ipt_s_brands b
+         where b.code = vFields.Brand_Code
+           and b.condition = 'A';
+
+        if vCount = 0 then
+          Ipt_Methods.Raise_Error('Bunday brend yo''q yoki faol emas: '||vFields.Brand_Code);
+        end if;
+      end if;
+    end if;
+
+    if vFields.Has_Condition = 'Y' then
+      vFields.Item_Condition := lower(trim(iParams.get_String('item_condition')));
+
+      if vFields.Item_Condition is not null and vFields.Item_Condition not in ('new', 'used') then
+        Ipt_Methods.Raise_Error('"item_condition" faqat "new" yoki "used" bo''ladi.');
+      end if;
+    end if;
+
+    if vFields.Has_Phys_Filial = 'Y' then
+      vFields.Phys_Filial_Code := trim(iParams.get_String('phys_filial_code'));
+
+      if vFields.Phys_Filial_Code is not null then
+        select count(*) into vCount
+          from ipt_s_filials f
+         where f.code = vFields.Phys_Filial_Code;
+
+        if vCount = 0 then
+          Ipt_Methods.Raise_Error('Bunday filial yo''q: '||vFields.Phys_Filial_Code);
+        end if;
+      end if;
+    end if;
+
+    if vFields.Has_Price = 'Y' then
+      -- Somda keladi, tiyinda saqlanadi — tizimdagi qolgan summalar kabi
+      vFields.Retail_Price_Uzs := round(iParams.get_Number('retail_price_uzs'), 2) * 100;
+
+      if vFields.Retail_Price_Uzs is not null and vFields.Retail_Price_Uzs <= 0 then
+        Ipt_Methods.Raise_Error('"retail_price_uzs" 0 dan katta bo''lishi kerak.');
+      end if;
+    end if;
+
+    return vFields;
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --Katalog maydonlarini mahsulot qatoriga qo'yish.
+  --
+  --FAQAT so'rovda kelgan maydonlar qo'yiladi. Product_Action U tarmog'ida
+  --"update ipt_products t set row = vProduct" ishlatadi — ya'ni butun qator
+  --almashtiriladi. Shartsiz o'zlashtirsak, bu maydonlarni hali yubormaydigan
+  --forma har saqlashda katalog ma'lumotini NULL bilan o'chirib yuborardi.
+  Procedure Apply_Catalog_Fields(iParams   json_object_t,
+                                 ioProduct in out nocopy ipt_products%rowtype)
+  is
+    vFields t_catalog_fields := Read_Catalog_Fields(iParams);
+  begin
+    if vFields.Has_Model_Code   = 'Y' then ioProduct.Model_Code       := vFields.Model_Code;       end if;
+    if vFields.Has_Model_Name   = 'Y' then ioProduct.Model_Name       := vFields.Model_Name;       end if;
+    if vFields.Has_Category     = 'Y' then ioProduct.Category_Code    := vFields.Category_Code;    end if;
+    if vFields.Has_Brand        = 'Y' then ioProduct.Brand_Code       := vFields.Brand_Code;       end if;
+    if vFields.Has_Condition    = 'Y' then ioProduct.Item_Condition   := vFields.Item_Condition;   end if;
+    if vFields.Has_Phys_Filial  = 'Y' then ioProduct.Phys_Filial_Code := vFields.Phys_Filial_Code; end if;
+    if vFields.Has_Price        = 'Y' then ioProduct.Retail_Price_Uzs := vFields.Retail_Price_Uzs; end if;
   end;
 
   --Cr By: Arslonbek Kulmatov
@@ -317,28 +473,12 @@ create or replace package body Ipt_Catalog is
   is
     vParams       json_object_t := Get_Params(iParams);
     vResponse     json_object_t := json_object_t();
+    vFields       t_catalog_fields;
     vIds          json_array_t;
     vSession_User number := core_session.Get_User_Id;
     vId           number;
     vCount        pls_integer;
     vUpdated      pls_integer := 0;
-
-    vModel_Code varchar2(200);
-    vModel_Name varchar2(1000);
-    vCategory   varchar2(30);
-    vBrand      varchar2(30);
-    vCondition  varchar2(10);
-    vPhys_Fil   varchar2(10);
-    vPrice      number;
-
-    -- SQL ichida ishlatilgani uchun boolean EMAS
-    vHas_Model_Code varchar2(1) := case when vParams.has('model_code')       then 'Y' else 'N' end;
-    vHas_Model_Name varchar2(1) := case when vParams.has('model_name')       then 'Y' else 'N' end;
-    vHas_Category   varchar2(1) := case when vParams.has('category_code')    then 'Y' else 'N' end;
-    vHas_Brand      varchar2(1) := case when vParams.has('brand_code')       then 'Y' else 'N' end;
-    vHas_Condition  varchar2(1) := case when vParams.has('item_condition')   then 'Y' else 'N' end;
-    vHas_Phys_Fil   varchar2(1) := case when vParams.has('phys_filial_code') then 'Y' else 'N' end;
-    vHas_Price      varchar2(1) := case when vParams.has('retail_price_uzs') then 'Y' else 'N' end;
   begin
     Ipt_Methods.Check_For_Seller;
 
@@ -352,83 +492,14 @@ create or replace package body Ipt_Catalog is
       Ipt_Methods.Raise_Error('"ids" bo''sh bo''lishi mumkin emas.');
     end if;
 
-    if vHas_Model_Code  = 'N' and vHas_Model_Name = 'N' and vHas_Category = 'N'
-       and vHas_Brand   = 'N' and vHas_Condition = 'N' and vHas_Phys_Fil = 'N'
-       and vHas_Price   = 'N' then
+    -- Tekshiruv sikldan OLDIN, bir marta
+    vFields := Read_Catalog_Fields(vParams);
+
+    if vFields.Has_Model_Code  = 'N' and vFields.Has_Model_Name  = 'N'
+       and vFields.Has_Category = 'N' and vFields.Has_Brand      = 'N'
+       and vFields.Has_Condition = 'N' and vFields.Has_Phys_Filial = 'N'
+       and vFields.Has_Price    = 'N' then
       Ipt_Methods.Raise_Error('Yangilash uchun birorta ham maydon berilmagan.');
-    end if;
-
-    -- Qiymatlarni o'qish va tekshirish: sikldan OLDIN, bir marta
-    if vHas_Model_Code = 'Y' then
-      vModel_Code := lower(trim(vParams.get_String('model_code')));
-
-      if vModel_Code is not null and not regexp_like(vModel_Code, '^[a-z0-9]+(-[a-z0-9]+)*$') then
-        Ipt_Methods.Raise_Error('"model_code" faqat kichik lotin harflari, raqam va "-" dan iborat bo''lishi kerak: iphone-16-pro-max');
-      end if;
-    end if;
-
-    if vHas_Model_Name = 'Y' then
-      vModel_Name := trim(vParams.get_String('model_name'));
-    end if;
-
-    if vHas_Category = 'Y' then
-      vCategory := trim(vParams.get_String('category_code'));
-
-      if vCategory is not null then
-        select count(*) into vCount
-          from ipt_s_categories c
-         where c.code = vCategory
-           and c.condition = 'A';
-
-        if vCount = 0 then
-          Ipt_Methods.Raise_Error('Bunday kategoriya yo''q yoki faol emas: '||vCategory);
-        end if;
-      end if;
-    end if;
-
-    if vHas_Brand = 'Y' then
-      vBrand := trim(vParams.get_String('brand_code'));
-
-      if vBrand is not null then
-        select count(*) into vCount
-          from ipt_s_brands b
-         where b.code = vBrand
-           and b.condition = 'A';
-
-        if vCount = 0 then
-          Ipt_Methods.Raise_Error('Bunday brend yo''q yoki faol emas: '||vBrand);
-        end if;
-      end if;
-    end if;
-
-    if vHas_Condition = 'Y' then
-      vCondition := lower(trim(vParams.get_String('item_condition')));
-
-      if vCondition is not null and vCondition not in ('new', 'used') then
-        Ipt_Methods.Raise_Error('"item_condition" faqat "new" yoki "used" bo''ladi.');
-      end if;
-    end if;
-
-    if vHas_Phys_Fil = 'Y' then
-      vPhys_Fil := trim(vParams.get_String('phys_filial_code'));
-
-      if vPhys_Fil is not null then
-        select count(*) into vCount
-          from ipt_s_filials f
-         where f.code = vPhys_Fil;
-
-        if vCount = 0 then
-          Ipt_Methods.Raise_Error('Bunday filial yo''q: '||vPhys_Fil);
-        end if;
-      end if;
-    end if;
-
-    if vHas_Price = 'Y' then
-      vPrice := round(vParams.get_Number('retail_price_uzs'), 2) * 100;
-
-      if vPrice is not null and vPrice <= 0 then
-        Ipt_Methods.Raise_Error('"retail_price_uzs" 0 dan katta bo''lishi kerak.');
-      end if;
     end if;
 
     for i in 0 .. vIds.get_size - 1
@@ -444,13 +515,13 @@ create or replace package body Ipt_Catalog is
       end if;
 
       update ipt_products t
-         set t.model_code       = case when vHas_Model_Code = 'Y' then vModel_Code else t.model_code end,
-             t.model_name       = case when vHas_Model_Name = 'Y' then vModel_Name else t.model_name end,
-             t.category_code    = case when vHas_Category   = 'Y' then vCategory   else t.category_code end,
-             t.brand_code       = case when vHas_Brand      = 'Y' then vBrand      else t.brand_code end,
-             t.item_condition   = case when vHas_Condition  = 'Y' then vCondition  else t.item_condition end,
-             t.phys_filial_code = case when vHas_Phys_Fil   = 'Y' then vPhys_Fil   else t.phys_filial_code end,
-             t.retail_price_uzs = case when vHas_Price      = 'Y' then vPrice      else t.retail_price_uzs end,
+         set t.model_code       = case when vFields.Has_Model_Code   = 'Y' then vFields.Model_Code       else t.model_code end,
+             t.model_name       = case when vFields.Has_Model_Name   = 'Y' then vFields.Model_Name       else t.model_name end,
+             t.category_code    = case when vFields.Has_Category     = 'Y' then vFields.Category_Code    else t.category_code end,
+             t.brand_code       = case when vFields.Has_Brand        = 'Y' then vFields.Brand_Code       else t.brand_code end,
+             t.item_condition   = case when vFields.Has_Condition    = 'Y' then vFields.Item_Condition   else t.item_condition end,
+             t.phys_filial_code = case when vFields.Has_Phys_Filial  = 'Y' then vFields.Phys_Filial_Code else t.phys_filial_code end,
+             t.retail_price_uzs = case when vFields.Has_Price        = 'Y' then vFields.Retail_Price_Uzs else t.retail_price_uzs end,
              t.up_by            = vSession_User,
              t.up_on            = sysdate
        where t.id = vId;
@@ -524,14 +595,20 @@ commit;
 
 
 -- =============================================================================
--- 4. catalogSaveProduct — chaqirish namunasi
+-- 4. KATALOG MAYDONLARINI TO'LDIRISH — ikki yo'l
 --
--- POST /api/app/request/v2  (oddiy JWT bilan, tokenga aloqasi yo'q)
+-- 4.1 BITTA MAHSULOT — mahsulotning o'z formasi orqali, qo'shimcha chaqiruvsiz.
+--     Ipt_Methods.Product_Action ga db/ipt_catalog_product_action.sql
+--     qo'llanilgandan keyin ishlaydi.
 --
 --   {
---     "method": "catalogSaveProduct",
+--     "method": "productAction",
 --     "params": {
---       "ids": [101, 102, 103],
+--       "action": "U",
+--       "id": 101,
+--       "name": "...", "price": 850, "investor_id": 3,
+--       "type": "M", "quantity": 1,
+--
 --       "model_code": "iphone-16-pro-max",
 --       "model_name": "iPhone 16 Pro Max",
 --       "category_code": "iphone",
@@ -542,12 +619,23 @@ commit;
 --     }
 --   }
 --
--- "ids" dan boshqa hamma maydon ixtiyoriy. Berilmagan maydon TEGILMAYDI —
--- ya'ni faqat model_code ni yuborib, narxni joyida qoldirish mumkin.
+-- 4.2 BIR NECHTA MAHSULOT — catalogSaveProduct, faqat ommaviy hol uchun.
+--     Bitta model bo'yicha o'nlab qator bir xil model_code va kategoriya
+--     oladi ("iPhone 16 Pro Max" yuklamada 34 marta uchraydi).
 --
--- Bir nechta id birdaniga: bitta model bo'yicha o'nlab qator bir xil
--- model_code/category/brand oladi, ularni bittalab tahrirlash ma'nosiz.
--- Narx ham odatda bir xil yangi apparatlarda bir xil.
+--   {
+--     "method": "catalogSaveProduct",
+--     "params": {
+--       "ids": [101, 102, 103],
+--       "model_code": "iphone-16-pro-max",
+--       "category_code": "iphone",
+--       "brand_code": "apple"
+--     }
+--   }
+--
+-- Ikkala yo'lda ham katalog maydonlari ixtiyoriy va bir xil tekshiruvdan
+-- o'tadi (Read_Catalog_Fields). Berilmagan maydon TEGILMAYDI — faqat
+-- model_code ni yuborib, narxni joyida qoldirish mumkin.
 --
 -- retail_price_uzs SOMDA yuboriladi (19500000), bazada tiyinda saqlanadi.
 -- =============================================================================

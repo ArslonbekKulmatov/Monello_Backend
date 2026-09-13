@@ -275,7 +275,32 @@ select
 ;
 
 
-prompt 4.2 IPT_CATALOG_TODO_V — ichki ish ro'yxati
+prompt 4.2 Ma'lumotnoma view'lari — frontend dropdownlari uchun
+
+-- Tizimdagi qolgan ipt_s_*_v kabi: code + name.
+-- Frontend bularni execSelect orqali oladi.
+create or replace force view ipt_s_categories_v as
+select
+  t.code,
+  t.name_ru name,
+  t.name_uz,
+  t.ord
+  From ipt_s_categories t
+ where t.condition = 'A'
+ order by t.ord, t.code
+;
+
+create or replace force view ipt_s_brands_v as
+select
+  t.code,
+  t.name
+  From ipt_s_brands t
+ where t.condition = 'A'
+ order by t.name
+;
+
+
+prompt 4.3 IPT_CATALOG_TODO_V — ichki ish ro'yxati
 
 -- DIQQAT: bu view API'ga CHIQMAYDI. Unda name ustuni bor, ichida mijoz
 -- ismlari va qarz summalari bo'lishi mumkin. Faqat ombor xodimlari uchun.

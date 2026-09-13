@@ -325,6 +325,7 @@ select
   case when t.model_code       is null then 'Y' else 'N' end no_model_code,
   case when t.model_name       is null then 'Y' else 'N' end no_model_name,
   case when t.category_code    is null then 'Y' else 'N' end no_category,
+  case when t.brand_code       is null then 'Y' else 'N' end no_brand,
   case when t.item_condition   is null then 'Y' else 'N' end no_condition,
   case when (select f.site_code
                from ipt_s_filials f
@@ -337,6 +338,7 @@ select
      or t.model_code is null
      or t.model_name is null
      or t.category_code is null
+     or t.brand_code is null
      or t.item_condition is null
      or (select f.site_code
            from ipt_s_filials f

@@ -52,8 +52,17 @@ create or replace package Ipt_Catalog is
   Procedure Save_Product(iParams clob, oResponse out clob);
 
   --Cr By: Arslonbek Kulmatov
-  --Model rasmlari. Modelning BARCHA rasmlari almashtiriladi
-  Procedure Save_Model_Images(iParams clob, oResponse out clob);
+  --Rasmni SERVERGA yuklash. Core_App.Set_Method_File orqali chaqiriladi,
+  --shuning uchun imzo (iParams, iFile, oResponse) ko'rinishida.
+  Procedure Upload_Image(iParams varchar2, iFile blob default null, oResponse out clob);
+
+  --Cr By: Arslonbek Kulmatov
+  --Tashqi havolali rasm qo'shish yoki mavjud rasm ma'lumotini o'zgartirish
+  Procedure Save_Image(iParams clob, oResponse out clob);
+
+  --Cr By: Arslonbek Kulmatov
+  --Rasmni o'chirish
+  Procedure Delete_Image(iParams clob, oResponse out clob);
 
   --Cr By: Arslonbek Kulmatov
   --Model xarakteristikalari. Modelning BARCHA xarakteristikalari almashtiriladi
@@ -139,16 +148,82 @@ create or replace package body Ipt_Catalog is
   end;
 
   --Cr By: Arslonbek Kulmatov
-  --Mantiqiy maydon: bazada 1/0, so'rovda true/false
+  --Sonni matnga o'girish. NLS ga bog'liq bo'lmasligi uchun ajratuvchi aniq
+  --ko'rsatilgan: aks holda serverda "13,5" chiqib, sayt buni sonsiz deb o'qiydi.
+  Function Num_To_Str(iValue number) return varchar2
+  is
+  begin
+    if iValue is null then
+      return null;
+    end if;
+
+    return trim(to_char(iValue, 'TM9', 'NLS_NUMERIC_CHARACTERS=''.,'''));
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --JSON dagi istalgan oddiy qiymatni matn sifatida o'qish.
+  --
+  --get_String FAQAT matn qiymatida ishlaydi: {"power_w": 20} da u NULL
+  --qaytaradi va qiymat jimgina yo'qoladi. Sayt esa aynan shunday yuboradi
+  --("power_w": 20, "network_5g": true), shuning uchun tur bo'yicha ajratamiz.
+  Function Json_Scalar(iObj json_object_t, iKey varchar2) return varchar2
+  is
+    vEl json_element_t;
+  begin
+    if not iObj.has(iKey) then
+      return null;
+    end if;
+
+    vEl := iObj.get(iKey);
+
+    if vEl is null then
+      return null;
+    elsif vEl.is_Number then
+      return Num_To_Str(iObj.get_Number(iKey));
+    elsif vEl.is_Boolean then
+      return case when iObj.get_Boolean(iKey) then 'true' else 'false' end;
+    else
+      return iObj.get_String(iKey);
+    end if;
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --Massiv elementini matn sifatida o'qish — Json_Scalar bilan bir sabab
+  Function Json_Scalar(iArr json_array_t, iPos number) return varchar2
+  is
+    vEl json_element_t := iArr.get(iPos);
+  begin
+    if vEl is null then
+      return null;
+    elsif vEl.is_Number then
+      return Num_To_Str(iArr.get_Number(iPos));
+    elsif vEl.is_Boolean then
+      return case when iArr.get_Boolean(iPos) then 'true' else 'false' end;
+    else
+      return iArr.get_String(iPos);
+    end if;
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --Mantiqiy qiymat: bazada 1/0. So'rovda true, "true", 1 — hammasi bo'lishi mumkin.
+  Function Json_Bool(iObj json_object_t, iKey varchar2) return number
+  is
+    vVal varchar2(100) := Json_Scalar(iObj, iKey);
+  begin
+    if vVal is null then
+      return null;
+    end if;
+
+    return case when lower(vVal) in ('true', '1', 'y') then 1 else 0 end;
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --Mantiqiy maydonni o'qish. Kelmagan bo'lsa TEGILMAYDI.
   Procedure Read_Bool(iParams json_object_t, iKey varchar2, ioVal in out nocopy number)
   is
   begin
     if iParams.has(iKey) then
-      if iParams.get_String(iKey) is null then
-        ioVal := null;
-      else
-        ioVal := case when lower(iParams.get_String(iKey)) in ('true', '1', 'y') then 1 else 0 end;
-      end if;
+      ioVal := Json_Bool(iParams, iKey);
     end if;
   end;
 
@@ -589,22 +664,49 @@ create or replace package body Ipt_Catalog is
   -- ===========================================================================
 
   --Cr By: Arslonbek Kulmatov
-  --Model rasmlari. Modelning BARCHA rasmlari almashtiriladi: kelgan ro'yxat
-  --to'liq holat deb qaraladi. Qisman yangilash yo'q — shunda frontend
-  --"qaysi rasm o'chirildi" ni hisoblab o'tirmaydi.
-  Procedure Save_Model_Images(iParams clob, oResponse out clob)
+  --Faqat bitta rasm asosiy bo'lishi uchun qolganlarini tushirish
+  Procedure Reset_Primary(iModel_Code varchar2, iColor_Code varchar2, iKeep_Id number)
   is
+  begin
+    update ipt_model_images t
+       set t.is_primary = 0
+     where t.model_code = iModel_Code
+       and nvl(t.color_code, '~') = nvl(iColor_Code, '~')
+       and t.id <> iKeep_Id
+       and t.is_primary = 1;
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --Rasmni SERVERGA yuklash.
+  --
+  --Core_App.Set_Method_File orqali keladi. U fayl nomi, kengaytmasi va
+  --papkasini so'rovning ILDIZIGA qo'shadi (params ichiga emas) — mavjud
+  --Insert_Client_Guars ham shunday ishlaydi.
+  --
+  --Faylning o'zini Java diskka yozadi: biz faqat nomni qaytaramiz va
+  --core_methods.file_upload_type dagi SERVER_INSERT shuni ishga soladi.
+  --
+  --Har yuklashda fayl nomi YANGI bo'ladi. Sayt hujjatida aytilganidek,
+  --eski nomga yangi rasm qo'yilsa brauzer va optimizator uzoq vaqt eskisini
+  --ko'rsatib turadi.
+  Procedure Upload_Image(iParams varchar2, iFile blob default null, oResponse out clob)
+  is
+    vJson         json_object_t := json_object_t.parse(iParams);
     vParams       json_object_t := Get_Params(iParams);
     vResponse     json_object_t := json_object_t();
-    vImages       json_array_t;
-    vImage        json_object_t;
-    vModel_Code   varchar2(200);
-    vUrl          varchar2(1000);
-    vColor        varchar2(30);
     vSession_User number := core_session.Get_User_Id;
-    vInserted     pls_integer := 0;
+    vModel_Code   varchar2(200);
+    vColor        varchar2(30);
+    vExt          varchar2(20);
+    vFile_Name    varchar2(500);
+    vId           number;
+    vIs_Primary   number;
   begin
     Ipt_Methods.Check_For_Seller;
+
+    if iFile is null then
+      Ipt_Methods.Raise_Error('Fayl yuborilmagan.');
+    end if;
 
     vModel_Code := lower(trim(vParams.get_String('model_code')));
 
@@ -612,48 +714,171 @@ create or replace package body Ipt_Catalog is
       Ipt_Methods.Raise_Error('"model_code" ko''rsatilmagan.');
     end if;
 
-    if not vParams.has('images') then
-      Ipt_Methods.Raise_Error('"images" ko''rsatilmagan. Barcha rasmlarni o''chirish uchun bo''sh massiv yuboring.');
+    vColor := trim(vParams.get_String('color_code'));
+    Check_Color(vColor);
+
+    vExt := lower(trim(vJson.get_String('fileExtension')));
+
+    if vExt not in ('jpg', 'jpeg', 'png', 'webp') then
+      Ipt_Methods.Raise_Error('Rasm formati qo''llab-quvvatlanmaydi: '||vExt||
+                              '. Mumkin: jpg, jpeg, png, webp.');
     end if;
 
-    vImages := vParams.get_Array('images');
+    if dbms_lob.getlength(iFile) > 10485760 then
+      Ipt_Methods.Raise_Error('Rasm hajmi 10 MB dan oshmasligi kerak.');
+    end if;
 
-    delete from ipt_model_images t where t.model_code = vModel_Code;
+    vId         := ipt_model_images_seq.nextval;
+    vIs_Primary := nvl(Json_Bool(vParams, 'is_primary'), 0);
 
-    for i in 0 .. vImages.get_size - 1
-    loop
-      vImage := treat(vImages.get(i) as json_object_t);
-      vUrl   := trim(vImage.get_String('url'));
-      vColor := trim(vImage.get_String('color_code'));
+    -- Nom takrorlanmasligi uchun id va vaqt qo'shiladi.
+    -- model_code 200 belgigacha bo'lishi mumkin, fayl tizimi esa 255 da
+    -- to'xtaydi — shuning uchun qisqartiriladi. Unikallikni id ta'minlaydi.
+    vFile_Name := 'ipt_'||substr(vModel_Code, 1, 60)||'_'||vId||'_'||
+                  to_char(sysdate, 'yyyymmddhh24miss')||'.'||vExt;
 
-      if vUrl is null then
-        Ipt_Methods.Raise_Error('Rasm havolasi bo''sh bo''lishi mumkin emas.');
-      end if;
+    insert into ipt_model_images(id, model_code, color_code, url, file_name,
+                                 is_primary, ord, cr_by, cr_on)
+    values (vId, vModel_Code, vColor, null, vFile_Name,
+            vIs_Primary,
+            nvl(vParams.get_Number('ord'), vId),
+            vSession_User, sysdate);
 
-      -- Sayt havolalar avtorizatsiyasiz ochilishini va https bo'lishini so'ragan
-      if not regexp_like(vUrl, '^https://', 'i') then
-        Ipt_Methods.Raise_Error('Rasm havolasi https:// bilan boshlanishi kerak: '||vUrl);
-      end if;
-
-      Check_Color(vColor);
-
-      insert into ipt_model_images(id, model_code, color_code, url, is_primary, ord, cr_by, cr_on)
-      values (ipt_model_images_seq.nextval,
-              vModel_Code,
-              vColor,
-              vUrl,
-              case when lower(nvl(vImage.get_String('is_primary'), 'false')) in ('true', '1', 'y')
-                   then 1 else 0 end,
-              nvl(vImage.get_Number('ord'), i + 1),
-              vSession_User,
-              sysdate);
-
-      vInserted := vInserted + 1;
-    end loop;
+    if vIs_Primary = 1 then
+      Reset_Primary(vModel_Code, vColor, vId);
+    end if;
 
     vResponse.put('oper', true);
-    vResponse.put('saved', vInserted);
-    vResponse.put('message', vInserted||' ta rasm saqlandi.');
+    vResponse.put('id', vId);
+    -- Java shu nom bo'yicha faylni diskka yozadi
+    vResponse.put('file_name', vFile_Name);
+    vResponse.put('url', Core_Util.Get_Properties('catalog_file_url')||vFile_Name);
+    vResponse.put('message', 'Rasm yuklandi.');
+
+    oResponse := vResponse.to_clob();
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --Tashqi havolali rasm qo'shish yoki mavjud rasmni o'zgartirish.
+  --"id" berilsa tahrir, berilmasa yangi yozuv.
+  Procedure Save_Image(iParams clob, oResponse out clob)
+  is
+    vParams       json_object_t := Get_Params(iParams);
+    vResponse     json_object_t := json_object_t();
+    vSession_User number := core_session.Get_User_Id;
+    vImage        ipt_model_images%rowtype;
+    vId           number;
+    vIs_New       boolean;
+  begin
+    Ipt_Methods.Check_For_Seller;
+
+    vId    := vParams.get_Number('id');
+    vIs_New := vId is null;
+
+    if vIs_New then
+      vImage.Id         := ipt_model_images_seq.nextval;
+      vImage.Model_Code := lower(trim(vParams.get_String('model_code')));
+      vImage.Cr_By      := vSession_User;
+      vImage.Cr_On      := sysdate;
+      vImage.Ord        := nvl(vParams.get_Number('ord'), vImage.Id);
+      vImage.Is_Primary := 0;
+
+      if vImage.Model_Code is null then
+        Ipt_Methods.Raise_Error('"model_code" ko''rsatilmagan.');
+      end if;
+    else
+      begin
+        select t.* into vImage from ipt_model_images t where t.id = vId;
+      exception
+        when no_data_found then
+          Ipt_Methods.Raise_Error('Bunday rasm yo''q: '||vId);
+      end;
+
+      vImage.Up_By := vSession_User;
+      vImage.Up_On := sysdate;
+      Read_Num(vParams, 'ord', vImage.Ord);
+    end if;
+
+    if vParams.has('color_code') then
+      vImage.Color_Code := trim(vParams.get_String('color_code'));
+      Check_Color(vImage.Color_Code);
+    end if;
+
+    if vParams.has('url') then
+      vImage.Url := trim(vParams.get_String('url'));
+
+      if vImage.Url is not null then
+        -- Sayt havolalar avtorizatsiyasiz va https orqali ochilishini so'ragan
+        if not regexp_like(vImage.Url, '^https://', 'i') then
+          Ipt_Methods.Raise_Error('Rasm havolasi https:// bilan boshlanishi kerak: '||vImage.Url);
+        end if;
+
+        -- Tashqi havola qo'yilsa serverdagi fayl bog'lanishi uziladi
+        vImage.File_Name := null;
+      end if;
+    end if;
+
+    if vImage.Url is null and vImage.File_Name is null then
+      Ipt_Methods.Raise_Error('Rasm havolasi ham, serverdagi fayli ham yo''q.');
+    end if;
+
+    if vParams.has('is_primary') then
+      vImage.Is_Primary := nvl(Json_Bool(vParams, 'is_primary'), 0);
+    end if;
+
+    if vIs_New then
+      insert into ipt_model_images values vImage;
+    else
+      update ipt_model_images t set row = vImage where t.id = vImage.Id;
+    end if;
+
+    if vImage.Is_Primary = 1 then
+      Reset_Primary(vImage.Model_Code, vImage.Color_Code, vImage.Id);
+    end if;
+
+    vResponse.put('oper', true);
+    vResponse.put('id', vImage.Id);
+    vResponse.put('message', case when vIs_New then 'Rasm qo''shildi.' else 'Rasm yangilandi.' end);
+
+    oResponse := vResponse.to_clob();
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --Rasm yozuvini o'chirish.
+  --
+  --Serverdagi faylning O'ZI o'chirilmaydi: bazadan yozuv ketgach fayl
+  --hech qayerdan chaqirilmaydi, lekin uni o'chirish uchun Java tomonidan
+  --alohida chaqiruv kerak bo'lardi. Yetim fayllar sekin to'planadi —
+  --kerak bo'lsa keyin tozalash jobi qilinadi.
+  Procedure Delete_Image(iParams clob, oResponse out clob)
+  is
+    vParams    json_object_t := Get_Params(iParams);
+    vResponse  json_object_t := json_object_t();
+    vId        number;
+    vFile_Name varchar2(500);
+  begin
+    Ipt_Methods.Check_For_Seller;
+
+    vId := vParams.get_Number('id');
+
+    if vId is null then
+      Ipt_Methods.Raise_Error('"id" ko''rsatilmagan.');
+    end if;
+
+    begin
+      select t.file_name into vFile_Name
+        from ipt_model_images t
+       where t.id = vId;
+    exception
+      when no_data_found then
+        Ipt_Methods.Raise_Error('Bunday rasm yo''q: '||vId);
+    end;
+
+    delete from ipt_model_images t where t.id = vId;
+
+    vResponse.put('oper', true);
+    Put_Str(vResponse, 'file_name', vFile_Name);
+    vResponse.put('message', 'Rasm o''chirildi.');
 
     oResponse := vResponse.to_clob();
   end;
@@ -732,10 +957,10 @@ create or replace package body Ipt_Catalog is
 
         for i in 0 .. vValues.get_size - 1
         loop
-          Insert_Value(vAttr_Code, vValues.get_string(i), i + 1);
+          Insert_Value(vAttr_Code, Json_Scalar(vValues, i), i + 1);
         end loop;
       else
-        Insert_Value(vAttr_Code, vAttrs.get_String(vAttr_Code), 1);
+        Insert_Value(vAttr_Code, Json_Scalar(vAttrs, vAttr_Code), 1);
       end if;
     end loop;
 
@@ -752,21 +977,31 @@ create or replace package body Ipt_Catalog is
 
   --Cr By: Arslonbek Kulmatov
   --Model rasmlari massivi
+  --
+  --Serverdagi rasm uchun to'liq havola core_properties.catalog_file_url
+  --prefiksi bilan yig'iladi — ipt_client_guars_v dagi dbo_url naqshi kabi.
   Function Build_Images(iModel_Code varchar2) return json_array_t
   is
     vImages json_array_t := json_array_t();
     vImage  json_object_t;
+    vBase   varchar2(500) := Core_Util.Get_Properties('catalog_file_url');
+    vUrl    varchar2(1500);
   begin
-    for rows in (select t.url, t.color_code, t.is_primary
+    for rows in (select t.url, t.file_name, t.color_code, t.is_primary
                    from ipt_model_images t
                   where t.model_code = iModel_Code
                   order by t.ord, t.id)
     loop
-      vImage := json_object_t();
-      vImage.put('url', rows.url);
-      Put_Str(vImage, 'color', rows.color_code);
-      vImage.put('is_primary', rows.is_primary = 1);
-      vImages.append(vImage);
+      vUrl := nvl(rows.url, vBase||rows.file_name);
+
+      -- Prefiks sozlanmagan bo'lsa yarim havola chiqmasin
+      if vUrl is not null and regexp_like(vUrl, '^https?://', 'i') then
+        vImage := json_object_t();
+        vImage.put('url', vUrl);
+        Put_Str(vImage, 'color', rows.color_code);
+        vImage.put('is_primary', rows.is_primary = 1);
+        vImages.append(vImage);
+      end if;
     end loop;
 
     return vImages;
@@ -1039,11 +1274,14 @@ using (
   select 'catalogSaveProduct', 'Ipt_Catalog.Save_Product', 'Y',
          'Katalog maydonlarini ommaviy to''ldirish', 3 from dual
   union all
-  select 'catalogSaveImages', 'Ipt_Catalog.Save_Model_Images', 'Y',
-         'Model rasmlari (barchasi almashtiriladi)', 4 from dual
-  union all
   select 'catalogSaveAttributes', 'Ipt_Catalog.Save_Model_Attributes', 'Y',
-         'Model xarakteristikalari (barchasi almashtiriladi)', 5 from dual
+         'Model xarakteristikalari (barchasi almashtiriladi)', 4 from dual
+  union all
+  select 'catalogSaveImage', 'Ipt_Catalog.Save_Image', 'Y',
+         'Tashqi havolali rasm qo''shish yoki tahrirlash', 5 from dual
+  union all
+  select 'catalogDeleteImage', 'Ipt_Catalog.Delete_Image', 'Y',
+         'Rasmni o''chirish', 6 from dual
 ) s
 on (lower(t.method) = lower(s.method))
 when matched then
@@ -1055,5 +1293,44 @@ when not matched then
   insert (id, method, proc_name, state, has_out_param, is_func, add_log, details, cr_on)
   values ((select nvl(max(m.id), 0) from core_methods m) + s.seq,
           s.method, s.proc_name, 'A', 'Y', 'N', s.add_log, s.details, sysdate);
+
+commit;
+
+
+-- =============================================================================
+-- RASM YUKLASH METODI
+--
+-- Alohida, chunki unga file_upload_type kerak: Core_App.Set_Method_File
+-- protsedurani (iParams, iFile, oAdditional) bilan chaqiradi va Java
+-- javobdagi "file_name" ni olib faylni "root" papkasiga yozadi.
+--
+-- root papkasi SERVERDA OLDINDAN YARATILGAN bo'lishi shart — Files.copy uni
+-- o'zi yaratmaydi va yuklash "Could not store the file" bilan tugaydi:
+--   mkdir -p /opt/monello71/files/catalog
+--
+-- Chaqiruv: POST /api/app/requestFile (multipart: params + file)
+-- =============================================================================
+
+prompt catalogUploadImage
+
+merge into core_methods t
+using (
+  select 'catalogUploadImage' method,
+         'Ipt_Catalog.Upload_Image' proc_name,
+         'Katalog rasmini serverga yuklash' details,
+         '{"type":"SERVER_INSERT","root":"/opt/monello71/files/catalog"}' file_upload_type
+    from dual
+) s
+on (lower(t.method) = lower(s.method))
+when matched then
+  update set t.proc_name        = s.proc_name,
+             t.details          = s.details,
+             t.file_upload_type = s.file_upload_type,
+             t.add_log          = 'Y',
+             t.state            = 'A'
+when not matched then
+  insert (id, method, proc_name, state, has_out_param, is_func, add_log, details, file_upload_type, cr_on)
+  values ((select nvl(max(m.id), 0) + 1 from core_methods m),
+          s.method, s.proc_name, 'A', 'Y', 'N', 'Y', s.details, s.file_upload_type, sysdate);
 
 commit;

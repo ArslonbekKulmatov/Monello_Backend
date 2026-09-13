@@ -134,7 +134,8 @@ create table IPT_MODEL_IMAGES
   id         NUMBER(20) not null,
   model_code VARCHAR2(200) not null,
   color_code VARCHAR2(30),
-  url        VARCHAR2(1000) not null,
+  url        VARCHAR2(1000),
+  file_name  VARCHAR2(500),
   is_primary NUMBER(1) default 0 not null,
   ord        NUMBER(5) default 100 not null,
   cr_by      NUMBER(20),
@@ -148,7 +149,9 @@ comment on table IPT_MODEL_IMAGES
 comment on column IPT_MODEL_IMAGES.color_code
   is 'Rasm qaysi rangga tegishli. Bo''sh bo''lsa — modelning umumiy rasmi';
 comment on column IPT_MODEL_IMAGES.url
-  is 'To''liq https havola. Internetdan avtorizatsiyasiz ochilishi shart';
+  is 'TASHQI havola — rasm boshqa joyda saqlansa. file_name bilan birga to''ldirilmaydi';
+comment on column IPT_MODEL_IMAGES.file_name
+  is 'SERVERDA saqlangan fayl nomi. To''liq havola core_properties.catalog_file_url bilan yig''iladi. Har yuklashda nom yangi bo''ladi — sayt eski rasmni keshdan olmasligi uchun';
 comment on column IPT_MODEL_IMAGES.is_primary
   is '1 — kartochkadagi asosiy rasm';
 comment on column IPT_MODEL_IMAGES.ord
@@ -157,6 +160,11 @@ comment on column IPT_MODEL_IMAGES.ord
 alter table IPT_MODEL_IMAGES add constraint IPT_MODEL_IMAGES_PK primary key (ID);
 alter table IPT_MODEL_IMAGES add constraint IPT_MODEL_IMAGES_COLOR_FK
   foreign key (COLOR_CODE) references IPT_S_COLORS (CODE);
+-- Rasm yo serverda, yo tashqarida. Ikkalasi ham bo'sh bo'lsa — havolasiz yozuv,
+-- ikkalasi ham to'ldirilgan bo'lsa — qaysi biri haqiqiy ekani noaniq.
+alter table IPT_MODEL_IMAGES add constraint IPT_MODEL_IMAGES_SRC_CHK
+  check ((url is not null and file_name is null)
+      or (url is null and file_name is not null));
 create index IPT_MODEL_IMAGES_IDX1 on IPT_MODEL_IMAGES (MODEL_CODE);
 
 create sequence IPT_MODEL_IMAGES_SEQ start with 1 increment by 1 nocache;
@@ -383,6 +391,24 @@ when not matched then
   insert (code, name_ru, name_uz, value_type, is_multi, condition)
   values (s.code, s.name_ru, s.name_uz, s.value_type, s.is_multi, 'A');
 
+
+prompt 4.4 Rasmlar uchun bazaviy havola
+
+-- Serverga yuklangan rasm havolasi shu prefiks + fayl nomi ko'rinishida
+-- yig'iladi. Sayt rasmlarni AVTORIZATSIYASIZ ocha olishi kerak — /api/app/get-file
+-- aynan shunday ishlaydi (Spring Security bu endpointni himoyalamaydi).
+--
+-- Keyinchalik rasmlarni alohida static hostga ko'chirsangiz, faqat shu
+-- qiymatni o'zgartirasiz — kodga tegish shart emas.
+--
+-- DOMENNI O'ZINGIZNIKIGA ALMASHTIRING:
+merge into core_properties t
+using (select 'catalog_file_url' param_name,
+              'https://erp.abmstore.uz/api/app/get-file?file=' param_value from dual) s
+on (t.param_name = s.param_name)
+when not matched then
+  insert (param_name, param_value, condition) values (s.param_name, s.param_value, 'A');
+
 commit;
 
 
@@ -481,6 +507,7 @@ select
    and t.model_code is not null
    and t.model_name is not null
    and t.category_code is not null
+   and t.brand_code is not null
    and t.item_condition is not null
    and (select f.site_code
           from ipt_s_filials f
@@ -496,7 +523,10 @@ select
   t.model_code,
   t.color_code,
   (select c.name_ru from ipt_s_colors c where c.code = t.color_code) color_name,
-  t.url,
+  -- Serverdagi fayl bo'lsa to'liq havola yig'iladi, aks holda tashqi havola
+  nvl(t.url, Core_Util.Get_Properties('catalog_file_url')||t.file_name) url,
+  t.file_name,
+  case when t.file_name is null then 'EXT' else 'SRV' end source,
   t.is_primary,
   t.ord,
   t.cr_on

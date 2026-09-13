@@ -258,7 +258,9 @@ select
      from ipt_s_filials f
     where f.code = nvl(t.phys_filial_code, t.filial_code)) site_code,
   1                      is_active,
-  t.up_on                updated_at
+  -- up_on hech tahrirlanmagan tovarda NULL bo'ladi. O'shanda cr_on olinadi,
+  -- aks holda bunday tovar updated_since bo'yicha delta'ga hech tushmaydi.
+  nvl(t.up_on, t.cr_on)  updated_at
   From ipt_products t
  where t.state = 'S'
    and nvl(t.quantity, 0) > 0

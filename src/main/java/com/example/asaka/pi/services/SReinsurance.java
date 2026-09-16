@@ -207,11 +207,28 @@ public class SReinsurance {
     if (!docsByUuid.containsKey(uuid.toLowerCase(Locale.ROOT))) {
       return "PDF document '" + uuid + ".pdf' was not uploaded";
     }
-    if (row.get("totalDamageSum") == null) {
-      return "totalDamageSum is empty";
-    }
-    if (row.get("totalSharePaymentSum") == null) {
-      return "totalSharePaymentSum is empty";
+    String[] numericFields = {
+        "totalDamageSum", "totalSharePaymentSum",
+        "exchangeRate", "totalDamageInForeignCurrency", "totalSharePaymentInForeignCurrency",
+        "paymentAmountSum", "paymentAmountInForeignCurrency",
+        "insuranceCompensationSum", "insuranceCompensationInForeignCurrency",
+        "sharePaymentSum", "sharePaymentInForeignCurrency"
+    };
+    for (String f : numericFields) {
+      String v = row.get(f);
+      if (v == null) {
+        if (f.equals("totalDamageSum") || f.equals("totalSharePaymentSum")) {
+          return f + " is empty";
+        }
+        continue;
+      }
+      String normalized = v.replace(" ", "").replace(",", ".");
+      row.put(f, normalized);
+      try {
+        Double.parseDouble(normalized);
+      } catch (NumberFormatException nfe) {
+        return f + " is not a valid number: \"" + v + "\"";
+      }
     }
     return null;
   }

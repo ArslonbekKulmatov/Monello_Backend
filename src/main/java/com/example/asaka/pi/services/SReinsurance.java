@@ -300,7 +300,6 @@ public class SReinsurance {
       ps.setString(i, row.get("place"));
 
       ps.executeUpdate();
-      conn.commit();
     }
   }
 

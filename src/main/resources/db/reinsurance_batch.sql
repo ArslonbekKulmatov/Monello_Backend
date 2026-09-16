@@ -70,17 +70,18 @@ Create Index Ix_Pi_Fond_Reins_Batch On PI_FOND_REINSURANCES (batch_id);
       Begin
         -- Safe numeric parsing: strip spaces, convert comma-decimal to dot,
         -- fall back to NULL if the string is not a valid number.
-        vTotalDamage := To_Number(Replace(Replace(i.total_damages_sum,                     ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
-        vTotalShare  := To_Number(Replace(Replace(i.total_share_payment_sum,               ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
-        vInsCompen   := To_Number(Replace(Replace(i.insurance_compensation_sum,            ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
-        vShareSum    := To_Number(Replace(Replace(i.share_payment_sum,                     ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
-        vExRate      := To_Number(Replace(Replace(i.exchange_rate,                         ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
-        vTotalDmgFC  := To_Number(Replace(Replace(i.total_damage_in_foreign_currency,      ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
-        vTotalShrFC  := To_Number(Replace(Replace(i.total_share_payment_in_foreign_currency, ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
-        vPayAmtSum   := To_Number(Replace(Replace(i.payment_amount_sum,                    ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
-        vPayAmtFC    := To_Number(Replace(Replace(i.payment_amount_in_foreign_currency,    ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
-        vInsCompenFC := To_Number(Replace(Replace(i.insurance_compensation_in_foreign_currency, ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
-        vShareSumFC  := To_Number(Replace(Replace(i.share_payment_in_foreign_currency,     ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR);
+        -- NLS parameter forces dot-decimal interpretation regardless of session locale.
+        vTotalDamage := To_Number(Replace(Replace(i.total_damages_sum,                     ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
+        vTotalShare  := To_Number(Replace(Replace(i.total_share_payment_sum,               ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
+        vInsCompen   := To_Number(Replace(Replace(i.insurance_compensation_sum,            ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
+        vShareSum    := To_Number(Replace(Replace(i.share_payment_sum,                     ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
+        vExRate      := To_Number(Replace(Replace(i.exchange_rate,                         ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
+        vTotalDmgFC  := To_Number(Replace(Replace(i.total_damage_in_foreign_currency,      ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
+        vTotalShrFC  := To_Number(Replace(Replace(i.total_share_payment_in_foreign_currency, ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
+        vPayAmtSum   := To_Number(Replace(Replace(i.payment_amount_sum,                    ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
+        vPayAmtFC    := To_Number(Replace(Replace(i.payment_amount_in_foreign_currency,    ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
+        vInsCompenFC := To_Number(Replace(Replace(i.insurance_compensation_in_foreign_currency, ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
+        vShareSumFC  := To_Number(Replace(Replace(i.share_payment_in_foreign_currency,     ' ', ''), ',', '.') DEFAULT NULL ON CONVERSION ERROR, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''');
 
         If vTotalDamage Is Null Then
           Raise_Application_Error(-20001, 'totalDamageSum is not a valid number: "' || i.total_damages_sum || '"');
@@ -89,16 +90,18 @@ Create Index Ix_Pi_Fond_Reins_Batch On PI_FOND_REINSURANCES (batch_id);
           Raise_Application_Error(-20001, 'totalSharePaymentSum is not a valid number: "' || i.total_share_payment_sum || '"');
         End If;
 
+        -- All To_Char below use the same NLS override so decimal is ALWAYS
+        -- a dot in the outgoing JSON (JSON never uses a comma decimal).
         If i.claim_uuid Is Not Null Then
           vData := '{
                       "reinsuranceContractUuid": "' || i.reinsurance_contract_uuid || '",
-                      "totalDamageSum": "' || To_Char(Round(vTotalDamage, 2)) || '",
-                      "totalSharePaymentSum": "' || To_Char(Round(vTotalShare, 2)) || '",
+                      "totalDamageSum": "' || To_Char(Round(vTotalDamage, 2), 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''') || '",
+                      "totalSharePaymentSum": "' || To_Char(Round(vTotalShare, 2), 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''') || '",
                       "claims": [
                         {
                           "claimUuid": "' || Regexp_Replace(i.claim_uuid, '[^A-Za-z0-9\-]', '') || '",
-                          "insuranceCompensationSum": "' || To_Char(Round(Nvl(vInsCompen, 0), 2)) || '",
-                          "sharePaymentSum": "' || To_Char(Round(Nvl(vShareSum, 0), 2)) || '"
+                          "insuranceCompensationSum": "' || To_Char(Round(Nvl(vInsCompen, 0), 2), 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''') || '",
+                          "sharePaymentSum": "' || To_Char(Round(Nvl(vShareSum, 0), 2), 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''') || '"
                         }
                       ]
                     }';
@@ -106,11 +109,11 @@ Create Index Ix_Pi_Fond_Reins_Batch On PI_FOND_REINSURANCES (batch_id);
           vData := '{
                       "reinsuranceContractUuid": "' || i.reinsurance_contract_uuid || '",
                       "currencyId": "' || Nvl(i.currency_id, '') || '",
-                      "exchangeRate": "' || Nvl(To_Char(vExRate), '0') || '",
-                      "totalDamageSum": "' || To_Char(Round(vTotalDamage, 2)) || '",
-                      "totalDamageInForeignCurrency": "' || Nvl(To_Char(vTotalDmgFC), '0') || '",
-                      "totalSharePaymentSum": "' || To_Char(Round(vTotalShare, 2)) || '",
-                      "totalSharePaymentInForeignCurrency": "' || Nvl(To_Char(vTotalShrFC), '0') || '",
+                      "exchangeRate": "' || Nvl(To_Char(vExRate, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. '''), '0') || '",
+                      "totalDamageSum": "' || To_Char(Round(vTotalDamage, 2), 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''') || '",
+                      "totalDamageInForeignCurrency": "' || Nvl(To_Char(vTotalDmgFC, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. '''), '0') || '",
+                      "totalSharePaymentSum": "' || To_Char(Round(vTotalShare, 2), 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''') || '",
+                      "totalSharePaymentInForeignCurrency": "' || Nvl(To_Char(vTotalShrFC, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. '''), '0') || '",
                       "claims": [
                         {
                           "claimUuid": "' || Regexp_Replace(Nvl(i.claim_uuid, ''), '[^A-Za-z0-9\-]', '') || '",
@@ -119,12 +122,12 @@ Create Index Ix_Pi_Fond_Reins_Batch On PI_FOND_REINSURANCES (batch_id);
                           "claimDate": "' || Nvl(i.claim_date, '') || '",
                           "decisionDate": "' || Nvl(i.decision_date, '') || '",
                           "paymentDate": "' || Nvl(i.payment_date, '') || '",
-                          "paymentAmountSum": "' || Nvl(To_Char(vPayAmtSum), '0') || '",
-                          "paymentAmountInForeignCurrency": "' || Nvl(To_Char(vPayAmtFC), '0') || '",
-                          "insuranceCompensationSum": "' || Nvl(To_Char(vInsCompen), '0') || '",
-                          "insuranceCompensationInForeignCurrency": "' || Nvl(To_Char(vInsCompenFC), '0') || '",
-                          "sharePaymentSum": "' || To_Char(Round(Nvl(vShareSum, 0), 2)) || '",
-                          "sharePaymentInForeignCurrency": "' || Nvl(To_Char(vShareSumFC), '0') || '",
+                          "paymentAmountSum": "' || Nvl(To_Char(vPayAmtSum, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. '''), '0') || '",
+                          "paymentAmountInForeignCurrency": "' || Nvl(To_Char(vPayAmtFC, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. '''), '0') || '",
+                          "insuranceCompensationSum": "' || Nvl(To_Char(vInsCompen, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. '''), '0') || '",
+                          "insuranceCompensationInForeignCurrency": "' || Nvl(To_Char(vInsCompenFC, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. '''), '0') || '",
+                          "sharePaymentSum": "' || To_Char(Round(Nvl(vShareSum, 0), 2), 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. ''') || '",
+                          "sharePaymentInForeignCurrency": "' || Nvl(To_Char(vShareSumFC, 'FM999999999999999999D999999999', 'NLS_NUMERIC_CHARACTERS=''. '''), '0') || '",
                           "eventCircumstances": {
                             "eventDateTime": "' || Nvl(i.event_date_time, '') || ' 12:00:00",
                             "regionId": "' || Nvl(i.region_id, '10') || '",

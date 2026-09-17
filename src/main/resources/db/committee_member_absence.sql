@@ -398,6 +398,232 @@ From Pi_S_Committee_Members m;
 
 
 -- ===========================================================================
+-- member_ref_action YANGILANISHI: reason maydonlarini ham qabul qilish
+--
+-- Frontend endi bitta so'rov bilan a'zo va uning hozirgi holatini
+-- birgalikda saqlaydi. setMemberReason ixtiyoriy qoladi — a'zo o'zi
+-- holatini o'zgartirishi kabi kichik holatlar uchun.
+--
+-- Params ichida yangi ixtiyoriy maydonlar:
+--   "reason":      "PARTICIPATES" | "BUSINESS_TRIP" | "VACATION" | "SICK_LEAVE" | "OTHER"
+--   "reason_from": "dd.mm.yyyy"  (agar reason != PARTICIPATES bo'lsa)
+--   "reason_to":   "dd.mm.yyyy"  (agar reason != PARTICIPATES bo'lsa)
+--   "reason_note": "matn"        (ixtiyoriy izoh)
+--
+-- Namunali chaqiruv:
+--   {"method":"member_ref_action",
+--    "params":{"action":"U","user_id":107,
+--              "position":"Суғурта Қўмитаси аъзоси",
+--              "added_on":"01.04.2026","expired_on":"06.04.2036",
+--              "reason":"BUSINESS_TRIP",
+--              "reason_from":"15.09.2026","reason_to":"25.09.2026",
+--              "reason_note":"Toshkent, buyruq #384"}}
+-- ===========================================================================
+
+  Procedure member_ref_action(p_Request Clob, o_Response Out Clob)
+  Is
+    v_Json         Json_Object_t := Json_Object_t.Parse(p_Request);
+    v_Response     Json_Object_t := Json_Object_t();
+    v_Params       Json_Object_t := v_Json.get_Object('params');
+    v_Action       Varchar2(2)   := v_Params.get_String('action');
+    v_User_Id      Number(20)    := core_session.get_user_id();
+    v_Row          pi_s_committee_members%rowtype;
+    v_Count        Number(5);
+    v_ReasonCount  Number(1);
+  Begin
+    -- 1. Ruxsat (admin — role_id = 6)
+    Select Count(*) Into v_Count
+      From core_user_roles t
+     Where t.role_id = 6 And t.user_id = v_User_Id;
+    If v_Count = 0 Then
+      Pi_Util.Raise_Error('У вас нет доступа к этим действиям!');
+    End If;
+
+    Pi_Util.Check_For_Existance(v_Params, 'action');
+    Pi_Util.Check_For_Existance(v_Params, 'user_id');
+    v_Row.User_Id := v_Params.get_Number('user_id');
+
+    If v_Action In ('I', 'U') Then
+      -- 2. Foydalanuvchi mavjudligi
+      Select Count(*) Into v_Count
+        From core_users t Where t.user_id = v_Row.User_Id;
+      If v_Count = 0 Then
+        Pi_Util.Raise_Error('Пользователь не найден: user_id = ' || v_Row.User_Id);
+      End If;
+
+      -- 3. Mavjudligini tekshirish
+      Select Count(*) Into v_Count
+        From pi_s_committee_members t Where t.user_id = v_Row.User_Id;
+
+      If v_Action = 'I' And v_Count > 0 Then
+        Pi_Util.Raise_Error('Этот пользователь уже является членом комитета!');
+      End If;
+      If v_Action = 'U' And v_Count = 0 Then
+        Pi_Util.Raise_Error('Член комитета не найден: user_id = ' || v_Row.User_Id);
+      End If;
+
+      -- 4. Update: eski qatorni olib history yozamiz
+      If v_Action = 'U' Then
+        Select t.* Into v_Row
+          From pi_s_committee_members t
+         Where t.user_id = v_Row.User_Id;
+
+        Insert Into pi_s_committee_members_his
+          (user_id, position, name, order_by, added_on, expired_on,
+           action, action_by, action_on)
+        Values
+          (v_Row.User_Id, v_Row.Position, v_Row.Name, v_Row.Order_By,
+           v_Row.Added_On, v_Row.Expired_On, 'U', v_User_Id, Sysdate);
+      End If;
+
+      -- 5. Asosiy maydonlar
+      Pi_Util.Check_For_Existance(v_Params, 'position');
+      Pi_Util.Check_For_Existance(v_Params, 'name');
+
+      v_Row.Position := Pi_Util.Get_By_Validation(v_Params, 'position', 1, 256, false);
+      v_Row.Name     := Pi_Util.Get_By_Validation(v_Params, 'name', 1, 256, false);
+
+      If v_Params.has('order_by') Then
+        v_Row.Order_By := v_Params.get_Number('order_by');
+      End If;
+
+      If v_Params.has('added_on') Then
+        Begin
+          v_Row.Added_On := to_date(v_Params.get_String('added_on'), 'dd.mm.yyyy');
+        Exception When Others Then
+          Pi_Util.Raise_Error('Неправильный формат "added_on". Нужно: dd.mm.yyyy');
+        End;
+      End If;
+
+      If v_Params.has('expired_on') Then
+        Begin
+          v_Row.Expired_On := to_date(v_Params.get_String('expired_on'), 'dd.mm.yyyy');
+        Exception When Others Then
+          Pi_Util.Raise_Error('Неправильный формат "expired_on". Нужно: dd.mm.yyyy');
+        End;
+      End If;
+
+      -- 6. YANGI: hozirgi holat (reason) maydonlari
+      If v_Params.has('reason') And v_Params.get_String('reason') Is Not Null Then
+        v_Row.Current_Reason := Upper(v_Params.get_String('reason'));
+
+        Select Count(*) Into v_ReasonCount
+          From Pi_S_Committee_Absence_Reasons
+         Where code = v_Row.Current_Reason And is_active = 'Y';
+        If v_ReasonCount = 0 Then
+          Pi_Util.Raise_Error('Noto''g''ri holat kodi: ' || v_Row.Current_Reason);
+        End If;
+
+        If v_Row.Current_Reason = 'PARTICIPATES' Then
+          v_Row.Reason_From := Null;
+          v_Row.Reason_To   := Null;
+          v_Row.Reason_Note := Null;
+        Else
+          If v_Params.has('reason_from') And v_Params.get_String('reason_from') Is Not Null Then
+            Begin
+              v_Row.Reason_From := to_date(v_Params.get_String('reason_from'), 'dd.mm.yyyy');
+            Exception When Others Then
+              Pi_Util.Raise_Error('"reason_from" formati noto''g''ri. Kerak: dd.mm.yyyy');
+            End;
+          End If;
+          If v_Params.has('reason_to') And v_Params.get_String('reason_to') Is Not Null Then
+            Begin
+              v_Row.Reason_To := to_date(v_Params.get_String('reason_to'), 'dd.mm.yyyy');
+            Exception When Others Then
+              Pi_Util.Raise_Error('"reason_to" formati noto''g''ri. Kerak: dd.mm.yyyy');
+            End;
+          End If;
+          If v_Params.has('reason_note') Then
+            v_Row.Reason_Note := Substr(v_Params.get_String('reason_note'), 1, 512);
+          End If;
+
+          If v_Row.Reason_From Is Not Null And v_Row.Reason_To Is Not Null
+             And v_Row.Reason_From > v_Row.Reason_To Then
+            Pi_Util.Raise_Error('"reason_from" "reason_to"dan katta bo''lishi mumkin emas');
+          End If;
+        End If;
+
+        v_Row.Reason_Set_By := v_User_Id;
+        v_Row.Reason_Set_On := Sysdate;
+
+      Elsif v_Action = 'I' Then
+        -- Insert vaqtida reason yuborilmagan bo'lsa — default PARTICIPATES
+        v_Row.Current_Reason := 'PARTICIPATES';
+      End If;
+
+      -- 7. Sana tekshiruvi
+      If v_Row.Added_On Is Not Null
+         And v_Row.Expired_On Is Not Null
+         And v_Row.Added_On > v_Row.Expired_On Then
+        Pi_Util.Raise_Error('"added_on" не может быть больше "expired_on".');
+      End If;
+
+      -- 8. order_by dublikat
+      If v_Row.Order_By Is Not Null Then
+        Select Count(*) Into v_Count
+          From pi_s_committee_members t
+         Where t.order_by = v_Row.Order_By
+           And t.user_id <> v_Row.User_Id;
+        If v_Count > 0 Then
+          Pi_Util.Raise_Error('Этот порядковый номер уже занят: order_by = ' || v_Row.Order_By);
+        End If;
+      End If;
+
+      -- 9. Yozish
+      If v_Action = 'I' Then
+        If v_Row.Added_On Is Null Then
+          v_Row.Added_On := Sysdate;
+        End If;
+
+        Insert Into pi_s_committee_members Values v_Row;
+
+        Insert Into pi_s_committee_members_his
+          (user_id, position, name, order_by, added_on, expired_on,
+           action, action_by, action_on)
+        Values
+          (v_Row.User_Id, v_Row.Position, v_Row.Name, v_Row.Order_By,
+           v_Row.Added_On, v_Row.Expired_On, 'I', v_User_Id, Sysdate);
+
+        v_Response.put('message', 'Данные успешно добавлены!');
+      Else
+        Update pi_s_committee_members t
+           Set Row = v_Row
+         Where t.user_id = v_Row.User_Id;
+
+        v_Response.put('message', 'Данные успешно обновлены!');
+      End If;
+
+    Elsif v_Action = 'D' Then
+      Select Count(*) Into v_Count
+        From pi_s_committee_members t Where t.user_id = v_Row.User_Id;
+      If v_Count = 0 Then
+        Pi_Util.Raise_Error('Член комитета не найден: user_id = ' || v_Row.User_Id);
+      End If;
+
+      Select t.* Into v_Row
+        From pi_s_committee_members t Where t.user_id = v_Row.User_Id;
+
+      Insert Into pi_s_committee_members_his
+        (user_id, position, name, order_by, added_on, expired_on,
+         action, action_by, action_on)
+      Values
+        (v_Row.User_Id, v_Row.Position, v_Row.Name, v_Row.Order_By,
+         v_Row.Added_On, v_Row.Expired_On, 'D', v_User_Id, Sysdate);
+
+      Delete From pi_s_committee_members Where user_id = v_Row.User_Id;
+
+      v_Response.put('message', 'Данные успешно удалены!');
+    Else
+      Pi_Util.Raise_Error('Noto''g''ri action: ' || v_Action);
+    End If;
+    Commit;
+
+    v_Response.put('success', True);
+    o_Response := v_Response.to_clob;
+  End member_ref_action;
+
+
+-- ===========================================================================
 -- CORE_METHODS ga yangi metod ro'yxatga olish
 -- ===========================================================================
 Insert Into Core_Methods (id, method, proc_name, state, has_out_param, details, cr_by, cr_on)

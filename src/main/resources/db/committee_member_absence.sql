@@ -628,11 +628,15 @@ From Pi_S_Committee_Members m;
 
 
 -- ===========================================================================
--- Get_Cover_Info_V2 ICHIDA VOTES BLOKINI ALMASHTIRISH
+-- Pi_Methods.Get_Cover_Info_V2 ICHIDA VOTES BLOKINI ALMASHTIRISH
 --
--- Manba: Pi_Insurance_Service.Get_Cover_Info_V2 protsedurasi ichida "vVotes_Arr"
--- yig'ayotgan For loop bor. U ham get_votes bilan bir xil eski mantiqni ishlatadi.
--- Absence reason bilan mos kelishi uchun uni ham yangilash kerak.
+-- Manba: PI_METHODS package body ichidagi Get_Cover_Info_V2 protsedurasi.
+-- Uning ichida "vVotes_Arr" yig'ayotgan For loop bor va u ham get_votes bilan
+-- bir xil eski mantiqni ishlatadi. Absence reason bilan mos kelishi uchun uni
+-- ham yangilash kerak.
+--
+-- PL/SQL Developer'da PI_METHODS package body'ni oching, Get_Cover_Info_V2
+-- protsedurasi ichidagi votes For loop'ini quyidagi bilan almashtiring.
 --
 -- ESKI kod (~qatorlar 27918-27966 asl paketda):
 --   If vCommittee_Id Is Not Null Then

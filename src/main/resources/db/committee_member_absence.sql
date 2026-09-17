@@ -368,7 +368,10 @@ From Pi_S_Committee_Members m;
     For m In (
       Select v.user_id, v.name, v.position, v.order_by, v.added_on, v.expired_on,
              v.effective_reason, v.reason_from, v.reason_to, v.reason_note, v.is_active,
-             r.name_uz As reason_name, r.color As reason_color
+             r.name_uz As reason_name, r.color As reason_color,
+             (Select Count(*)
+                From Pi_Committee_Member_Votes cv
+               Where cv.user_id = v.user_id) As votes_count
         From Pi_S_Committee_Members_Now_V v
              Left Join Pi_S_Committee_Absence_Reasons r
                     On r.code = v.effective_reason
@@ -383,6 +386,7 @@ From Pi_S_Committee_Members m;
       v_Row.Put('added_on',     To_Char(m.added_on,   'dd.mm.yyyy'));
       v_Row.Put('expired_on',   To_Char(m.expired_on, 'dd.mm.yyyy'));
       v_Row.Put('is_active',    m.is_active);
+      v_Row.Put('votes_count',  m.votes_count);
       v_Row.Put('reason',       m.effective_reason);
       v_Row.Put('reason_name',  m.reason_name);
       v_Row.Put('reason_color', m.reason_color);

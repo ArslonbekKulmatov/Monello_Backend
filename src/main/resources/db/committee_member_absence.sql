@@ -628,6 +628,114 @@ From Pi_S_Committee_Members m;
 
 
 -- ===========================================================================
+-- Get_Cover_Info_V2 ICHIDA VOTES BLOKINI ALMASHTIRISH
+--
+-- Manba: Pi_Insurance_Service.Get_Cover_Info_V2 protsedurasi ichida "vVotes_Arr"
+-- yig'ayotgan For loop bor. U ham get_votes bilan bir xil eski mantiqni ishlatadi.
+-- Absence reason bilan mos kelishi uchun uni ham yangilash kerak.
+--
+-- ESKI kod (~qatorlar 27918-27966 asl paketda):
+--   If vCommittee_Id Is Not Null Then
+--     For i In (Select t.user_id, t.name, t.position, ... From pi_s_committee_members t Order By t.order_by) Loop
+--       ...
+--       Begin
+--         Select v.vote, v.comments, ... Into vVote, vComments, vVote_On
+--           From pi_committee_member_votes v
+--          Where v.user_id = i.user_id And v.committee_id = vCommittee_Id;
+--       Exception When no_data_found Then vVote := 'Кутилмоқда'; ...
+--       End;
+--       vVote_Obj.put('committee_id', vCommittee_Id);
+--       vVote_Obj.put('user_id', i.user_id);
+--       vVote_Obj.put('user_name', i.name);
+--       vVote_Obj.put('role', i.position);
+--       vVote_Obj.put('vote', vVote);
+--       vVote_Obj.put('vote_on', vVote_On);
+--       vVote_Obj.put('comments', vComments);
+--       vVotes_Arr.append(vVote_Obj);
+--     End Loop;
+--
+-- YANGI kod (shu For loop'ni ushbu bilan almashtiring):
+-- ===========================================================================
+
+/*
+      For i In (Select
+                  m.user_id,
+                  m.name,
+                  m.position,
+                  Nvl(m.added_on, To_Date('01.11.2025', 'dd.mm.yyyy')) added_on,
+                  m.expired_on,
+                  Case
+                    When m.reason_to Is Not Null And m.reason_to < Trunc(Sysdate) Then 'PARTICIPATES'
+                    Else Nvl(m.current_reason, 'PARTICIPATES')
+                  End effective_reason,
+                  m.reason_note
+                From pi_s_committee_members m
+                Order By m.order_by) Loop
+        Begin
+          Select k.* Into v_Row
+            From pi_committees_v k
+           Where k.id = vCommittee_Id;
+
+          If To_Date(v_Row.APPLICATION_DATE, 'dd.mm.yyyy') < i.added_on   Then Continue; End If;
+          If To_Date(v_Row.APPLICATION_DATE, 'dd.mm.yyyy') > i.expired_on Then Continue; End If;
+        Exception
+          When Others Then Null;
+        End;
+
+        -- YANGI: absence reason nomi va rangini olamiz
+        Declare
+          v_ReasonName Varchar2(128);
+          v_Color      Varchar2(16);
+        Begin
+          Begin
+            Select name_uz, color
+              Into v_ReasonName, v_Color
+              From Pi_S_Committee_Absence_Reasons
+             Where code = i.effective_reason;
+          Exception When No_Data_Found Then
+            v_ReasonName := 'Иштирок этади';
+            v_Color      := 'success';
+          End;
+
+          If i.effective_reason = 'PARTICIPATES' Then
+            Begin
+              Select v.vote, v.comments, To_Char(v.vote_on, 'dd.mm.yyyy hh24:mi:ss')
+                Into vVote, vComments, vVote_On
+                From pi_committee_member_votes v
+               Where v.user_id = i.user_id
+                 And v.committee_id = vCommittee_Id;
+            Exception When No_Data_Found Then
+              vVote     := 'Кутилмоқда';
+              vVote_On  := Null;
+              vComments := Null;
+            End;
+          Else
+            -- Ovoz kutilmaydi — sabab ko'rsatiladi
+            vVote     := v_ReasonName;
+            vVote_On  := Null;
+            vComments := i.reason_note;
+          End If;
+
+          vVote_Obj := Json_Object_t();
+          vVote_Obj.Put('committee_id',  vCommittee_Id);
+          vVote_Obj.Put('user_id',       i.user_id);
+          vVote_Obj.Put('user_name',     i.name);
+          vVote_Obj.Put('role',          i.position);
+          vVote_Obj.Put('vote',          vVote);
+          vVote_Obj.Put('vote_on',       vVote_On);
+          vVote_Obj.Put('comments',      vComments);
+          vVote_Obj.Put('reason',        i.effective_reason);
+          vVote_Obj.Put('reason_name',   v_ReasonName);
+          vVote_Obj.Put('reason_color',  v_Color);
+          vVote_Obj.Put('is_voter',      Case When i.effective_reason = 'PARTICIPATES' Then 'Y' Else 'N' End);
+
+          vVotes_Arr.Append(vVote_Obj);
+        End;
+      End Loop;
+*/
+
+
+-- ===========================================================================
 -- CORE_METHODS ga yangi metod ro'yxatga olish
 -- ===========================================================================
 Insert Into Core_Methods (id, method, proc_name, state, has_out_param, details, cr_by, cr_on)

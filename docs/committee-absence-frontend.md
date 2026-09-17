@@ -343,7 +343,16 @@ POST /api/app/request
 
 ---
 
-## 8. Ovoz berish varaqasi (getVotes)
+## 8. Ovoz berish varaqasi (getVotes / Get_Cover_Info_V2)
+
+Xuddi shu ma'lumot **2 joyda** qaytariladi:
+
+1. **`getVotes`** — faqat ovoz varaqasi olish uchun (Голосование modal ochilganda)
+2. **`Get_Cover_Info_V2`** — hodisa (cover) haqida hamma ma'lumot (jumladan `votes` massivi)
+
+Ikki javob ham bir xil format (yangilangan absence reason mantiqi bilan). Frontend qayerдa kerak bo'lsa o'shani ishlatadi.
+
+### 8.1. getVotes
 
 **Request:**
 ```json

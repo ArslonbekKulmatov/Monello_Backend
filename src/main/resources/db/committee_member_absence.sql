@@ -43,6 +43,21 @@ Insert Into Pi_S_Committee_Absence_Reasons Values
 Commit;
 
 
+-- ----- 1a) Spravochnikni execSelect orqali o'qish uchun view -----------
+-- Frontend dropdown ni to'ldirish uchun:
+--   POST /api/app/execSelect { "view": "pi_s_committee_absence_reasons_v" }
+Create Or Replace View Pi_S_Committee_Absence_Reasons_V As
+Select t.code,
+       t.name_uz,
+       t.name_ru,
+       t.color,
+       t.order_by,
+       t.is_active,
+       t.is_default
+  From Pi_S_Committee_Absence_Reasons t
+ Order By t.order_by;
+
+
 -- ----- 2) A'zolar jadvaliga hozirgi holat maydonlari qo'shildi ------------
 Alter Table Pi_S_Committee_Members Add (
   current_reason Varchar2(32) Default 'PARTICIPATES',
@@ -383,16 +398,17 @@ From Pi_S_Committee_Members m;
 
 
 -- ===========================================================================
--- CORE_METHODS ga 2 ta yangi metod ro'yxatga olish
+-- CORE_METHODS ga yangi metod ro'yxatga olish
 -- ===========================================================================
 Insert Into Core_Methods (id, method, proc_name, state, has_out_param, details, cr_by, cr_on)
 Values (Core_Methods_Seq.Nextval, 'setMemberReason', 'Pi_Committee.set_member_reason',
         'A', 'Y', 'Qo''mita a''zosining hozirgi holatini belgilash', Core_Session.Get_User_Id, Sysdate);
-
-Insert Into Core_Methods (id, method, proc_name, state, has_out_param, details, cr_by, cr_on)
-Values (Core_Methods_Seq.Nextval, 'getAbsenceReasons', 'Pi_Committee.get_absence_reasons',
-        'A', 'Y', 'A''zolar uchun ishtirok holatlari spravochnigi', Core_Session.Get_User_Id, Sysdate);
 Commit;
+
+-- Eslatma: getAbsenceReasons CORE_METHODS'ga qo'shilmaydi — spravochnik
+-- Pi_S_Committee_Absence_Reasons_V view orqali /api/app/execSelect endpoint'idan
+-- olinadi. Shu bilan get_absence_reasons protsedurasi ham ixtiyoriy (qoldirish
+-- mumkin, lekin frontend'da ishlatilmaydi).
 
 -- getMembersList / getVotes CORE_METHODS'da allaqachon bor — protsedura tanasi
 -- yangilanganligi sabab uni qayta qo'shish shart emas.

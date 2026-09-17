@@ -744,6 +744,183 @@ xhr.send(fd);
 
 ---
 
+## 8b. Fond batch import (Ariza / Qaror / To'lov)
+
+Sug'urta hodisasi hujjatlari (Ariza → Qaror → To'lov) uchun Excel'dan bulk import. Reinsurance bilan bir xil pattern.
+
+**Ish oqimi:**
+```
+1. Ariza (Claim)    → POST /api/app/fond/claim/import    → claim UUID
+2. Qaror (Decision) → POST /api/app/fond/decision/import → decision UUID
+   - decisionId=2 (rad etildi) → tugadi
+   - decisionId=1 (to'lov qaror) → 3-qadam
+3. To'lov (Payout)  → POST /api/app/fond/payout/import   → payout UUID
+```
+
+### 8b.1. `POST /api/app/fond/claim/import` — Ariza
+
+**Request body** (JSON):
+
+```json
+{
+  "rows": [
+    {
+      "polisUuid": "65fcaf24-84b3-47e3-b796-ee3a9da23f88",
+      "regionId": "10",
+      "areaTypeId": "1",
+      "claimNumber": "95287",
+      "claimDate": "2026-09-14",
+      "insuranceCompensationSum": "77183500.23",
+      "applicant.organization.regionId": "23",
+      "applicant.organization.inn": "306053809",
+      "applicant.organization.name": "ESHMURATOV ISLOMJON OK",
+      "damageType": "4",
+      "damage[].claimedDamage": "77183500.23",
+      "damage[].organization.inn": "306053809",
+      "damage[].appraiserInn": "204735191",
+      "damage[].appraiserReportNumber": "382MK/26",
+      "damage[].appraiserReportDate": "2026-09-10",
+      "insuranceOrgId": "1064"
+    }
+  ]
+}
+```
+
+**Ustunlar** — Excel header dot-notation'i (yoki lower_snake_case). 160 ta ustun (asosiy `PI_FOND_CLAIMS` jadval strukturasi). Foydalanuvchi faqat kerakli ustunlarni yuboradi — qolganlari NULL.
+
+**damageType**:
+- `1` = life damage
+- `2` = health damage
+- `3` = vehicle damage
+- `4` = other property damage
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "batchId": "8f2a...",
+  "totalRows": 1,
+  "insertedRows": 1,
+  "invalidRows": 0,
+  "invalid": [],
+  "sendResult": {
+    "batchId": "8f2a...",
+    "sent": 1,
+    "failed": 0,
+    "rows": [
+      { "id": 371, "claimNumber": "95287", "sent": true, "claimUuid": "25b0d599-aa2d-4394-b7fb-d5d2ef26e5a5" }
+    ]
+  }
+}
+```
+
+### 8b.2. `POST /api/app/fond/decision/import` — Qaror
+
+**Request:**
+
+```json
+{
+  "rows": [
+    {
+      "claimUuid": "25b0d599-aa2d-4394-b7fb-d5d2ef26e5a5",
+      "decision.decisionId": 1,
+      "decision.reasonForPayment": "6832",
+      "decisionDate": "2026-09-14"
+    },
+    {
+      "claimUuid": "abc-....",
+      "decision.decisionId": 2,
+      "decision.rejectionReason": "Полис хат/срок...",
+      "decisionDate": "2026-09-14"
+    }
+  ]
+}
+```
+
+`decisionId = 1` — to'lov, `decisionId = 2` — otkaz (rad etilgan, keyingi qadam yo'q).
+
+**Response:**
+
+```json
+{
+  "success": true, "batchId": "...", "totalRows": 2, "insertedRows": 2, "invalidRows": 0,
+  "sendResult": {
+    "sent": 2, "failed": 0,
+    "rows": [
+      { "id": 221, "claim_uuid": "...", "sent": true, "decisionUuid": "54b549a2-..." },
+      { "id": 222, "claim_uuid": "...", "sent": true, "decisionUuid": "77c1e2f3-..." }
+    ]
+  }
+}
+```
+
+### 8b.3. `POST /api/app/fond/payout/import` — To'lov
+
+**Faqat `decisionId = 1` bo'lgan (otkaz emas) qarorlar uchun.**
+
+**Request:**
+
+```json
+{
+  "rows": [
+    {
+      "decisionUuid": "54b549a2-d6fb-4f22-a348-00bc0191e008",
+      "payoutSum": "77183500.23",
+      "payoutDate": "2026-09-14",
+      "paymentOrderNumber": "14619",
+      "recipient": "ESHMURATOV ISLOMJON OK",
+      "inheritanceDocumentNumberAndDate": null,
+      "type": "OTHER"
+    }
+  ]
+}
+```
+
+**`type`**: `LIFE` / `HEALTH` / `OTHER` — PL/SQL bu asosda `lifePayouts` / `healthPayouts` / `otherPropertyPayouts` payload'ni yasaydi.
+
+**Response:**
+
+```json
+{
+  "success": true, "batchId": "...", "totalRows": 1, "insertedRows": 1,
+  "sendResult": {
+    "sent": 1,
+    "rows": [
+      { "id": 182, "decisionUuid": "54b549a2-...", "sent": true, "payoutUuid": "9a8b7c-..." }
+    ]
+  }
+}
+```
+
+### 8b.4. Frontend integratsiyasi
+
+```js
+// 1. Ariza yuborish
+const claim = await api('/api/app/fond/claim/import', {
+  method: 'POST',
+  body: JSON.stringify({ rows: excelRows })
+});
+const claimUuids = claim.sendResult.rows
+  .filter(r => r.sent)
+  .map(r => ({ [r.claimNumber]: r.claimUuid }));
+
+// 2. Qaror yuborish (Excel'ga claim UUIDlarni to'ldiring)
+const decision = await api('/api/app/fond/decision/import', {
+  method: 'POST',
+  body: JSON.stringify({ rows: decisionRows })
+});
+
+// 3. To'lov faqat decisionId=1 bo'lganlar uchun
+const payoutRows = decisionRows.filter(r => r["decision.decisionId"] === 1);
+const payout = await api('/api/app/fond/payout/import', {
+  method: 'POST',
+  body: JSON.stringify({ rows: payoutRows })
+});
+```
+
+---
+
 ## 9. Boshqa modullar
 
 ### 9.1. User

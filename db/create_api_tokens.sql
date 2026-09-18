@@ -2,8 +2,13 @@
 -- TASHQI TIZIMLAR UCHUN API TOKEN YARATISH
 --
 -- Ikkita iste'molchi uchun ikkita alohida token:
---   catalog — ABM Store sayti,          /api/catalog/*
---   report  — ABM Store boshqaruv paneli, /api/report/*
+--   catalog — ABM Store sayti,           /api/catalog/*  (Ipt_Catalog)
+--   report  — ABM Store boshqaruv paneli, /api/report/*   (Ipt_Dashboard)
+--
+-- "Boshqaruv paneli" (dashboard) — bu sayt EMAS, alohida tizim: "Monello API
+-- integratsiyasi - texnik talablar" hujjatidagi nazorat paneli. U mijozlar
+-- soni, qarzdorlik, kechikkanlar va sdelkalar dinamikasini oladi; katalog
+-- unga kerak emas. Saytga esa aksincha — faqat katalog.
 --
 -- ALOHIDA bo'lishi shart. Bitta token ikkalasiga berilsa, sayt jamoasi
 -- mijoz ismlari va qarzdorlik ma'lumotini ham o'qiy oladi.
@@ -184,7 +189,7 @@ end;
 -- =============================================================================
 
 prompt
-prompt === DASHBOARD TOKENI ===
+prompt === BOSHQARUV PANELI (DASHBOARD) TOKENI ===
 prompt
 
 declare
@@ -216,7 +221,7 @@ begin
   -- Ikkala tokenning bir xil bo'lishi qamrovni ma'nosiz qiladi
   if lower(vToken) = lower(trim('&&token_catalog')) then
     raise_application_error(-20000,
-      'Dashboard tokeni sayt tokeni bilan bir xil. Har biri uchun alohida '||
+      'Boshqaruv paneli tokeni sayt tokeni bilan bir xil. Har biri uchun alohida '||
       'token generatsiya qiling — aks holda qamrovni ajratishdan foyda yo''q.');
   end if;
 
@@ -249,7 +254,7 @@ begin
   dbms_output.put_line('  nomi   : '||cName);
   dbms_output.put_line('  qamrov : '||cScope);
   dbms_output.put_line('  user_id: '||vUser);
-  dbms_output.put_line('Endi uni dashboard jamoasiga xavfsiz kanal orqali bering.');
+  dbms_output.put_line('Endi uni boshqaruv paneli jamoasiga xavfsiz kanal orqali bering.');
 end;
 /
 
@@ -275,7 +280,7 @@ undefine service_user_id
 --   curl -i -H "Authorization: Bearer <sayt_tokeni>" \
 --        "https://<manzil>/api/catalog/stock"
 --
---   curl -i -H "Authorization: Bearer <dashboard_tokeni>" \
+--   curl -i -H "Authorization: Bearer <panel_tokeni>" \
 --        "https://<manzil>/api/report/debt"
 --
 --
@@ -308,7 +313,7 @@ undefine service_user_id
 --
 -- Almashtirish paytida qisqa uzilish bo'ladi: eski token o'chgandan yangisi
 -- ularda sozlangunicha so'rovlar 401 qaytaradi. Sayt bunga chidaydi — oxirgi
--- ma'lumotda ishlayveradi; dashboard esa kuniga bir marta so'raydi, shuning
+-- ma'lumotda ishlayveradi; panel esa kuniga bir marta so'raydi, shuning
 -- uchun kun davomida almashtirsangiz sezilmaydi ham.
 --
 --

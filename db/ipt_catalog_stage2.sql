@@ -122,18 +122,22 @@ alter table CORE_API_TOKENS
 -- o'zingizda saqlamang: bazada faqat xesh qoladi, tokenni tiklab bo'lmaydi.
 -- Yo'qolsa — yangisini yaratib, eskisini condition = 'P' ga o'tkazasiz.
 --
---   insert into core_api_tokens(id, name, token_hash, user_id, condition, cr_by, cr_on)
+--   insert into core_api_tokens(id, name, token_hash, user_id, scope, condition, cr_by, cr_on)
 --   values ((select nvl(max(id), 0) + 1 from core_api_tokens),
 --           'ABM Store sayti',
 --           lower(rawtohex(standard_hash('BU_YERGA_TOKEN', 'SHA256'))),
 --           :user_id,          -- katalog nomidan ishlaydigan core_users.user_id
+--           'catalog',         -- qamrov: bu token faqat /api/catalog/* ga kiradi
 --           'A',
 --           :user_id,
 --           sysdate);
 --   commit;
 --
+-- scope ustuni db/ipt_dashboard.sql da qo'shiladi. Agar u hali ishga
+-- tushirilmagan bo'lsa, insert dan scope ni olib tashlang.
+--
 -- Tekshirish:
---   select id, name, user_id, condition from core_api_tokens;
+--   select id, name, scope, condition from core_api_tokens;
 --
 -- Bekor qilish:
 --   update core_api_tokens set condition = 'P' where id = ?;

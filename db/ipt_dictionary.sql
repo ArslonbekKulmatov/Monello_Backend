@@ -32,6 +32,7 @@ create table IPT_S_DICTIONARIES
   pk_type       VARCHAR2(1)  default 'S' not null,
   pk_max_len    NUMBER(6),
   state_column  VARCHAR2(30),
+  order_column  VARCHAR2(30),
   state_active  VARCHAR2(2) default 'A',
   state_passive VARCHAR2(2) default 'P',
   can_insert    VARCHAR2(1) default 'Y' not null,
@@ -47,6 +48,8 @@ comment on column IPT_S_DICTIONARIES.pk_type
   is 'S - matn kod, N - son kod';
 comment on column IPT_S_DICTIONARIES.state_column
   is 'Faol/nofaol ustuni nomi: CONDITION yoki STATE. Yo''q bo''lsa NULL';
+comment on column IPT_S_DICTIONARIES.order_column
+  is 'Ko''rsatish tartibi ustuni, masalan ORD. Yo''q bo''lsa kod bo''yicha saralanadi';
 comment on column IPT_S_DICTIONARIES.can_insert
   is 'N - yangi qator qo''shib bo''lmaydi. Kodlar PL/SQL da qotirilgan bo''lsa shunday qilinadi';
 comment on column IPT_S_DICTIONARIES.can_delete
@@ -121,25 +124,25 @@ prompt 2.1 Ma'lumotnomalar
 
 merge into ipt_s_dictionaries t
 using (
-  --          code                  table_name                 name_ru                      name_uz                      pk_type pk_len state_col    ins del ord
-  select 'categories'          code, 'IPT_S_CATEGORIES'   tab, 'Категории товаров'    nm_ru, 'Tovar kategoriyalari' nm_uz, 'S' pk, 30  pl, 'CONDITION' st, 'Y' ins, 'Y' del, null lock, 10 ord from dual union all
-  select 'brands',                   'IPT_S_BRANDS',           'Бренды',                     'Brendlar',                   'S', 30,     'CONDITION',     'Y',      'Y',      null,      20 from dual union all
-  select 'colors',                   'IPT_S_COLORS',           'Цвета',                      'Ranglar',                    'S', 30,     'CONDITION',     'Y',      'Y',      null,      30 from dual union all
-  select 'attributes',               'IPT_S_ATTRIBUTES',       'Характеристики моделей',     'Model xarakteristikalari',   'S', 40,     'CONDITION',     'Y',      'Y',      null,      40 from dual union all
-  select 'sim_types',                'IPT_S_SIM_TYPES',        'Типы SIM',                   'SIM turlari',                'S', 20,     'CONDITION',     'Y',      'Y',      null,      50 from dual union all
-  select 'market_codes',             'IPT_S_MARKET_CODES',     'Коды рынка',                 'Bozor kodlari',              'S', 20,     'CONDITION',     'Y',      'Y',      null,      60 from dual union all
-  select 'replaced_parts',           'IPT_S_REPLACED_PARTS',   'Заменённые детали',          'Almashtirilgan qismlar',     'S', 30,     'CONDITION',     'Y',      'Y',      null,      70 from dual union all
-  select 'expense_types',            'IPT_S_EXPENSE_TYPES',    'Виды расходов',              'Xarajat turlari',            'N', null,   'STATE',         'Y',      'Y',      null,      80 from dual union all
-  select 'client_guar_types',        'IPT_S_CLIENT_GUAR_TYPES','Виды обеспечения',           'Ta''minot turlari',          'S', 2,      'CONDITION',     'Y',      'Y',      null,      90 from dual union all
-  select 'operations',               'IPT_S_OPERATIONS',       'Операции',                   'Operatsiyalar',              'S', 10,     'CONDITION',     'Y',      'Y',      null,     100 from dual union all
-  select 'balance_log_modules',      'IPT_S_BALANCE_LOG_MODULES','Модули журнала баланса',   'Balans jurnali modullari',   'S', 60,     'CONDITION',     'Y',      'Y',      null,     110 from dual union all
-  select 'product_types',            'IPT_S_PRODUCT_TYPES',    'Типы товара',                'Tovar turlari',              'S', 2,      'CONDITION',     'Y',      'N',
+  --          code                  table_name                 name_ru                      name_uz                      pk_type pk_len state_col    ord_col ins del ord
+  select 'categories'          code, 'IPT_S_CATEGORIES'   tab, 'Категории товаров'    nm_ru, 'Tovar kategoriyalari' nm_uz, 'S' pk, 30  pl, 'CONDITION' st, 'ORD' oc, 'Y' ins, 'Y' del, null lock, 10 ord from dual union all
+  select 'brands',                   'IPT_S_BRANDS',           'Бренды',                     'Brendlar',                   'S', 30,     'CONDITION',     null, 'Y',      'Y',      null,      20 from dual union all
+  select 'colors',                   'IPT_S_COLORS',           'Цвета',                      'Ranglar',                    'S', 30,     'CONDITION',     null, 'Y',      'Y',      null,      30 from dual union all
+  select 'attributes',               'IPT_S_ATTRIBUTES',       'Характеристики моделей',     'Model xarakteristikalari',   'S', 40,     'CONDITION',     null, 'Y',      'Y',      null,      40 from dual union all
+  select 'sim_types',                'IPT_S_SIM_TYPES',        'Типы SIM',                   'SIM turlari',                'S', 20,     'CONDITION',     null, 'Y',      'Y',      null,      50 from dual union all
+  select 'market_codes',             'IPT_S_MARKET_CODES',     'Коды рынка',                 'Bozor kodlari',              'S', 20,     'CONDITION',     null, 'Y',      'Y',      null,      60 from dual union all
+  select 'replaced_parts',           'IPT_S_REPLACED_PARTS',   'Заменённые детали',          'Almashtirilgan qismlar',     'S', 30,     'CONDITION',     null, 'Y',      'Y',      null,      70 from dual union all
+  select 'expense_types',            'IPT_S_EXPENSE_TYPES',    'Виды расходов',              'Xarajat turlari',            'N', null,   'STATE',         null, 'Y',      'Y',      null,      80 from dual union all
+  select 'client_guar_types',        'IPT_S_CLIENT_GUAR_TYPES','Виды обеспечения',           'Ta''minot turlari',          'S', 2,      'CONDITION',     null, 'Y',      'Y',      null,      90 from dual union all
+  select 'operations',               'IPT_S_OPERATIONS',       'Операции',                   'Operatsiyalar',              'S', 10,     'CONDITION',     null, 'Y',      'Y',      null,     100 from dual union all
+  select 'balance_log_modules',      'IPT_S_BALANCE_LOG_MODULES','Модули журнала баланса',   'Balans jurnali modullari',   'S', 60,     'CONDITION',     null, 'Y',      'Y',      null,     110 from dual union all
+  select 'product_types',            'IPT_S_PRODUCT_TYPES',    'Типы товара',                'Tovar turlari',              'S', 2,      'CONDITION',     null, 'Y',      'N',
          'Kod o''chirilsa mavjud tovarlar turi yo''qoladi. Nofaol qilish yetarli.',                                                                                                    120 from dual union all
-  select 'filials',                  'IPT_S_FILIALS',          'Филиалы',                    'Filiallar',                  'S', 10,     'CONDITION',     'N',      'N',
+  select 'filials',                  'IPT_S_FILIALS',          'Филиалы',                    'Filiallar',                  'S', 10,     'CONDITION',     null, 'N',      'N',
          'Filial qo''shish bitta qator emas: sessiya filiali, hisobotlar va huquqlar bilan bog''liq. Nomi va site_code ni bu yerdan o''zgartirish mumkin.',                             130 from dual union all
-  select 'product_states',           'IPT_S_PRODUCT_STATES',   'Состояния товара',           'Tovar holatlari',            'S', 2,      'CONDITION',     'N',      'N',
+  select 'product_states',           'IPT_S_PRODUCT_STATES',   'Состояния товара',           'Tovar holatlari',            'S', 2,      'CONDITION',     null, 'N',      'N',
          'Kodlar PL/SQL da qotirilgan (state = ''S'' kabi). Yangi kodni hech qanday kod ishlatmaydi. Faqat nomini o''zgartirish mumkin.',                                               140 from dual union all
-  select 'trade_states',             'IPT_S_TRADE_STATES',     'Состояния сделки',           'Sdelka holatlari',           'S', 3,      'CONDITION',     'N',      'N',
+  select 'trade_states',             'IPT_S_TRADE_STATES',     'Состояния сделки',           'Sdelka holatlari',           'S', 3,      'CONDITION',     null, 'N',      'N',
          'Kodlar PL/SQL da qotirilgan (state not in (''03'',''05'',''06'',''07'') kabi). Faqat nomini o''zgartirish mumkin.',                                                           150 from dual
 ) s
 on (t.code = s.code)
@@ -150,6 +153,7 @@ when matched then
              t.pk_type     = s.pk,
              t.pk_max_len  = s.pl,
              t.state_column= s.st,
+             t.order_column= s.oc,
              t.can_insert  = s.ins,
              t.can_delete  = s.del,
              t.lock_reason = s.lock,
@@ -157,9 +161,9 @@ when matched then
              t.condition   = 'A'
 when not matched then
   insert (code, table_name, name_ru, name_uz, pk_type, pk_max_len, state_column,
-          can_insert, can_delete, lock_reason, ord, condition)
+          order_column, can_insert, can_delete, lock_reason, ord, condition)
   values (s.code, s.tab, s.nm_ru, s.nm_uz, s.pk, s.pl, s.st,
-          s.ins, s.del, s.lock, s.ord, 'A');
+          s.oc, s.ins, s.del, s.lock, s.ord, 'A');
 
 commit;
 
@@ -593,6 +597,7 @@ create or replace package body Ipt_Dictionary is
       end if;
 
       Put_Str(vDict, 'state_column', lower(d.state_column));
+      Put_Str(vDict, 'order_column', lower(d.order_column));
       vDict.put('can_insert', d.can_insert = 'Y');
       vDict.put('can_delete', d.can_delete = 'Y');
       Put_Str(vDict, 'lock_reason', d.lock_reason);
@@ -673,9 +678,14 @@ create or replace package body Ipt_Dictionary is
 
     vSql := 'select '||vSelect||' from '||vDict.Table_Name||
             ' where :s is null or '||vSearchable||' like :s'||
+            -- Tartib: avval faollar, keyin o'z tartib ustuni (bo'lsa),
+            -- oxirida kod. Kategoriyalarda ORD aynan shu uchun bor —
+            -- usiz ro'yxat "acc-audio" dan boshlanadi, "iphone" dan emas.
             ' order by '||
             case when vDict.State_Column is not null
                  then Safe_Name(vDict.State_Column)||', ' else '' end||
+            case when vDict.Order_Column is not null
+                 then Safe_Name(vDict.Order_Column)||', ' else '' end||
             vDict.Pk_Column||
             ' offset :o rows fetch next :l rows only';
 

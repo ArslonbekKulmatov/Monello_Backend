@@ -11,6 +11,11 @@
 -- ISHGA TUSHIRISH: ipt_catalog_stage3.sql dan KEYIN (yangi ma'lumotnomalar
 -- o'sha yerda yaratiladi)
 --
+-- DIQQAT: bu fayldagi SQL statementlar ichida BO'SH QATOR yo'q va
+-- bo'lmasligi ham kerak. SQL*Plus va PL/SQL Developer bo'sh qatorni
+-- "statement tugadi" deb tushunadi va uzun merge'ni o'rtasidan bo'lib
+-- tashlaydi (ORA-00933). Tahrirlaganda shuni yodda tuting.
+--
 -- Muallif: Arslonbek Kulmatov
 -- Sana   : 19.09.2026
 -- =============================================================================
@@ -125,7 +130,7 @@ prompt 2.1 Ma'lumotnomalar
 merge into ipt_s_dictionaries t
 using (
   --          code                  table_name                 name_ru                      name_uz                      pk_type pk_len state_col    ord_col ins del ord
-  select 'categories'          code, 'IPT_S_CATEGORIES'   tab, 'Категории товаров'    nm_ru, 'Tovar kategoriyalari' nm_uz, 'S' pk, 30  pl, 'CONDITION' st, 'ORD' oc, 'Y' ins, 'Y' del, null lock, 10 ord from dual union all
+  select 'categories'          code, 'IPT_S_CATEGORIES'   tab, 'Категории товаров'    nm_ru, 'Tovar kategoriyalari' nm_uz, 'S' pk, 30  pl, 'CONDITION' st, 'ORD' oc, 'Y' ins, 'Y' del, null lck, 10 ord from dual union all
   select 'brands',                   'IPT_S_BRANDS',           'Бренды',                     'Brendlar',                   'S', 30,     'CONDITION',     null, 'Y',      'Y',      null,      20 from dual union all
   select 'colors',                   'IPT_S_COLORS',           'Цвета',                      'Ranglar',                    'S', 30,     'CONDITION',     null, 'Y',      'Y',      null,      30 from dual union all
   select 'attributes',               'IPT_S_ATTRIBUTES',       'Характеристики моделей',     'Model xarakteristikalari',   'S', 40,     'CONDITION',     null, 'Y',      'Y',      null,      40 from dual union all
@@ -156,14 +161,14 @@ when matched then
              t.order_column= s.oc,
              t.can_insert  = s.ins,
              t.can_delete  = s.del,
-             t.lock_reason = s.lock,
+             t.lock_reason = s.lck,
              t.ord         = s.ord,
              t.condition   = 'A'
 when not matched then
   insert (code, table_name, name_ru, name_uz, pk_type, pk_max_len, state_column,
           order_column, can_insert, can_delete, lock_reason, ord, condition)
   values (s.code, s.tab, s.nm_ru, s.nm_uz, s.pk, s.pl, s.st,
-          s.oc, s.ins, s.del, s.lock, s.ord, 'A');
+          s.oc, s.ins, s.del, s.lck, s.ord, 'A');
 
 commit;
 
@@ -179,60 +184,46 @@ using (
   select 'categories', 'NAME_UZ',   'Название (uz)',   'Nomi (uz)',      'S', 500,  'N', null, 20 from dual union all
   select 'categories', 'ORD',       'Порядок',         'Tartib',         'N', null, 'N', null, 30 from dual union all
   select 'categories', 'CONDITION', 'Состояние',       'Holati',         'L', null, 'N', 'A:Faol;P:Nofaol', 40 from dual union all
-
   select 'brands', 'NAME',      'Название', 'Nomi',   'S', 500,  'Y', null, 10 from dual union all
   select 'brands', 'CONDITION', 'Состояние','Holati', 'L', null, 'N', 'A:Faol;P:Nofaol', 20 from dual union all
-
   select 'colors', 'NAME_RU',   'Название (ru)','Nomi (ru)','S', 200,  'Y', null, 10 from dual union all
   select 'colors', 'NAME_UZ',   'Название (uz)','Nomi (uz)','S', 200,  'N', null, 20 from dual union all
   select 'colors', 'CONDITION', 'Состояние',    'Holati',   'L', null, 'N', 'A:Faol;P:Nofaol', 30 from dual union all
-
   select 'attributes', 'NAME_RU',    'Название (ru)','Nomi (ru)',      'S', 200,  'Y', null, 10 from dual union all
   select 'attributes', 'NAME_UZ',    'Название (uz)','Nomi (uz)',      'S', 200,  'N', null, 20 from dual union all
   select 'attributes', 'VALUE_TYPE', 'Тип значения', 'Qiymat turi',    'L', null, 'Y', 'text:Matn;number:Son;bool:Mantiqiy', 30 from dual union all
   select 'attributes', 'IS_MULTI',   'Много значений','Ko''p qiymatli','B', null, 'Y', null, 40 from dual union all
   select 'attributes', 'CONDITION',  'Состояние',    'Holati',         'L', null, 'N', 'A:Faol;P:Nofaol', 50 from dual union all
-
   select 'sim_types', 'NAME',      'Название', 'Nomi',   'S', 200,  'Y', null, 10 from dual union all
   select 'sim_types', 'CONDITION', 'Состояние','Holati', 'L', null, 'N', 'A:Faol;P:Nofaol', 20 from dual union all
-
   select 'market_codes', 'NAME',      'Название', 'Nomi',   'S', 200,  'Y', null, 10 from dual union all
   select 'market_codes', 'CONDITION', 'Состояние','Holati', 'L', null, 'N', 'A:Faol;P:Nofaol', 20 from dual union all
-
   select 'replaced_parts', 'NAME_RU',   'Название (ru)','Nomi (ru)','S', 200,  'Y', null, 10 from dual union all
   select 'replaced_parts', 'NAME_UZ',   'Название (uz)','Nomi (uz)','S', 200,  'N', null, 20 from dual union all
   select 'replaced_parts', 'CONDITION', 'Состояние',    'Holati',   'L', null, 'N', 'A:Faol;P:Nofaol', 30 from dual union all
-
   select 'expense_types', 'NAME',  'Название', 'Nomi',   'S', 500,  'N', null, 10 from dual union all
   select 'expense_types', 'STATE', 'Состояние','Holati', 'L', null, 'N', 'A:Faol;P:Nofaol', 20 from dual union all
-
   select 'client_guar_types', 'NAME',      'Название', 'Nomi',   'S', 1000, 'Y', null, 10 from dual union all
   select 'client_guar_types', 'CONDITION', 'Состояние','Holati', 'L', null, 'Y', 'A:Faol;P:Nofaol', 20 from dual union all
-
   select 'operations', 'NAME',       'Название',   'Nomi',        'S', 500,  'Y', null, 10 from dual union all
   select 'operations', 'INITIATOR',  'Инициатор',  'Tashabbuskor','S', 2,    'Y', null, 20 from dual union all
   select 'operations', 'IS_EXPENSE', 'Расход',     'Xarajat',     'F', null, 'N', null, 30 from dual union all
   select 'operations', 'CONDITION',  'Состояние',  'Holati',      'L', null, 'Y', 'A:Faol;P:Nofaol', 40 from dual union all
-
   select 'balance_log_modules', 'NAME',        'Название',  'Nomi',       'S', 200,  'Y', null, 10 from dual union all
   select 'balance_log_modules', 'DESCRIPTION', 'Описание',  'Izoh',       'S', 1000, 'N', null, 20 from dual union all
   select 'balance_log_modules', 'HAS_CONTEXT', 'Есть контекст','Kontekst bor','F', null, 'Y', null, 30 from dual union all
   select 'balance_log_modules', 'AFFECTS',     'Влияет на', 'Nimaga ta''sir qiladi','S', 40, 'N', null, 40 from dual union all
   select 'balance_log_modules', 'CONDITION',   'Состояние', 'Holati',     'L', null, 'N', 'A:Faol;P:Nofaol', 50 from dual union all
-
   select 'product_types', 'NAME',      'Название', 'Nomi',   'S', 500,  'Y', null, 10 from dual union all
   select 'product_types', 'CONDITION', 'Состояние','Holati', 'L', null, 'Y', 'A:Faol;P:Nofaol', 20 from dual union all
-
   -- Filialda site_code ayni shu forma orqali qo'yiladi: sayt katalogi
   -- to'ldirilmagan site_code da butunlay bo'sh qaytadi.
   select 'filials', 'NAME',      'Название',        'Nomi',            'S', 1000, 'Y', null, 10 from dual union all
   select 'filials', 'TYPE',      'Тип',             'Turi',            'S', 100,  'N', null, 20 from dual union all
   select 'filials', 'SITE_CODE', 'Код витрины',     'Shourum kodi',    'S', 30,   'N', null, 30 from dual union all
   select 'filials', 'CONDITION', 'Состояние',       'Holati',          'L', null, 'Y', 'A:Faol;P:Nofaol', 40 from dual union all
-
   select 'product_states', 'NAME',      'Название', 'Nomi',   'S', 500,  'Y', null, 10 from dual union all
   select 'product_states', 'CONDITION', 'Состояние','Holati', 'L', null, 'Y', 'A:Faol;P:Nofaol', 20 from dual union all
-
   select 'trade_states', 'NAME',      'Название', 'Nomi',   'S', 500,  'Y', null, 10 from dual union all
   select 'trade_states', 'CONDITION', 'Состояние','Holati', 'L', null, 'Y', 'A:Faol;P:Nofaol', 20 from dual
 ) s

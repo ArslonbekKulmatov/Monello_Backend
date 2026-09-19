@@ -39,6 +39,7 @@ chiqadi, faqat kartochkasi bo'sh ko'rinadi.
 |---|---|
 | Baza sxemasi (24 maydon, 7 ma'lumotnoma, 2 model jadvali) | ✅ bazada |
 | `Ipt_Catalog` paketi (8 metod) | ✅ bazada |
+| `IPT_PRODUCTS_V` — web o'qishi uchun katalog ustunlari | ⏳ `db/ipt_products_v.sql` qo'llanishi kerak |
 | `Product_Action` integratsiyasi | ✅ bazada |
 | `core_methods` yozuvlari (889–895) | ✅ faol |
 | `/api/catalog/*` endpointlari (Java) | ✅ yozildi, **deploy qilinmagan** |
@@ -61,6 +62,17 @@ Ro'yxatdan o'tgan metodlar tekshirildi: 889 `catalogProducts`,
 ---
 
 ## 2. A qism — Monello webda, shu ketma-ketlikda
+
+### 2.0 `IPT_PRODUCTS_V` ni yangilash
+
+- [ ] `db/ipt_products_v.sql` ni bazada bajarish
+
+Metodlar katalog maydonlarini yozadi, lekin forma ularni qaytarib o'qishi
+uchun view kerak. Bu qilinmasa forma har ochilganda maydonlar bo'sh
+ko'rinadi. Yangi ustunlar oxiriga qo'shilgan, eski qismi tegilmagan.
+
+Qo'shimcha: `in_catalog` ustuni ('Y'/'N') tovar saytga chiqadimi-yo'qmi
+darhol ko'rsatadi — `ipt_catalog_v` ning yettita sharti bilan aynan bir xil.
 
 ### 2.1 Ma'lumotnomalarni o'qishni ulash
 
@@ -367,6 +379,7 @@ Manzil kelganda qo'shiladi.
 | `db/ipt_catalog_stage3.sql` | Qolgan maydonlar, rasm va xarakteristika jadvallari |
 | `db/ipt_catalog_package.sql` | `Ipt_Catalog` paketi, `core_methods` yozuvlari |
 | `db/ipt_catalog_product_action.sql` | `Product_Action` — qo'lda qo'llanadi |
+| `db/ipt_products_v.sql` | `IPT_PRODUCTS_V` — katalog ustunlari qo'shilgan |
 | `db/create_api_tokens.sql` | Token yaratish, qamrov bilan |
 | `docs/MONELLO_WEB_KATALOG_UZ.md` | Web jamoasiga spetsifikatsiya |
 | `docs/ABM_STORE_KATALOG_API_RU.md` | Sayt jamoasiga spetsifikatsiya |

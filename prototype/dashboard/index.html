@@ -1,0 +1,1279 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  body{margin:0}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<!-- ARTIFACT-START -->
+<title>Monello nazorat paneli</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+/* ===========================================================================
+   Tokenlar. Yorug' palitra bare :root da to'liq beriladi; qorong'i faqat
+   qiymatlarni qayta belgilaydi — ikkala qamrovda ham (OS sozlamasi va
+   foydalanuvchi tanlovi).
+   Grafik ranglari dataviz validatoridan o'tgan: ko'k ordinal ramp (qarz
+   yoshi) va 1/2-slot kategoriya juftligi (#2a78d6 / #eb6834).
+   =========================================================================== */
+:root{
+  color-scheme: light;
+
+  --plane:#edf0f3;
+  --surface:#fbfcfc;
+  --surface-2:#f2f5f7;
+  --surface-3:#e8edf1;
+
+  --ink:#101720;
+  --ink-2:#4b555f;
+  --muted:#7b858f;
+
+  --grid:#e1e6ea;
+  --axis:#c4ccd4;
+  --border:rgba(16,23,32,.12);
+  --border-strong:rgba(16,23,32,.22);
+
+  --accent:#184f95;
+  --accent-soft:#e3ecf8;
+  --on-accent:#ffffff;
+
+  --s1:#2a78d6;
+  --s2:#eb6834;
+  --o1:#86b6ef;
+  --o2:#3987e5;
+  --o3:#256abf;
+  --o4:#104281;
+
+  --shadow:0 1px 2px rgba(16,23,32,.05), 0 10px 28px -20px rgba(16,23,32,.45);
+
+  --font-display:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --font-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+/* Holat ranglari qat'iy — mavzuga qarab o'zgarmaydi va hech qachon
+   qator rangi sifatida ishlatilmaydi. Har doim belgi + yozuv bilan keladi. */
+:root{
+  --st-good:#0ca30c;
+  --st-warn:#fab219;
+  --st-serious:#ec835a;
+  --st-crit:#d03b3b;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --plane:#0d0f11;
+    --surface:#16191b;
+    --surface-2:#1c2023;
+    --surface-3:#23282c;
+    --ink:#f1f4f6;
+    --ink-2:#b4bec6;
+    --muted:#889199;
+    --grid:#262b2f;
+    --axis:#343a40;
+    --border:rgba(255,255,255,.12);
+    --border-strong:rgba(255,255,255,.24);
+    --accent:#6da7ec;
+    --accent-soft:#14263c;
+    --on-accent:#0b1420;
+    --s1:#3987e5;
+    --s2:#d95926;
+    --o1:#b7d3f6;
+    --o2:#6da7ec;
+    --o3:#2a78d6;
+    --o4:#184f95;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plane:#0d0f11;
+  --surface:#16191b;
+  --surface-2:#1c2023;
+  --surface-3:#23282c;
+  --ink:#f1f4f6;
+  --ink-2:#b4bec6;
+  --muted:#889199;
+  --grid:#262b2f;
+  --axis:#343a40;
+  --border:rgba(255,255,255,.12);
+  --border-strong:rgba(255,255,255,.24);
+  --accent:#6da7ec;
+  --accent-soft:#14263c;
+  --on-accent:#0b1420;
+  --s1:#3987e5;
+  --s2:#d95926;
+  --o1:#b7d3f6;
+  --o2:#6da7ec;
+  --o3:#2a78d6;
+  --o4:#184f95;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+
+body{
+  background:var(--plane);
+  color:var(--ink);
+  font-family:var(--font-ui);
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* ---------- Umumiy karkas ---------- */
+.wrap{max-width:1200px;margin:0 auto;padding-inline:16px}
+
+.topbar{
+  position:sticky;
+  top:env(safe-area-inset-top,0px);
+  z-index:40;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.topbar-in{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding-block:10px;
+}
+.brand{display:flex;align-items:baseline;gap:9px;margin-right:auto}
+.brand-mark{
+  font-family:var(--font-display);font-weight:700;font-size:19px;
+  letter-spacing:.02em;text-transform:uppercase;
+}
+.brand-sub{
+  font-family:var(--font-display);font-weight:600;font-size:13px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+}
+
+.pill{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--font-mono);font-size:11px;font-weight:500;
+  letter-spacing:.04em;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;
+  border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);
+  white-space:nowrap;
+}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.pill.is-demo .dot{background:var(--st-warn)}
+.pill.is-live .dot{background:var(--st-good)}
+.pill.is-err .dot{background:var(--st-crit)}
+.pill.is-load .dot{background:var(--accent)}
+
+.asof{font-family:var(--font-mono);font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* ---------- Boshqaruv ---------- */
+.controls{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  box-shadow:var(--shadow);
+  margin-block:18px;
+  overflow:hidden;
+}
+.ctl-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface-2);
+}
+.ctl-title{
+  font-family:var(--font-display);font-weight:600;font-size:12px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);
+}
+.ctl-body{padding:14px;display:grid;gap:14px}
+
+.seg-ctl{display:inline-flex;border:1px solid var(--border-strong);border-radius:7px;overflow:hidden}
+.seg-ctl button{
+  font:inherit;font-size:12px;font-weight:500;
+  padding:6px 13px;border:0;background:var(--surface);color:var(--ink-2);cursor:pointer;
+}
+.seg-ctl button + button{border-left:1px solid var(--border)}
+.seg-ctl button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+
+.field-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{
+  font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+}
+.field input,.field select{
+  font:inherit;font-size:13px;color:var(--ink);
+  background:var(--surface-2);border:1px solid var(--border-strong);border-radius:7px;
+  padding:7px 9px;min-width:0;max-width:100%;
+}
+.field input[type="password"],.field.mono input{font-family:var(--font-mono);font-size:12px}
+.field.grow{flex:1 1 220px}
+
+.btn{
+  font:inherit;font-size:13px;font-weight:500;
+  padding:8px 16px;border-radius:7px;cursor:pointer;
+  border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);
+}
+.btn.ghost{background:var(--surface);color:var(--ink-2);border-color:var(--border-strong)}
+.btn:disabled{opacity:.5;cursor:default}
+
+.note{
+  display:flex;gap:9px;align-items:flex-start;
+  font-size:12.5px;line-height:1.55;color:var(--ink-2);
+  background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--st-warn);
+  border-radius:7px;padding:10px 12px;
+}
+.note.err{border-left-color:var(--st-crit)}
+.note b{color:var(--ink);font-weight:600}
+.note code{font-family:var(--font-mono);font-size:11.5px;background:var(--surface-3);padding:1px 4px;border-radius:3px}
+
+/* ---------- KPI ---------- */
+/* Hero ikki ustun + to'rtta plitka = 6 birlik. Plitka soni ustun soniga
+   bo'linmasa oxirgisi yolg'iz qatorda qolib ketadi. */
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));margin-block:18px}
+.kpi{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:13px 14px;display:flex;flex-direction:column;gap:3px;min-width:0;
+}
+.kpi-label{font-size:11.5px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.kpi-value{font-size:25px;font-weight:600;line-height:1.15;letter-spacing:-.01em;word-break:break-word}
+.kpi-sub{font-size:12px;color:var(--ink-2)}
+.kpi.hero{
+  grid-column:span 2;background:var(--surface);border-color:var(--border-strong);
+  box-shadow:var(--shadow);
+}
+.kpi.hero .kpi-value{font-size:50px;letter-spacing:-.025em}
+@media (max-width:560px){ .kpi.hero{grid-column:span 1} .kpi.hero .kpi-value{font-size:38px} }
+
+/* ---------- Bo'limlar ---------- */
+.panel{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  margin-block:18px;overflow:hidden;
+}
+.panel-head{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:12px 14px;border-bottom:1px solid var(--border);
+}
+.panel-titles{margin-right:auto;min-width:0}
+.panel-title{font-family:var(--font-display);font-weight:600;font-size:17px;letter-spacing:.01em}
+.panel-ep{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);word-break:break-all}
+.panel-body{padding:14px}
+
+.viewtabs{display:inline-flex;border:1px solid var(--border-strong);border-radius:7px;overflow:hidden}
+.viewtabs button{
+  font:inherit;font-size:11.5px;font-weight:500;letter-spacing:.03em;
+  padding:5px 11px;border:0;background:var(--surface);color:var(--ink-2);cursor:pointer;
+}
+.viewtabs button + button{border-left:1px solid var(--border)}
+.viewtabs button[aria-pressed="true"]{background:var(--surface-3);color:var(--ink)}
+
+/* ---------- Grafik ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-bottom:14px}
+.legend-item{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2)}
+.swatch{width:11px;height:11px;border-radius:3px;flex:none}
+
+/* Qatorlar va o'q BITTA gridda: alohida bo'lsa ustun kengliklari
+   mos kelmay, to'r chiziqlari qatorlardan siljib qoladi. */
+.chart{
+  display:grid;
+  grid-template-columns:minmax(96px,150px) minmax(0,1fr) minmax(74px,auto);
+  align-items:center;
+  gap:9px 12px;
+}
+.brow{display:contents}
+.blabel{min-width:0}
+.bname{display:block;font-size:13px;font-weight:500;overflow-wrap:anywhere}
+.bcode{display:block;font-family:var(--font-mono);font-size:10.5px;color:var(--muted)}
+.btrack{position:relative;min-width:0;display:grid;gap:3px}
+.gl{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--grid);z-index:0}
+.gl.last{transform:translateX(-1px)}
+.bstack{position:relative;z-index:1;display:flex;height:22px}
+.bgroup .bstack{height:10px}
+.seg{
+  height:100%;border:0;padding:0;cursor:default;
+  background:var(--s1);
+}
+.bstack .seg:last-child{border-radius:0 4px 4px 0}
+.bval{
+  font-family:var(--font-mono);font-size:12.5px;font-variant-numeric:tabular-nums;
+  text-align:right;color:var(--ink);white-space:nowrap;
+}
+.bval small{display:block;font-size:10.5px;color:var(--muted)}
+.xaxis{display:contents}
+.xaxis-track{
+  position:relative;height:15px;align-self:start;
+  border-top:1px solid var(--axis);
+}
+.xtick{
+  position:absolute;top:3px;transform:translateX(-50%);
+  font-family:var(--font-mono);font-size:10.5px;color:var(--muted);white-space:nowrap;
+}
+.xtick.first{transform:none}
+.xtick.last{transform:translateX(-100%)}
+@media (max-width:520px){
+  /* Tor ekranda qatorlar ustma-ust yig'iladi, shuning uchun har biri
+     yana o'z gridiga qaytadi — display:contents da qatorni ajratib
+     bo'lmaydi. */
+  .chart{grid-template-columns:1fr;gap:16px}
+  .brow,.xaxis{display:grid;grid-template-columns:1fr;gap:4px}
+  .bval{text-align:left}
+  .bval small{display:inline;margin-left:6px}
+  .xaxis .xaxis-track{margin-top:2px}
+}
+
+/* ---------- Jadval ---------- */
+.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:520px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+thead th{
+  font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--muted);background:var(--surface-2);position:sticky;top:0;
+}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:nth-child(even) td{background:var(--surface-2)}
+td.num,th.num{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+td.name{white-space:normal;min-width:150px}
+tfoot td{font-weight:600;background:var(--surface-3);border-top:1px solid var(--border-strong)}
+
+.stripe{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.stripe i{width:4px;height:15px;border-radius:2px;flex:none;display:block}
+.bucket-note{font-size:11px;color:var(--muted)}
+
+.jsonview{
+  margin:0;overflow-x:auto;max-height:420px;overflow-y:auto;
+  font-family:var(--font-mono);font-size:11.5px;line-height:1.55;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
+  padding:12px;color:var(--ink-2);
+}
+
+.pager{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.pager-info{font-family:var(--font-mono);font-size:11.5px;color:var(--muted)}
+
+.empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:13px}
+
+/* ---------- Tooltip ---------- */
+#tip{
+  position:fixed;z-index:80;pointer-events:none;
+  background:var(--ink);color:var(--plane);
+  border-radius:7px;padding:7px 10px;font-size:12px;line-height:1.45;
+  box-shadow:0 6px 20px -8px rgba(0,0,0,.5);max-width:260px;
+}
+#tip .tip-k{display:block;font-weight:600;margin-bottom:1px}
+#tip .tip-v{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+footer.page-foot{
+  padding-block:22px 44px;color:var(--muted);font-size:12px;line-height:1.6;
+  border-top:1px solid var(--border);margin-top:26px;
+}
+footer.page-foot code{font-family:var(--font-mono);font-size:11.5px}
+</style>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">
+      <span class="brand-mark">Monello</span>
+      <span class="brand-sub">Nazorat paneli</span>
+    </div>
+    <span class="pill is-demo" id="srcPill"><span class="dot"></span><span id="srcText">Demo</span></span>
+    <span class="asof" id="asOf">&nbsp;</span>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ===================== ULANISH VA FILTRLAR ===================== -->
+  <section class="controls" aria-labelledby="ctlTitle">
+    <div class="ctl-head">
+      <span class="ctl-title" id="ctlTitle">Manba va filtrlar</span>
+      <div class="seg-ctl" role="group" aria-label="Ma'lumot manbasi">
+        <button type="button" id="modeDemo" aria-pressed="true">Demo ma'lumot</button>
+        <button type="button" id="modeLive" aria-pressed="false">Jonli API</button>
+      </div>
+    </div>
+
+    <div class="ctl-body">
+      <div class="field-row" id="connRow" hidden>
+        <div class="field grow mono">
+          <label for="baseUrl">API manzili</label>
+          <input type="url" id="baseUrl" placeholder="https://monello.example.uz" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field grow">
+          <label for="apiToken">Token (qamrov: report)</label>
+          <input type="password" id="apiToken" placeholder="openssl rand -hex 32" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="dateFrom">Sana dan</label>
+          <input type="date" id="dateFrom" value="2026-09-01">
+        </div>
+        <div class="field">
+          <label for="dateTo">Sana gacha</label>
+          <input type="date" id="dateTo" value="2026-09-18">
+        </div>
+        <div class="field">
+          <label for="filialSel">Filial</label>
+          <select id="filialSel"><option value="">Barchasi</option></select>
+        </div>
+        <div class="field">
+          <label for="minDays">Kechikish, kundan</label>
+          <input type="number" id="minDays" value="1" min="1" max="3650" style="width:110px">
+        </div>
+        <button type="button" class="btn" id="refreshBtn">Yangilash</button>
+      </div>
+
+      <div class="note" id="modeNote">
+        <span aria-hidden="true">&#9679;</span>
+        <span id="modeNoteText">
+          <b>Demo rejim.</b> Raqamlar va mijoz ismlari o'ylab topilgan — maketni
+          baza ishga tushmasdan ko'rish uchun. Javob tuzilmasi
+          <code>Ipt_Dashboard</code> qaytaradigan JSON bilan bir xil.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== KPI ===================== -->
+  <section class="kpis" id="kpis" aria-label="Asosiy ko'rsatkichlar"></section>
+
+  <!-- ===================== QARZDORLIK ===================== -->
+  <section class="panel" id="panel-debt" aria-labelledby="t-debt">
+    <div class="panel-head">
+      <div class="panel-titles">
+        <div class="panel-title" id="t-debt">Qarzdorlik, yosh guruhlari bo'yicha</div>
+        <div class="panel-ep">GET /api/report/debt &middot; reportDebt</div>
+      </div>
+      <div class="viewtabs" role="group" aria-label="Qarzdorlik ko'rinishi" data-tabs="debt">
+        <button type="button" data-view="chart" aria-pressed="true">Grafik</button>
+        <button type="button" data-view="table" aria-pressed="false">Jadval</button>
+        <button type="button" data-view="json" aria-pressed="false">JSON</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div data-pane="debt-chart"></div>
+      <div data-pane="debt-table" hidden></div>
+      <pre class="jsonview" data-pane="debt-json" hidden></pre>
+    </div>
+  </section>
+
+  <!-- ===================== KECHIKKANLAR ===================== -->
+  <section class="panel" id="panel-overdue" aria-labelledby="t-overdue">
+    <div class="panel-head">
+      <div class="panel-titles">
+        <div class="panel-title" id="t-overdue">Kechikkan sdelkalar reyestri</div>
+        <div class="panel-ep">GET /api/report/overdue &middot; reportOverdue</div>
+      </div>
+      <div class="viewtabs" role="group" aria-label="Kechikkanlar ko'rinishi" data-tabs="overdue">
+        <button type="button" data-view="table" aria-pressed="true">Jadval</button>
+        <button type="button" data-view="json" aria-pressed="false">JSON</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div data-pane="overdue-table"></div>
+      <pre class="jsonview" data-pane="overdue-json" hidden></pre>
+    </div>
+  </section>
+
+  <!-- ===================== SDELKALAR ===================== -->
+  <section class="panel" id="panel-trades" aria-labelledby="t-trades">
+    <div class="panel-head">
+      <div class="panel-titles">
+        <div class="panel-title" id="t-trades">Sdelkalar dinamikasi</div>
+        <div class="panel-ep">GET /api/report/trades &middot; reportTrades</div>
+      </div>
+      <div class="viewtabs" role="group" aria-label="Sdelkalar ko'rinishi" data-tabs="trades">
+        <button type="button" data-view="chart" aria-pressed="true">Grafik</button>
+        <button type="button" data-view="table" aria-pressed="false">Jadval</button>
+        <button type="button" data-view="json" aria-pressed="false">JSON</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div data-pane="trades-chart"></div>
+      <div data-pane="trades-table" hidden></div>
+      <pre class="jsonview" data-pane="trades-json" hidden></pre>
+    </div>
+  </section>
+
+  <!-- ===================== MIJOZLAR ===================== -->
+  <section class="panel" id="panel-clients" aria-labelledby="t-clients">
+    <div class="panel-head">
+      <div class="panel-titles">
+        <div class="panel-title" id="t-clients">Mijozlar bazasi</div>
+        <div class="panel-ep">GET /api/report/clients &middot; reportClients</div>
+      </div>
+      <div class="viewtabs" role="group" aria-label="Mijozlar ko'rinishi" data-tabs="clients">
+        <button type="button" data-view="chart" aria-pressed="true">Grafik</button>
+        <button type="button" data-view="table" aria-pressed="false">Jadval</button>
+        <button type="button" data-view="json" aria-pressed="false">JSON</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div data-pane="clients-chart"></div>
+      <div data-pane="clients-table" hidden></div>
+      <pre class="jsonview" data-pane="clients-json" hidden></pre>
+    </div>
+  </section>
+
+  <footer class="page-foot">
+    <p>
+      Prototip. To'rtta chaqiruv: <code>/api/report/debt</code>,
+      <code>/api/report/overdue</code>, <code>/api/report/trades</code>,
+      <code>/api/report/clients</code> — hammasi <code>Bearer</code> tokeni bilan,
+      qamrovi <code>report</code>. Summalar dollarda, chunki qarz bazada
+      kanonik ravishda USD da yuritiladi.
+    </p>
+    <p>
+      Token brauzerda saqlanmaydi: sahifa yopilsa yo'qoladi. Ishga
+      tushirilganda token brauzerga umuman tushmasligi kerak — so'rovni
+      panelning o'z backendi qilsin.
+    </p>
+  </footer>
+</main>
+
+<div id="tip" hidden></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================================
+     Format
+     ========================================================================= */
+  var nf = new Intl.NumberFormat('ru-RU');
+
+  function money(v){
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    return '$' + nf.format(Math.round(v));
+  }
+  function compact(v){
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    var a = Math.abs(v);
+    if (a >= 1e6) return '$' + (v/1e6).toFixed(1).replace('.',',') + ' mln';
+    if (a >= 1e4) return '$' + nf.format(Math.round(v/1e3)) + ' ming';
+    return '$' + nf.format(Math.round(v));
+  }
+  function int(v){
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    return nf.format(v);
+  }
+  function pct(part, whole){
+    if (!whole) return '—';
+    return (part/whole*100).toFixed(1).replace('.',',') + '%';
+  }
+  function esc(s){
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  /* O'qsa bo'ladigan o'q chegarasi. Qadamlar zich olingan: siyrak bo'lsa
+     eng uzun ustun yo'lakning yarmida qolib, grafik bo'sh ko'rinadi. */
+  /* Har bir chegaraning o'z bo'linma soni bor, shunda belgilar butun songa
+     tushadi: 150 ming ni 4 ga bo'lsak "38 ming" chiqadi, 3 ga bo'lsak
+     "50 ming". */
+  var NICE = [[1,4],[1.25,5],[1.5,3],[2,4],[2.5,5],[3,3],[4,4],[5,5],[6,3],[8,4],[10,5]];
+  function niceMax(v){
+    if (!v || v <= 0) return { max:1, divs:4 };
+    var pow = Math.pow(10, Math.floor(Math.log10(v)));
+    var q = v / pow;
+    for (var i = 0; i < NICE.length; i++){
+      if (q <= NICE[i][0]) return { max: NICE[i][0] * pow, divs: NICE[i][1] };
+    }
+    return { max: 10 * pow, divs: 5 };
+  }
+
+  /* =========================================================================
+     Kechikish guruhlari. Qarz yoshi TARTIBLI, shuning uchun bitta ko'k
+     ramp — har guruhga alohida rang emas.
+     ========================================================================= */
+  var BUCKETS = [
+    { key:'debt_30',      label:'1–30 kun',   short:'1–30',  css:'--o1', min:1,  max:30 },
+    { key:'debt_31_60',   label:'31–60 kun',  short:'31–60', css:'--o2', min:31, max:60 },
+    { key:'debt_61_90',   label:'61–90 kun',  short:'61–90', css:'--o3', min:61, max:90 },
+    { key:'debt_90_more', label:'90+ kun',    short:'90+',   css:'--o4', min:91, max:1e9 }
+  ];
+  function bucketOf(days){
+    for (var i=0;i<BUCKETS.length;i++){
+      if (days >= BUCKETS[i].min && days <= BUCKETS[i].max) return BUCKETS[i];
+    }
+    return BUCKETS[0];
+  }
+
+  /* =========================================================================
+     Demo ma'lumot
+     Raqamlar o'zaro bog'langan: graph_amount − paid_amount = total_debt, va
+     total_debt guruhlar yig'indisiga teng. Ismlar o'ylab topilgan.
+     ========================================================================= */
+  var FILIALS = [
+    { code:'01025', name:'Mirobod' },
+    { code:'01026', name:'Sebzor' },
+    { code:'01031', name:'Chilonzor' },
+    { code:'01042', name:'Yunusobod' }
+  ];
+
+  var DEMO_DEBT = [
+    { calc_day:'2026-09-17', filial_code:'01025', filial_name:'Mirobod',   graph_amount:1842300, paid_amount:1705940, debt_30:61420, debt_31_60:32180, debt_61_90:18640, debt_90_more:24120, total_debt:136360 },
+    { calc_day:'2026-09-17', filial_code:'01026', filial_name:'Sebzor',    graph_amount:1268700, paid_amount:1178250, debt_30:42900, debt_31_60:22310, debt_61_90:12470, debt_90_more:12770, total_debt:90450 },
+    { calc_day:'2026-09-17', filial_code:'01031', filial_name:'Chilonzor', graph_amount:903400,  paid_amount:836120,  debt_30:31980, debt_31_60:16540, debt_61_90:9210,  debt_90_more:9550,  total_debt:67280 },
+    { calc_day:'2026-09-17', filial_code:'01042', filial_name:'Yunusobod', graph_amount:548900,  paid_amount:512470,  debt_30:17260, debt_31_60:8930,  debt_61_90:4870,  debt_90_more:5370,  total_debt:36430 }
+  ];
+
+  var DEMO_TRADES = [
+    { filial_code:'01025', filial_name:'Mirobod',   trades_count:128, sold_amount:96400, initial_amount:21200, financed_amount:75200, cancelled_count:4, returned_count:2 },
+    { filial_code:'01026', filial_name:'Sebzor',    trades_count:94,  sold_amount:68900, initial_amount:15100, financed_amount:53800, cancelled_count:3, returned_count:1 },
+    { filial_code:'01031', filial_name:'Chilonzor', trades_count:67,  sold_amount:47300, initial_amount:10400, financed_amount:36900, cancelled_count:2, returned_count:1 },
+    { filial_code:'01042', filial_name:'Yunusobod', trades_count:41,  sold_amount:28100, initial_amount:6300,  financed_amount:21800, cancelled_count:1, returned_count:0 }
+  ];
+
+  var DEMO_CLIENTS = [
+    { filial_code:'01025', filial_name:'Mirobod',   total_clients:1842, active_clients:1790, new_clients:96, with_active_trade:612 },
+    { filial_code:'01026', filial_name:'Sebzor',    total_clients:1317, active_clients:1288, new_clients:74, with_active_trade:455 },
+    { filial_code:'01031', filial_name:'Chilonzor', total_clients:968,  active_clients:941,  new_clients:51, with_active_trade:331 },
+    { filial_code:'01042', filial_name:'Yunusobod', total_clients:604,  active_clients:592,  new_clients:38, with_active_trade:208 }
+  ];
+
+  var SURNAMES = [
+    'Azizov','Rahimov','Tursunov','Qodirov','Yusupov','Ergashev','Sobirov','Karimov',
+    'Nazarov','Islomov','Xolmatov','Sharipov','Abdullayev','Mirzayev','Sattorov',
+    'Umarov','Qosimov','Berdiyev','Hamdamov','Ruzmetov','Egamberdiyev','Nurmatov',
+    'Jalilov','Solihov','Rasulov','Mahmudov','Xudoyberdiyev','Oripov'
+  ];
+  var GIVEN_M = ['Bekzod','Sardor','Jasur','Otabek','Shuhrat','Aziz','Rustam','Doston',
+                 'Ilhom','Alisher','Farrux','Sanjar','Anvar','Ulugbek','Javohir'];
+  var GIVEN_F = ['Nigora','Malika','Dilnoza','Zulfiya','Gulnora','Madina','Nasiba',
+                 'Feruza','Shahnoza','Nodira','Kamola','Lola','Sevara','Dilbar'];
+
+  /* Reyestr DEMO_DEBT dan kelib chiqib yasaladi: har filialning har bir yosh
+     guruhi bo'yicha qatorlar yig'indisi o'sha guruhning summasiga TENG.
+     Shunda qarzdorlik paneli va reyestr bir xil raqamni ko'rsatadi — aks
+     holda maketda $330 520 turib, reyestrda $18 301 chiqadi.
+     Bir marta yasaladi: sahifa har yangilanganda raqam o'zgarmasligi kerak. */
+  /* Familiya × ism juftligi takrorlanmasin: 28 x 29 = 812 nom, reyestrda
+     esa ~430 qator. Ayol ismiga familiya -a bilan keladi. */
+  function demoName(i){
+    var sn = SURNAMES[i % SURNAMES.length];
+    var gi = Math.floor(i / SURNAMES.length) % (GIVEN_M.length + GIVEN_F.length);
+    if (gi < GIVEN_M.length) return sn + ' ' + GIVEN_M[gi];
+    return sn + 'a ' + GIVEN_F[gi - GIVEN_M.length];
+  }
+
+  var DEMO_OVERDUE = (function(){
+    var seed = 20260918;
+    function rnd(){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+
+    /* O'rtacha chek: kechikish qancha uzoq bo'lsa, qoldiq shuncha katta */
+    var TICKET = { debt_30:520, debt_31_60:980, debt_61_90:1450, debt_90_more:2300 };
+    var BASE_DAY = Date.UTC(2026, 8, 18);
+    var rows = [], seq = 0;
+
+    DEMO_DEBT.forEach(function(f){
+      BUCKETS.forEach(function(b){
+        var amount = Number(f[b.key]) || 0;
+        if (amount <= 0) return;
+
+        var count = Math.max(1, Math.round(amount / TICKET[b.key]));
+        var weights = [], wsum = 0, i;
+        for (i = 0; i < count; i++){ var w = 0.45 + rnd() * 1.3; weights.push(w); wsum += w; }
+
+        var left = amount;
+        for (i = 0; i < count; i++){
+          /* Oxirgi qator qoldiqni yutadi — yig'indi aniq summaga tushsin */
+          var amt = (i === count - 1) ? left : Math.max(1, Math.round(amount * weights[i] / wsum));
+          if (i < count - 1) left -= amt;
+          if (amt < 1) amt = 1;
+
+          var span = Math.min(b.max, b.min + 119) - b.min + 1;
+          var days = b.min + Math.floor(rnd() * span);
+          var started = new Date(BASE_DAY - (days + 45 + Math.floor(rnd() * 520)) * 86400000);
+
+          rows.push({
+            trade_id: String(48210 + seq * 7),
+            client_id: String(91200 + seq * 3),
+            client_name: demoName(seq),
+            filial_code: f.filial_code,
+            filial_name: f.filial_name,
+            overdue_days: days,
+            overdue_amount: amt,
+            total_debt: amt + Math.round(amt * (0.6 + rnd() * 2.4)),
+            trade_date: started.toISOString().slice(0, 10),
+            payment_term: [6, 9, 12, 18, 24][seq % 5]
+          });
+          seq++;
+        }
+      });
+    });
+
+    rows.sort(function(a,b){ return b.overdue_days - a.overdue_days || (a.trade_id > b.trade_id ? 1 : -1); });
+    return rows;
+  })();
+
+  /* =========================================================================
+     Holat
+     ========================================================================= */
+  var state = {
+    mode: 'demo',
+    base: '',
+    token: '',
+    dateFrom: '2026-09-01',
+    dateTo: '2026-09-18',
+    filial: '',
+    minDays: 1,
+    page: 1,
+    perPage: 12
+  };
+  var data = { debt:null, overdue:null, trades:null, clients:null };
+
+  var $ = function(sel, root){ return (root||document).querySelector(sel); };
+  var $$ = function(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); };
+  var pane = function(name){ return $('[data-pane="'+name+'"]'); };
+
+  /* =========================================================================
+     Demo javoblarini yig'ish — jonli API qaytaradigan tuzilmada
+     ========================================================================= */
+  function nowIso(){
+    var d = new Date(), p = function(n){ return String(n).padStart(2,'0'); };
+    var off = -d.getTimezoneOffset(), sign = off >= 0 ? '+' : '-';
+    off = Math.abs(off);
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+
+           p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds())+
+           sign+p(Math.floor(off/60))+':'+p(off%60);
+  }
+  function byFilial(rows){
+    if (!state.filial) return rows.slice();
+    return rows.filter(function(r){ return r.filial_code === state.filial; });
+  }
+
+  function demoResponse(kind){
+    var base = { as_of: nowIso() };
+    if (kind === 'debt'){
+      base.currency = 'USD';
+      base.rate_usd = 12850;
+      base.date_from = '2026-09-17';
+      base.date_to = '2026-09-17';
+      base.rows = byFilial(DEMO_DEBT);
+      return base;
+    }
+    if (kind === 'trades'){
+      base.currency = 'USD';
+      base.date_from = state.dateFrom;
+      base.date_to = state.dateTo;
+      base.rows = byFilial(DEMO_TRADES);
+      return base;
+    }
+    if (kind === 'clients'){
+      base.date_from = state.dateFrom;
+      base.date_to = state.dateTo;
+      base.rows = byFilial(DEMO_CLIENTS);
+      return base;
+    }
+    /* overdue */
+    var all = byFilial(DEMO_OVERDUE).filter(function(r){ return r.overdue_days >= state.minDays; });
+    var from = (state.page - 1) * state.perPage;
+    base.currency = 'USD';
+    base.total_trades = all.length;
+    base.total_amount = all.reduce(function(s,r){ return s + r.overdue_amount; }, 0);
+    base.min_days = state.minDays;
+    base.page = state.page;
+    base.per_page = state.perPage;
+    base.rows = all.slice(from, from + state.perPage);
+    return base;
+  }
+
+  /* =========================================================================
+     Jonli chaqiruv
+     ========================================================================= */
+  function qs(obj){
+    var out = [];
+    Object.keys(obj).forEach(function(k){
+      var v = obj[k];
+      if (v === '' || v === null || v === undefined) return;
+      out.push(encodeURIComponent(k)+'='+encodeURIComponent(v));
+    });
+    return out.length ? '?'+out.join('&') : '';
+  }
+
+  function liveParams(kind){
+    if (kind === 'overdue'){
+      return { min_days: state.minDays, filial_code: state.filial,
+               page: state.page, per_page: state.perPage };
+    }
+    if (kind === 'debt'){
+      /* Davr berilmasa Get_Debt oxirgi mavjud kunni qaytaradi — panel uchun
+         odatda kerakli narsa shu. */
+      return { filial_code: state.filial };
+    }
+    return { date_from: state.dateFrom, date_to: state.dateTo, filial_code: state.filial };
+  }
+
+  function fetchLive(kind){
+    var url = state.base.replace(/\/+$/,'') + '/api/report/' + kind + qs(liveParams(kind));
+    return fetch(url, { headers: { 'Authorization': 'Bearer ' + state.token } })
+      .then(function(r){
+        return r.text().then(function(text){
+          var body = null;
+          try { body = JSON.parse(text); } catch(e){ /* JSON emas */ }
+          if (!r.ok){
+            var msg = body && body.error && body.error.message ? body.error.message : ('HTTP '+r.status);
+            if (r.status === 401) msg = 'Token noto’g’ri yoki qamrovi "report" emas';
+            throw new Error('/'+kind+': '+msg);
+          }
+          if (!body) throw new Error('/'+kind+': javob JSON emas');
+          return body;
+        });
+      });
+  }
+
+  /* =========================================================================
+     Yuklash
+     ========================================================================= */
+  var KINDS = ['debt','overdue','trades','clients'];
+
+  function setPill(cls, text){
+    var p = $('#srcPill');
+    p.className = 'pill ' + cls;
+    $('#srcText').textContent = text;
+  }
+
+  function showError(msg){
+    var n = $('#modeNote');
+    n.className = 'note err';
+    $('#modeNoteText').innerHTML = '<b>So’rov bajarilmadi.</b> ' + esc(msg) +
+      '<br>Manzil, token va qamrovni tekshiring. Sahifa o’z serveringizdan emas, ' +
+      'boshqa joydan ochilgan bo’lsa, brauzer so’rovni butunlay to’sishi mumkin.';
+  }
+
+  function resetNote(){
+    var n = $('#modeNote');
+    if (state.mode === 'demo'){
+      n.className = 'note';
+      $('#modeNoteText').innerHTML = '<b>Demo rejim.</b> Raqamlar va mijoz ismlari o’ylab topilgan — ' +
+        'maketni baza ishga tushmasdan ko’rish uchun. Javob tuzilmasi <code>Ipt_Dashboard</code> ' +
+        'qaytaradigan JSON bilan bir xil.';
+    } else {
+      n.className = 'note';
+      $('#modeNoteText').innerHTML = '<b>Jonli rejim.</b> Token shu sahifada turadi va brauzer ' +
+        'konsolidan ko’rinadi — bu faqat sinov uchun yaraydi. Ishga tushirilganda so’rovni ' +
+        'panelning o’z backendi qilsin, token esa serverda qolsin.';
+    }
+  }
+
+  function load(){
+    if (state.mode === 'demo'){
+      KINDS.forEach(function(k){ data[k] = demoResponse(k); });
+      setPill('is-demo','Demo');
+      resetNote();
+      renderAll();
+      return;
+    }
+
+    if (!state.base || !state.token){
+      showError('API manzili va token kiritilmagan.');
+      setPill('is-err','Xato');
+      return;
+    }
+
+    setPill('is-load','Yuklanmoqda');
+    $('#refreshBtn').disabled = true;
+
+    Promise.all(KINDS.map(fetchLive))
+      .then(function(res){
+        KINDS.forEach(function(k,i){ data[k] = res[i]; });
+        setPill('is-live','Jonli');
+        resetNote();
+        renderAll();
+      })
+      .catch(function(e){
+        setPill('is-err','Xato');
+        showError(e && e.message ? e.message : 'Noma’lum xato');
+      })
+      .then(function(){ $('#refreshBtn').disabled = false; });
+  }
+
+  /* =========================================================================
+     Grafik. Gorizontal ustunlar, HTML da: 22px qalinlik, 4px yumaloq uch,
+     segmentlar orasida 2px yuza oralig'i, siyrak to'r chiziqlari.
+     ========================================================================= */
+  function ticksOf(divs){
+    var out = [];
+    for (var i = 0; i <= divs; i++) out.push(i / divs);
+    return out;
+  }
+
+  function gridlines(ticks){
+    return ticks.map(function(t,i){
+      return '<span class="gl'+(i===ticks.length-1?' last':'')+'" style="left:'+(t*100)+'%"></span>';
+    }).join('');
+  }
+
+  function segHtml(segs, max, isLast){
+    return segs.map(function(s, i){
+      var p = max ? (s.value / max * 100) : 0;
+      var last = (i === segs.length - 1);
+      var w = last ? 'calc(' + p + '%)' : 'max(1px, calc(' + p + '% - 2px))';
+      var mr = last ? '' : 'margin-right:2px;';
+      return '<span class="seg" style="width:'+w+';'+mr+'background:var('+s.css+')" ' +
+             'tabindex="0" role="img" data-tip="'+esc(s.label)+'" data-tipval="'+esc(s.display)+'" ' +
+             'aria-label="'+esc(s.label)+': '+esc(s.display)+'"></span>';
+    }).join('');
+  }
+
+  /* cfg: { rows:[...], max, divs, tick:fn, legend:[...] } */
+  function renderChart(el, cfg){
+    var ticks = ticksOf(cfg.divs || 4);
+    if (!cfg.rows.length){
+      el.innerHTML = '<div class="empty">Tanlangan filtrlar bo’yicha ma’lumot yo’q.</div>';
+      return;
+    }
+
+    var legend = '';
+    if (cfg.legend && cfg.legend.length > 1){
+      legend = '<div class="legend">' + cfg.legend.map(function(l){
+        return '<span class="legend-item"><span class="swatch" style="background:var('+l.css+')"></span>'+esc(l.label)+'</span>';
+      }).join('') + '</div>';
+    }
+
+    var rows = cfg.rows.map(function(r){
+      var stacks = r.groups.map(function(segs){
+        return '<div class="bstack">' + gridlines(ticks) + segHtml(segs, cfg.max) + '</div>';
+      }).join('');
+      return '<div class="brow">' +
+        '<div class="blabel"><span class="bname">'+esc(r.name)+'</span>' +
+          '<span class="bcode">'+esc(r.code)+'</span></div>' +
+        '<div class="btrack'+(r.groups.length>1?' bgroup':'')+'">'+stacks+'</div>' +
+        '<div class="bval">'+esc(r.display)+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div>' +
+      '</div>';
+    }).join('');
+
+    var tickHtml = ticks.map(function(t,i){
+      var cls = i === 0 ? ' first' : (i === ticks.length-1 ? ' last' : '');
+      return '<span class="xtick'+cls+'" style="left:'+(t*100)+'%">'+esc(cfg.tick(t*cfg.max))+'</span>';
+    }).join('');
+
+    el.innerHTML = legend +
+      '<div class="chart">'+rows+'</div>' +
+      '<div class="xaxis"><div></div><div class="xaxis-track">'+tickHtml+'</div><div></div></div>';
+  }
+
+  /* =========================================================================
+     Bo'limlar
+     ========================================================================= */
+  function renderKpis(){
+    var d = data.debt, o = data.overdue, t = data.trades, c = data.clients;
+    var debtRows = (d && d.rows) || [];
+    var tradeRows = (t && t.rows) || [];
+    var cliRows = (c && c.rows) || [];
+
+    var sum = function(rows, key){ return rows.reduce(function(s,r){ return s + (Number(r[key])||0); }, 0); };
+
+    var totalDebt = sum(debtRows,'total_debt');
+    var deep = sum(debtRows,'debt_90_more');
+    var graph = sum(debtRows,'graph_amount');
+
+    var tiles = [
+      { hero:true, label:'Jami qarzdorlik', value: money(totalDebt),
+        sub: (d && d.date_to ? d.date_to + ' holatiga' : '') +
+             (graph ? ' · grafikning ' + pct(totalDebt, graph) + 'i' : '') },
+      { label:'90+ kun qarz', value: compact(deep), sub: pct(deep, totalDebt) + ' — jami qarzdan' },
+      { label:'Kechikkan sdelkalar', value: int(o && o.total_trades),
+        sub: o && o.total_trades ? 'o’rtacha ' + money(o.total_amount / o.total_trades) : '' },
+      { label:'Davr sdelkalari', value: int(sum(tradeRows,'trades_count')),
+        sub: compact(sum(tradeRows,'sold_amount')) + ' — sotuv' },
+      { label:'Nasiyadagi mijozlar', value: int(sum(cliRows,'with_active_trade')),
+        sub: 'jami ' + int(sum(cliRows,'total_clients')) + ' mijozdan' }
+    ];
+
+    $('#kpis').innerHTML = tiles.map(function(k){
+      return '<div class="kpi'+(k.hero?' hero':'')+'">' +
+        '<span class="kpi-label">'+esc(k.label)+'</span>' +
+        '<span class="kpi-value">'+esc(k.value)+'</span>' +
+        (k.sub ? '<span class="kpi-sub">'+esc(k.sub)+'</span>' : '') +
+      '</div>';
+    }).join('');
+
+    $('#asOf').textContent = d && d.as_of ? 'as_of ' + d.as_of : '';
+  }
+
+  function renderDebt(){
+    var d = data.debt || { rows:[] };
+    var rows = d.rows || [];
+    var scale = niceMax(Math.max.apply(null, rows.map(function(r){ return Number(r.total_debt)||0; }).concat([1])));
+
+    renderChart(pane('debt-chart'), {
+      max: scale.max,
+      divs: scale.divs,
+      tick: function(v){ return compact(v).replace('$',''); },
+      legend: BUCKETS.map(function(b){ return { css:b.css, label:b.label }; }),
+      rows: rows.map(function(r){
+        return {
+          name: r.filial_name || r.filial_code,
+          code: r.filial_code,
+          display: money(r.total_debt),
+          sub: pct(r.total_debt, r.graph_amount) + ' grafikdan',
+          groups: [ BUCKETS.map(function(b){
+            return { css:b.css, label:b.label, value:Number(r[b.key])||0, display:money(r[b.key]) };
+          }) ]
+        };
+      })
+    });
+
+    var head = '<tr><th>Filial</th><th>Kun</th>' +
+      BUCKETS.map(function(b){ return '<th class="num">'+b.short+'</th>'; }).join('') +
+      '<th class="num">Jami qarz</th><th class="num">Grafik</th><th class="num">To’langan</th></tr>';
+    var body = rows.map(function(r){
+      return '<tr><td class="name">'+esc(r.filial_name||'')+'<br><span class="bucket-note">'+esc(r.filial_code)+'</span></td>' +
+        '<td>'+esc(r.calc_day)+'</td>' +
+        BUCKETS.map(function(b){ return '<td class="num">'+money(r[b.key])+'</td>'; }).join('') +
+        '<td class="num">'+money(r.total_debt)+'</td>' +
+        '<td class="num">'+money(r.graph_amount)+'</td>' +
+        '<td class="num">'+money(r.paid_amount)+'</td></tr>';
+    }).join('');
+    pane('debt-table').innerHTML = rows.length
+      ? '<div class="tablewrap"><table><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>' +
+        '<p class="bucket-note" style="margin:8px 0 0">Manba — <code>ipt_report_by_filials_v_t</code>, kunlik snapshot. ' +
+        'Kun davomida o’zgarmaydi.</p>'
+      : '<div class="empty">Ma’lumot yo’q.</div>';
+
+    pane('debt-json').textContent = JSON.stringify(d, null, 2);
+  }
+
+  function renderOverdue(){
+    var o = data.overdue || { rows:[] };
+    var rows = o.rows || [];
+
+    var head = '<tr><th>Kechikish</th><th>Mijoz</th><th>Filial</th>' +
+      '<th class="num">Kechikkan</th><th class="num">Umumiy qarz</th>' +
+      '<th>Sdelka</th><th>Sana</th><th class="num">Muddat</th></tr>';
+
+    var body = rows.map(function(r){
+      var b = bucketOf(Number(r.overdue_days)||0);
+      return '<tr>' +
+        '<td><span class="stripe"><i style="background:var('+b.css+')"></i>' +
+          '<b style="font-family:var(--font-mono);font-variant-numeric:tabular-nums">'+int(r.overdue_days)+'</b>' +
+          '<span class="bucket-note">'+esc(b.short)+'</span></span></td>' +
+        '<td class="name">'+esc(r.client_name||('#'+r.client_id))+'</td>' +
+        '<td>'+esc(r.filial_name||r.filial_code||'')+'</td>' +
+        '<td class="num">'+money(r.overdue_amount)+'</td>' +
+        '<td class="num">'+money(r.total_debt)+'</td>' +
+        '<td style="font-family:var(--font-mono)">'+esc(r.trade_id)+'</td>' +
+        '<td>'+esc(r.trade_date||'')+'</td>' +
+        '<td class="num">'+esc(r.payment_term != null ? r.payment_term + ' oy' : '')+'</td>' +
+      '</tr>';
+    }).join('');
+
+    var totalPages = Math.max(1, Math.ceil((Number(o.total_trades)||0) / (Number(o.per_page)||state.perPage)));
+    var pager =
+      '<div class="pager">' +
+        '<button type="button" class="btn ghost" id="pgPrev"'+(state.page<=1?' disabled':'')+'>← Oldingi</button>' +
+        '<button type="button" class="btn ghost" id="pgNext"'+(state.page>=totalPages?' disabled':'')+'>Keyingi →</button>' +
+        '<span class="pager-info">'+state.page+' / '+totalPages+' · jami '+int(o.total_trades)+' sdelka · '+money(o.total_amount)+'</span>' +
+      '</div>';
+
+    pane('overdue-table').innerHTML = rows.length
+      ? '<div class="legend">' + BUCKETS.map(function(b){
+          return '<span class="legend-item"><span class="swatch" style="background:var('+b.css+')"></span>'+esc(b.label)+'</span>';
+        }).join('') + '</div>' +
+        '<div class="tablewrap"><table><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>' + pager
+      : '<div class="empty">'+state.minDays+' kundan ortiq kechikkan sdelka yo’q.</div>';
+
+    var prev = $('#pgPrev'), next = $('#pgNext');
+    if (prev) prev.addEventListener('click', function(){ if (state.page > 1){ state.page--; load(); } });
+    if (next) next.addEventListener('click', function(){ if (state.page < totalPages){ state.page++; load(); } });
+
+    pane('overdue-json').textContent = JSON.stringify(o, null, 2);
+  }
+
+  function renderTrades(){
+    var t = data.trades || { rows:[] };
+    var rows = t.rows || [];
+    var scale = niceMax(Math.max.apply(null, rows.map(function(r){ return Number(r.sold_amount)||0; }).concat([1])));
+
+    renderChart(pane('trades-chart'), {
+      max: scale.max,
+      divs: scale.divs,
+      tick: function(v){ return compact(v).replace('$',''); },
+      legend: [
+        { css:'--s1', label:'Boshlang’ich to’lov' },
+        { css:'--s2', label:'Moliyalashtirilgan' }
+      ],
+      rows: rows.map(function(r){
+        return {
+          name: r.filial_name || r.filial_code,
+          code: r.filial_code,
+          display: money(r.sold_amount),
+          sub: int(r.trades_count) + ' sdelka',
+          groups: [[
+            { css:'--s1', label:'Boshlang’ich to’lov', value:Number(r.initial_amount)||0, display:money(r.initial_amount) },
+            { css:'--s2', label:'Moliyalashtirilgan',           value:Number(r.financed_amount)||0, display:money(r.financed_amount) }
+          ]]
+        };
+      })
+    });
+
+    var body = rows.map(function(r){
+      return '<tr><td class="name">'+esc(r.filial_name||'')+'<br><span class="bucket-note">'+esc(r.filial_code)+'</span></td>' +
+        '<td class="num">'+int(r.trades_count)+'</td>' +
+        '<td class="num">'+money(r.sold_amount)+'</td>' +
+        '<td class="num">'+money(r.initial_amount)+'</td>' +
+        '<td class="num">'+money(r.financed_amount)+'</td>' +
+        '<td class="num">'+int(r.cancelled_count)+'</td>' +
+        '<td class="num">'+int(r.returned_count)+'</td></tr>';
+    }).join('');
+
+    pane('trades-table').innerHTML = rows.length
+      ? '<div class="tablewrap"><table><thead><tr><th>Filial</th><th class="num">Sdelka</th>' +
+        '<th class="num">Sotuv</th><th class="num">Boshlang’ich</th><th class="num">Moliyalashtirilgan</th>' +
+        '<th class="num">Bekor</th><th class="num">Qaytarilgan</th></tr></thead><tbody>'+body+'</tbody></table></div>' +
+        '<p class="bucket-note" style="margin:8px 0 0">Bekor qilingan (holat 06) va qaytarilgan (07) sdelkalar ' +
+        'konversiya o’rniga beriladi: Monello’da ariza tasdiqlash bosqichi yo’q.</p>'
+      : '<div class="empty">Tanlangan davrda sdelka yo’q.</div>';
+
+    pane('trades-json').textContent = JSON.stringify(t, null, 2);
+  }
+
+  function renderClients(){
+    var c = data.clients || { rows:[] };
+    var rows = c.rows || [];
+    var scale = niceMax(Math.max.apply(null, rows.map(function(r){ return Number(r.total_clients)||0; }).concat([1])));
+
+    /* Nasiyadagi mijoz jami mijozning ICHIDA — shuning uchun ustma-ust
+       emas, yonma-yon ikki ustun. */
+    renderChart(pane('clients-chart'), {
+      max: scale.max,
+      divs: scale.divs,
+      tick: function(v){ return int(Math.round(v)); },
+      legend: [
+        { css:'--s1', label:'Jami mijoz' },
+        { css:'--s2', label:'Nasiyasi ochiq' }
+      ],
+      rows: rows.map(function(r){
+        return {
+          name: r.filial_name || r.filial_code,
+          code: r.filial_code,
+          display: int(r.total_clients),
+          sub: '+' + int(r.new_clients) + ' yangi',
+          groups: [
+            [{ css:'--s1', label:'Jami mijoz', value:Number(r.total_clients)||0, display:int(r.total_clients) }],
+            [{ css:'--s2', label:'Nasiyasi ochiq', value:Number(r.with_active_trade)||0, display:int(r.with_active_trade) }]
+          ]
+        };
+      })
+    });
+
+    var body = rows.map(function(r){
+      return '<tr><td class="name">'+esc(r.filial_name||'')+'<br><span class="bucket-note">'+esc(r.filial_code)+'</span></td>' +
+        '<td class="num">'+int(r.total_clients)+'</td>' +
+        '<td class="num">'+int(r.active_clients)+'</td>' +
+        '<td class="num">'+int(r.new_clients)+'</td>' +
+        '<td class="num">'+int(r.with_active_trade)+'</td>' +
+        '<td class="num">'+pct(r.with_active_trade, r.total_clients)+'</td></tr>';
+    }).join('');
+
+    pane('clients-table').innerHTML = rows.length
+      ? '<div class="tablewrap"><table><thead><tr><th>Filial</th><th class="num">Jami</th>' +
+        '<th class="num">Faol</th><th class="num">Davrda yangi</th><th class="num">Nasiyasi ochiq</th>' +
+        '<th class="num">Ulush</th></tr></thead><tbody>'+body+'</tbody></table></div>'
+      : '<div class="empty">Ma’lumot yo’q.</div>';
+
+    pane('clients-json').textContent = JSON.stringify(c, null, 2);
+  }
+
+  function renderAll(){
+    renderKpis();
+    renderDebt();
+    renderOverdue();
+    renderTrades();
+    renderClients();
+  }
+
+  /* =========================================================================
+     Tooltip — segment ustiga olib borilganda va klaviatura fokusida
+     ========================================================================= */
+  var tip = $('#tip');
+
+  function showTip(el, x, y){
+    tip.innerHTML = '<span class="tip-k">'+esc(el.getAttribute('data-tip'))+'</span>' +
+                    '<span class="tip-v">'+esc(el.getAttribute('data-tipval'))+'</span>';
+    tip.hidden = false;
+    var r = tip.getBoundingClientRect();
+    var left = Math.min(Math.max(8, x - r.width/2), window.innerWidth - r.width - 8);
+    var top = y - r.height - 12;
+    if (top < 8) top = y + 18;
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  function hideTip(){ tip.hidden = true; }
+
+  document.addEventListener('pointermove', function(e){
+    var el = e.target.closest ? e.target.closest('[data-tip]') : null;
+    if (el) showTip(el, e.clientX, e.clientY); else hideTip();
+  });
+  document.addEventListener('pointerleave', hideTip);
+  document.addEventListener('focusin', function(e){
+    var el = e.target.closest ? e.target.closest('[data-tip]') : null;
+    if (!el){ hideTip(); return; }
+    var r = el.getBoundingClientRect();
+    showTip(el, r.left + r.width/2, r.top);
+  });
+  document.addEventListener('focusout', hideTip);
+  document.addEventListener('scroll', hideTip, true);
+
+  /* =========================================================================
+     Boshqaruv elementlari
+     ========================================================================= */
+  $$('[data-tabs]').forEach(function(group){
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('button[data-view]');
+      if (!btn) return;
+      var key = group.getAttribute('data-tabs');
+      $$('button[data-view]', group).forEach(function(b){
+        var on = (b === btn);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        var p = pane(key + '-' + b.getAttribute('data-view'));
+        if (p) p.hidden = !on;
+      });
+    });
+  });
+
+  function setMode(mode){
+    state.mode = mode;
+    state.page = 1;
+    $('#modeDemo').setAttribute('aria-pressed', mode === 'demo' ? 'true' : 'false');
+    $('#modeLive').setAttribute('aria-pressed', mode === 'live' ? 'true' : 'false');
+    $('#connRow').hidden = (mode !== 'live');
+    resetNote();
+    load();
+  }
+
+  $('#modeDemo').addEventListener('click', function(){ setMode('demo'); });
+  $('#modeLive').addEventListener('click', function(){ setMode('live'); });
+
+  $('#refreshBtn').addEventListener('click', function(){
+    state.base = $('#baseUrl').value.trim();
+    state.token = $('#apiToken').value.trim();
+    state.dateFrom = $('#dateFrom').value;
+    state.dateTo = $('#dateTo').value;
+    state.filial = $('#filialSel').value;
+    state.minDays = Math.max(1, parseInt($('#minDays').value, 10) || 1);
+    state.page = 1;
+    load();
+  });
+
+  $('#filialSel').innerHTML = '<option value="">Barcha filiallar</option>' +
+    FILIALS.map(function(f){ return '<option value="'+esc(f.code)+'">'+esc(f.name)+' ('+esc(f.code)+')</option>'; }).join('');
+
+  setMode('demo');
+})();
+</script>
+<!-- ARTIFACT-END -->
+</body>
+</html>

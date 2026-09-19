@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  body{margin:0}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<!-- ARTIFACT-START -->
+<title>Monello yordamchisi</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+/* Tokenlar — nazorat paneli va ma'lumotnomalar prototipidagi bilan bir xil */
+:root{
+  color-scheme: light;
+  --plane:#edf0f3; --surface:#fbfcfc; --surface-2:#f2f5f7; --surface-3:#e8edf1;
+  --ink:#101720; --ink-2:#4b555f; --muted:#7b858f;
+  --border:rgba(16,23,32,.12); --border-strong:rgba(16,23,32,.22);
+  --accent:#184f95; --accent-soft:#e3ecf8; --on-accent:#ffffff;
+  --shadow:0 1px 2px rgba(16,23,32,.05), 0 10px 28px -20px rgba(16,23,32,.45);
+  --font-display:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --font-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --st-good:#0ca30c; --st-warn:#fab219; --st-crit:#d03b3b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --plane:#0d0f11; --surface:#16191b; --surface-2:#1c2023; --surface-3:#23282c;
+    --ink:#f1f4f6; --ink-2:#b4bec6; --muted:#889199;
+    --border:rgba(255,255,255,.12); --border-strong:rgba(255,255,255,.24);
+    --accent:#6da7ec; --accent-soft:#14263c; --on-accent:#0b1420;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plane:#0d0f11; --surface:#16191b; --surface-2:#1c2023; --surface-3:#23282c;
+  --ink:#f1f4f6; --ink-2:#b4bec6; --muted:#889199;
+  --border:rgba(255,255,255,.12); --border-strong:rgba(255,255,255,.24);
+  --accent:#6da7ec; --accent-soft:#14263c; --on-accent:#0b1420;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--plane);color:var(--ink);font-family:var(--font-ui);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.wrap{max-width:900px;margin:0 auto;padding-inline:16px}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--surface);border-bottom:1px solid var(--border)}
+.topbar-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:baseline;gap:9px;margin-right:auto}
+.brand-mark{font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:.02em;text-transform:uppercase}
+.brand-sub{font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.pill.is-demo .dot{background:var(--st-warn)}
+.pill.is-live .dot{background:var(--st-good)}
+.pill.is-err .dot{background:var(--st-crit)}
+
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);margin-block:16px;overflow:hidden}
+.ctl-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.ctl-title{font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.ctl-body{padding:14px;display:grid;gap:13px}
+.seg-ctl{display:inline-flex;border:1px solid var(--border-strong);border-radius:7px;overflow:hidden}
+.seg-ctl button{font:inherit;font-size:12px;font-weight:500;padding:6px 13px;border:0;background:var(--surface);color:var(--ink-2);cursor:pointer}
+.seg-ctl button + button{border-left:1px solid var(--border)}
+.seg-ctl button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+
+.field-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.field input{font:inherit;font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--border-strong);border-radius:7px;padding:7px 9px;min-width:0;max-width:100%}
+.field.mono input{font-family:var(--font-mono);font-size:12px}
+.field.grow{flex:1 1 220px}
+.field .hint{font-size:11px;color:var(--muted)}
+
+.btn{font:inherit;font-size:13px;font-weight:500;padding:8px 16px;border-radius:7px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);white-space:nowrap}
+.btn.ghost{background:var(--surface);color:var(--ink-2);border-color:var(--border-strong)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.note{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.55;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--st-warn);border-radius:7px;padding:10px 12px}
+.note.err{border-left-color:var(--st-crit)}
+.note b{color:var(--ink);font-weight:600}
+.note code{font-family:var(--font-mono);font-size:11.5px;background:var(--surface-3);padding:1px 4px;border-radius:3px}
+
+/* ---------- Suhbat ---------- */
+.chat{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:22px;display:flex;flex-direction:column;min-height:430px}
+.log{flex:1;padding:16px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;max-height:min(58vh,540px)}
+
+.turn{display:flex;gap:10px;max-width:100%}
+.turn.me{flex-direction:row-reverse}
+.who{
+  width:28px;height:28px;border-radius:8px;flex:none;
+  display:grid;place-items:center;
+  font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.02em;
+  background:var(--surface-3);color:var(--ink-2);
+}
+.turn.me .who{background:var(--accent);color:var(--on-accent)}
+.bubble{min-width:0;max-width:calc(100% - 42px)}
+.bubble p{margin:0 0 9px}
+.bubble p:last-child{margin-bottom:0}
+.turn.me .bubble{
+  background:var(--accent-soft);border:1px solid var(--border);
+  border-radius:12px 12px 4px 12px;padding:9px 13px;
+}
+.turn.bot .bubble{padding-top:3px}
+.bubble table{border-collapse:collapse;font-size:12.5px;margin:6px 0;width:100%}
+.bubble th,.bubble td{padding:5px 9px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.bubble th{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.bubble td.num{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.tablescroll{overflow-x:auto}
+
+/* Qaysi tool ishlatilgani — ERP chatida bu ko'rinishi shart:
+   xodim raqam qayerdan kelganini bilishi kerak */
+.trace{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.tool{
+  font-family:var(--font-mono);font-size:11px;
+  border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);
+  border-radius:999px;padding:3px 9px;cursor:pointer;
+}
+.tool:hover{background:var(--surface-3)}
+.tool[aria-expanded="true"]{background:var(--accent-soft);color:var(--ink)}
+.toolout{
+  margin-top:8px;font-family:var(--font-mono);font-size:11.5px;line-height:1.5;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
+  padding:11px;max-height:240px;overflow:auto;white-space:pre-wrap;color:var(--ink-2);
+}
+.thinking{display:inline-flex;gap:4px;align-items:center;color:var(--muted);font-size:13px}
+.thinking i{width:5px;height:5px;border-radius:50%;background:var(--muted);display:block;animation:blink 1.4s infinite both}
+.thinking i:nth-child(2){animation-delay:.2s}
+.thinking i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+
+.empty{padding:26px 6px;text-align:center;color:var(--muted)}
+.empty h2{font-family:var(--font-display);font-weight:600;font-size:17px;color:var(--ink-2);margin:0 0 4px}
+.empty p{margin:0 0 16px;font-size:13px}
+.seeds{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.seed{
+  font:inherit;font-size:12.5px;text-align:left;
+  border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-2);
+  border-radius:999px;padding:6px 13px;cursor:pointer;
+}
+.seed:hover{background:var(--surface-2);color:var(--ink)}
+
+.composer{display:flex;gap:10px;align-items:flex-end;padding:12px 14px;border-top:1px solid var(--border);background:var(--surface-2)}
+.composer textarea{
+  flex:1;font:inherit;font-size:14px;color:var(--ink);resize:none;
+  background:var(--surface);border:1px solid var(--border-strong);border-radius:9px;
+  padding:9px 11px;min-height:42px;max-height:140px;min-width:0;
+}
+.composer .hint{font-size:11px;color:var(--muted);padding-bottom:11px;white-space:nowrap}
+@media (max-width:520px){ .composer .hint{display:none} }
+
+footer.page-foot{padding-block:18px 40px;color:var(--muted);font-size:12px;line-height:1.6;border-top:1px solid var(--border)}
+footer.page-foot code{font-family:var(--font-mono);font-size:11.5px}
+</style>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">
+      <span class="brand-mark">Monello</span>
+      <span class="brand-sub">Yordamchi</span>
+    </div>
+    <span class="pill is-demo" id="srcPill"><span class="dot"></span><span id="srcText">Demo</span></span>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="controls">
+    <div class="ctl-head">
+      <span class="ctl-title">Manba</span>
+      <div class="seg-ctl" role="group" aria-label="Ma'lumot manbasi">
+        <button type="button" id="modeDemo" aria-pressed="true">Demo</button>
+        <button type="button" id="modeLive" aria-pressed="false">Jonli API</button>
+      </div>
+    </div>
+    <div class="ctl-body">
+      <div class="field-row" id="connRow" hidden>
+        <div class="field grow mono">
+          <label for="baseUrl">Monello manzili</label>
+          <input type="url" id="baseUrl" placeholder="https://erp.abmstore.uz" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field grow">
+          <label for="jwt">JWT token</label>
+          <input type="password" id="jwt" placeholder="Monello'ga kirganda olinadi" autocomplete="off" spellcheck="false">
+          <span class="hint">Chat sizning filialingiz doirasida javob beradi</span>
+        </div>
+      </div>
+      <div class="note" id="modeNote">
+        <span aria-hidden="true">&#9679;</span>
+        <span id="modeNoteText">
+          <b>Demo rejim.</b> Model chaqirilmaydi — savol kalit so'zlar bo'yicha
+          yo'naltiriladi va tayyor ma'lumot ko'rsatiladi. Maqsad mexanizmni
+          ko'rsatish: qaysi tool chaqirilgani va u nima qaytargani.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section class="chat">
+    <div class="log" id="log" aria-live="polite"></div>
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="Savolingizni yozing…" aria-label="Savol"></textarea>
+      <span class="hint">Enter — yuborish</span>
+      <button type="button" class="btn" id="send">Yuborish</button>
+    </div>
+  </section>
+
+  <footer class="page-foot">
+    <p>
+      Model <b>SQL yozmaydi</b>. U faqat beshta ro'yxatdan o'tgan metodni
+      chaqira oladi: <code>chatFilials</code>, <code>chatSales</code>,
+      <code>chatInstallments</code>, <code>chatDebtors</code>,
+      <code>chatTrade</code> — hammasi faqat o'qiydi.
+    </p>
+    <p>
+      Javob ostidagi kulrang yorliqlar qaysi tool ishlatilganini ko'rsatadi.
+      Ustiga bossangiz o'sha tool qaytargan ma'lumot ochiladi — raqam qayerdan
+      kelganini tekshirish uchun.
+    </p>
+    <p>
+      Mijozning telefoni, PINFL va manzili chatga umuman berilmaydi.
+    </p>
+  </footer>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  var $ = function(s){ return document.querySelector(s); };
+
+  function esc(s){
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  var nf = new Intl.NumberFormat('ru-RU');
+  function usd(v){ return '$' + nf.format(Math.round(v)); }
+
+  /* =========================================================================
+     Demo ma'lumot — nazorat paneli prototipidagi raqamlar bilan bir xil,
+     shunda ikki ekran bir-biriga zid javob bermaydi.
+     ========================================================================= */
+  var DEMO_FILIALS = [
+    { filial_code:'01025', filial_name:'Mirobod',   active_trades:612, clients:1842, stock_items:284 },
+    { filial_code:'01026', filial_name:'Sebzor',    active_trades:455, clients:1317, stock_items:211 },
+    { filial_code:'01031', filial_name:'Chilonzor', active_trades:331, clients:968,  stock_items:156 },
+    { filial_code:'01042', filial_name:'Yunusobod', active_trades:208, clients:604,  stock_items:98 }
+  ];
+
+  var DEMO_SALES = [
+    { filial_code:'01025', filial_name:'Mirobod',   trades_count:128, sold_amount:96400, initial_amount:21200, financed_amount:75200, cancelled_count:4, returned_count:2 },
+    { filial_code:'01026', filial_name:'Sebzor',    trades_count:94,  sold_amount:68900, initial_amount:15100, financed_amount:53800, cancelled_count:3, returned_count:1 },
+    { filial_code:'01031', filial_name:'Chilonzor', trades_count:67,  sold_amount:47300, initial_amount:10400, financed_amount:36900, cancelled_count:2, returned_count:1 },
+    { filial_code:'01042', filial_name:'Yunusobod', trades_count:41,  sold_amount:28100, initial_amount:6300,  financed_amount:21800, cancelled_count:1, returned_count:0 }
+  ];
+
+  var DEMO_DEBTORS = [
+    { trade_id:'50884', client_name:'Hamdamov Rustam',      filial_name:'Chilonzor', overdue_days:209, overdue_amount:2548, total_debt:7148 },
+    { trade_id:'51213', client_name:'Islomova Zulfiya',     filial_name:'Yunusobod', overdue_days:209, overdue_amount:3657, total_debt:8822 },
+    { trade_id:'50233', client_name:'Sattorova Feruza',     filial_name:'Sebzor',    overdue_days:206, overdue_amount:2059, total_debt:5150 },
+    { trade_id:'50268', client_name:'Sattorov Anvar',       filial_name:'Sebzor',    overdue_days:204, overdue_amount:2148, total_debt:6768 },
+    { trade_id:'49372', client_name:'Xudoyberdiyev Otabek', filial_name:'Mirobod',   overdue_days:201, overdue_amount:2532, total_debt:5394 }
+  ];
+
+  var DEMO_INSTALLMENTS = [
+    { trade_id:'52017', client_name:'Azizov Bekzod', product_name:'iPhone 17 Pro Max 256 Silver', state:'faol',
+      trade_date:'2026-06-14', payment_term_months:12, price:1520, monthly_payment:118, debt:826, overdue_days:0 },
+    { trade_id:'51740', client_name:'Azizova Nigora', product_name:'Apple Watch Series 11 45mm', state:'muddati o’tgan',
+      trade_date:'2026-03-02', payment_term_months:9, price:540, monthly_payment:64, debt:192, overdue_days:17 }
+  ];
+
+  var DEMO_TRADE = {
+    trade_id:'52017', client_name:'Azizov Bekzod', product_name:'iPhone 17 Pro Max 256 Silver',
+    state:'faol', trade_date:'2026-06-14', payment_term_months:12, price:1520,
+    initial_payment:340, monthly_payment:118, debt:826, overdue_days:0,
+    schedule:[
+      { n:1, due_date:'2026-07-14', amount:118, paid:118, status:'to’langan' },
+      { n:2, due_date:'2026-08-14', amount:118, paid:118, status:'to’langan' },
+      { n:3, due_date:'2026-09-14', amount:118, paid:118, status:'to’langan' },
+      { n:4, due_date:'2026-10-14', amount:118, paid:0,   status:'kutilmoqda' },
+      { n:5, due_date:'2026-11-14', amount:118, paid:0,   status:'kutilmoqda' },
+      { n:6, due_date:'2026-12-14', amount:118, paid:0,   status:'kutilmoqda' },
+      { n:7, due_date:'2027-01-14', amount:118, paid:0,   status:'kutilmoqda' }
+    ]
+  };
+
+  var SEEDS = [
+    'Qaysi filiallar bor?',
+    'Shu oy nechta sotuv bo’ldi?',
+    'Eng ko’p kechikkanlar kim?',
+    'Azizovning rassrochkasi bormi?',
+    '52017 sdelka bo’yicha grafik'
+  ];
+
+  /* =========================================================================
+     Holat
+     ========================================================================= */
+  var state = { mode:'demo', base:'', jwt:'', busy:false };
+  var history = [];   // [{role, text}] — serverga shu yuboriladi
+
+  function setPill(cls, text){
+    $('#srcPill').className = 'pill ' + cls;
+    $('#srcText').textContent = text;
+  }
+
+  /* =========================================================================
+     Demo "model": kalit so'z bo'yicha tool tanlaydi va javob yozadi.
+     Haqiqiy modelning ishi emas — mexanizmni ko'rsatish uchun.
+     ========================================================================= */
+  function demoAnswer(q){
+    var s = q.toLowerCase();
+
+    if (/grafik|jadval|to.?lov/.test(s) || /\b5\d{4}\b/.test(s)){
+      var t = DEMO_TRADE;
+      var rows = t.schedule.map(function(r){
+        return '<tr><td>' + r.n + '</td><td>' + r.due_date + '</td>' +
+               '<td class="num">' + usd(r.amount) + '</td><td>' + esc(r.status) + '</td></tr>';
+      }).join('');
+      return {
+        html: '<p><b>' + esc(t.client_name) + '</b> — ' + esc(t.product_name) + ' (' + t.trade_id + ')</p>' +
+              '<p>Narxi ' + usd(t.price) + ', boshlang’ich ' + usd(t.initial_payment) +
+              ', oylik ' + usd(t.monthly_payment) + '. Qolgan qarz <b>' + usd(t.debt) + '</b>, kechikish yo’q.</p>' +
+              '<div class="tablescroll"><table><thead><tr><th>#</th><th>Sana</th><th class="num">Summa</th><th>Holati</th></tr></thead>' +
+              '<tbody>' + rows + '</tbody></table></div>',
+        tools: [{ name:'chatTrade', out:{ trade_id:t.trade_id, client_name:t.client_name, debt:t.debt,
+                                          monthly_payment:t.monthly_payment, schedule:t.schedule } }]
+      };
+    }
+
+    if (/qarzdor|kechik|prosro/.test(s)){
+      var rows2 = DEMO_DEBTORS.map(function(r){
+        return '<tr><td>' + esc(r.client_name) + '</td><td>' + esc(r.filial_name) + '</td>' +
+               '<td class="num">' + r.overdue_days + '</td>' +
+               '<td class="num">' + usd(r.overdue_amount) + '</td></tr>';
+      }).join('');
+      return {
+        html: '<p>Eng uzoq kechikkan 5 ta sdelka:</p>' +
+              '<div class="tablescroll"><table><thead><tr><th>Mijoz</th><th>Filial</th>' +
+              '<th class="num">Kun</th><th class="num">Kechikkan</th></tr></thead>' +
+              '<tbody>' + rows2 + '</tbody></table></div>' +
+              '<p>Jami 431 ta kechikkan sdelka bor, umumiy kechikkan summa ' + usd(330520) + '. ' +
+              'Ro’yxat qisqartirilgan — eng uzoq kechikkan 5 tasi ko’rsatildi.</p>',
+        tools: [{ name:'chatDebtors', out:{ scope:'barcha filiallar', currency:'USD', min_days:1,
+                                            total_debtors:431, total_overdue_amount:330520, shown:5,
+                                            note:'Jami 431 ta kechikkan sdelka, eng uzoq kechikkan 5 tasi ko’rsatildi.',
+                                            rows:DEMO_DEBTORS } }]
+      };
+    }
+
+    if (/rassrochka|nasiya|sdelka/.test(s) && /[a-zA-Z’']{4,}/.test(s.replace(/rassrochka|nasiya|sdelka|bormi|bor|mi/g,''))){
+      var rows3 = DEMO_INSTALLMENTS.map(function(r){
+        return '<tr><td>' + esc(r.client_name) + '</td><td>' + esc(r.product_name) + '</td>' +
+               '<td class="num">' + usd(r.debt) + '</td><td>' + esc(r.state) + '</td></tr>';
+      }).join('');
+      return {
+        html: '<p>Ismida “Azizov” bo’lgan ikki mijozning faol sdelkasi bor:</p>' +
+              '<div class="tablescroll"><table><thead><tr><th>Mijoz</th><th>Tovar</th>' +
+              '<th class="num">Qarz</th><th>Holati</th></tr></thead><tbody>' + rows3 + '</tbody></table></div>' +
+              '<p>Azizova Nigoraning sdelkasi <b>17 kun kechikkan</b> — unga e’tibor bering.</p>',
+        tools: [{ name:'chatInstallments', out:{ scope:'barcha filiallar', currency:'USD',
+                                                 search:'Azizov', total:2, shown:2, rows:DEMO_INSTALLMENTS } }]
+      };
+    }
+
+    if (/sotuv|savdo|prodaj|oy|davr/.test(s)){
+      var total = DEMO_SALES.reduce(function(a,r){ return a + r.trades_count; }, 0);
+      var amount = DEMO_SALES.reduce(function(a,r){ return a + r.sold_amount; }, 0);
+      var rows4 = DEMO_SALES.map(function(r){
+        return '<tr><td>' + esc(r.filial_name) + '</td><td class="num">' + r.trades_count + '</td>' +
+               '<td class="num">' + usd(r.sold_amount) + '</td></tr>';
+      }).join('');
+      return {
+        html: '<p>1–18 sentabr oralig’ida <b>' + total + ' ta</b> sdelka, jami ' +
+              '<b>' + usd(amount) + '</b>:</p>' +
+              '<div class="tablescroll"><table><thead><tr><th>Filial</th><th class="num">Sdelka</th>' +
+              '<th class="num">Summa</th></tr></thead><tbody>' + rows4 + '</tbody></table></div>' +
+              '<p>Shu davrda 10 ta bekor qilingan va 4 ta qaytarilgan sdelka bor.</p>',
+        tools: [{ name:'chatSales', out:{ scope:'barcha filiallar', currency:'USD',
+                                          date_from:'2026-09-01', date_to:'2026-09-18',
+                                          total_trades:total, total_amount:amount, rows:DEMO_SALES } }]
+      };
+    }
+
+    if (/filial|shourum|do.?kon/.test(s)){
+      var rows5 = DEMO_FILIALS.map(function(r){
+        return '<tr><td>' + esc(r.filial_name) + '</td><td class="num">' + r.active_trades + '</td>' +
+               '<td class="num">' + nf.format(r.clients) + '</td>' +
+               '<td class="num">' + r.stock_items + '</td></tr>';
+      }).join('');
+      return {
+        html: '<p>To’rtta filial bor:</p>' +
+              '<div class="tablescroll"><table><thead><tr><th>Filial</th><th class="num">Faol sdelka</th>' +
+              '<th class="num">Mijoz</th><th class="num">Omborda</th></tr></thead>' +
+              '<tbody>' + rows5 + '</tbody></table></div>' +
+              '<p>Eng katta filial — Mirobod: 612 faol sdelka.</p>',
+        tools: [{ name:'chatFilials', out:{ scope:'barcha filiallar', currency:'USD',
+                                            total:4, rows:DEMO_FILIALS } }]
+      };
+    }
+
+    if (/telefon|pinfl|manzil|adres/.test(s)){
+      return {
+        html: '<p>Mijozning telefon raqami, PINFL va manzili chatga berilmaydi — ' +
+              'bu ma’lumot tool’larda umuman yo’q. Ular kerak bo’lsa ' +
+              'mijoz kartochkasidan qarang.</p>',
+        tools: []
+      };
+    }
+
+    if (/o.?chir|o.?zgartir|to.?la|kirit|qo.?sh/.test(s)){
+      return {
+        html: '<p>Men faqat o’qiy olaman — o’zgartirish, o’chirish yoki ' +
+              'to’lov kiritish qo’limdan kelmaydi. Buni Monello’ning tegishli ' +
+              'formasidan qiling.</p>',
+        tools: []
+      };
+    }
+
+    return {
+      html: '<p>Demo rejimda bu savolga tayyor javob yo’q. Quyidagilarni sinab ko’ring: ' +
+            'filiallar, sotuvlar, qarzdorlar, bitta mijozning rassrochkasi yoki sdelka grafigi. ' +
+            'Jonli rejimda model savolni o’zi tushunadi.</p>',
+      tools: []
+    };
+  }
+
+  /* =========================================================================
+     Chizish
+     ========================================================================= */
+  function renderEmpty(){
+    $('#log').innerHTML =
+      '<div class="empty">' +
+        '<h2>Nimani bilmoqchisiz?</h2>' +
+        '<p>Filiallar, sotuvlar, rassrochkalar va qarzdorlar haqida so’rang.</p>' +
+        '<div class="seeds">' +
+          SEEDS.map(function(s){
+            return '<button type="button" class="seed" data-seed="' + esc(s) + '">' + esc(s) + '</button>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  }
+
+  function addTurn(role, html, tools){
+    var log = $('#log');
+    if (log.querySelector('.empty')) {
+      log.innerHTML = '';
+    }
+    var wrap = document.createElement('div');
+    wrap.className = 'turn ' + (role === 'user' ? 'me' : 'bot');
+
+    var trace = '';
+    if (tools && tools.length){
+      trace = '<div class="trace">' + tools.map(function(t, i){
+        return '<button type="button" class="tool" aria-expanded="false" data-tool="' + i + '">' +
+               esc(t.name) + '</button>';
+      }).join('') + '</div>' +
+      tools.map(function(t, i){
+        return '<pre class="toolout" data-out="' + i + '" hidden>' +
+               esc(JSON.stringify(t.out, null, 2)) + '</pre>';
+      }).join('');
+    }
+
+    wrap.innerHTML =
+      '<div class="who">' + (role === 'user' ? 'Siz' : 'M') + '</div>' +
+      '<div class="bubble">' + html + trace + '</div>';
+
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+    return wrap;
+  }
+
+  function addThinking(){
+    var w = addTurn('bot', '<span class="thinking"><i></i><i></i><i></i></span>', null);
+    w.setAttribute('data-thinking', '1');
+    return w;
+  }
+
+  /* =========================================================================
+     Yuborish
+     ========================================================================= */
+  function send(text){
+    if (state.busy) return;
+    text = (text || $('#input').value).trim();
+    if (!text) return;
+
+    $('#input').value = '';
+    $('#input').style.height = 'auto';
+    addTurn('user', '<p>' + esc(text) + '</p>', null);
+    history.push({ role:'user', text:text });
+
+    state.busy = true;
+    $('#send').disabled = true;
+    var pending = addThinking();
+
+    finish(text, pending);
+  }
+
+  function finish(question, pending){
+    function done(html, tools, plain){
+      pending.remove();
+      addTurn('bot', html, tools);
+      history.push({ role:'assistant', text: plain || question });
+      state.busy = false;
+      $('#send').disabled = false;
+      $('#input').focus();
+    }
+
+    if (state.mode === 'demo'){
+      // Kichik kechikish: javob darhol chiqsa maket haqiqiy ko'rinmaydi
+      setTimeout(function(){
+        var a = demoAnswer(question);
+        done(a.html, a.tools, 'javob berildi');
+      }, 550);
+      return;
+    }
+
+    fetch(state.base.replace(/\/+$/,'') + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + state.jwt },
+      body: JSON.stringify({ question: question, history: history.slice(0, -1) })
+    })
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      var body;
+      try { body = JSON.parse(t); } catch(e){ throw new Error('Javob JSON emas'); }
+      if (!body.ok) throw new Error(body.error || 'Xato');
+
+      var tools = (body.tools_used || []).map(function(n){
+        return { name:n, out:{ note:'Tool chaqirildi. Natijani ko’rish uchun ' +
+                                     'backend javobiga tool natijalarini qo’shish kerak.' } };
+      });
+      done(mdToHtml(body.answer || ''), tools, body.answer || '');
+    })
+    .catch(function(e){
+      done('<p style="color:var(--st-crit)">' + esc(e.message || String(e)) + '</p>', null, '');
+    });
+  }
+
+  /* Modelning javobi markdown bo'lishi mumkin — eng keraklisini o'giramiz */
+  function mdToHtml(text){
+    var lines = esc(text).split('\n');
+    var out = [], tbl = [];
+
+    function flush(){
+      if (!tbl.length) return;
+      var head = tbl[0].map(function(c){ return '<th>' + c + '</th>'; }).join('');
+      var body = tbl.slice(1).map(function(r){
+        return '<tr>' + r.map(function(c){
+          return /^[\s$\d.,%+-]+$/.test(c) ? '<td class="num">' + c + '</td>' : '<td>' + c + '</td>';
+        }).join('') + '</tr>';
+      }).join('');
+      out.push('<div class="tablescroll"><table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>');
+      tbl = [];
+    }
+
+    lines.forEach(function(ln){
+      var t = ln.trim();
+      if (/^\|.*\|$/.test(t)){
+        var cells = t.slice(1, -1).split('|').map(function(c){ return c.trim(); });
+        if (cells.every(function(c){ return /^:?-{2,}:?$/.test(c); })) return;  // ajratgich
+        tbl.push(cells);
+        return;
+      }
+      flush();
+      if (!t) return;
+      t = t.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+      if (/^[-*]\s+/.test(t)) t = '&bull; ' + t.replace(/^[-*]\s+/, '');
+      out.push('<p>' + t + '</p>');
+    });
+    flush();
+    return out.join('') || '<p>&mdash;</p>';
+  }
+
+  /* =========================================================================
+     Hodisalar
+     ========================================================================= */
+  $('#log').addEventListener('click', function(e){
+    var seed = e.target.closest('button[data-seed]');
+    if (seed){ send(seed.getAttribute('data-seed')); return; }
+
+    var tool = e.target.closest('button[data-tool]');
+    if (!tool) return;
+    var bubble = tool.closest('.bubble');
+    var out = bubble.querySelector('[data-out="' + tool.getAttribute('data-tool') + '"]');
+    var open = tool.getAttribute('aria-expanded') === 'true';
+    tool.setAttribute('aria-expanded', open ? 'false' : 'true');
+    if (out) out.hidden = open;
+  });
+
+  $('#send').addEventListener('click', function(){ send(); });
+
+  $('#input').addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+  });
+  $('#input').addEventListener('input', function(){
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+  });
+
+  function setMode(mode){
+    state.mode = mode;
+    $('#modeDemo').setAttribute('aria-pressed', mode === 'demo' ? 'true' : 'false');
+    $('#modeLive').setAttribute('aria-pressed', mode === 'live' ? 'true' : 'false');
+    $('#connRow').hidden = (mode !== 'live');
+    setPill(mode === 'demo' ? 'is-demo' : 'is-live', mode === 'demo' ? 'Demo' : 'Jonli');
+
+    var n = $('#modeNote');
+    n.className = 'note';
+    $('#modeNoteText').innerHTML = mode === 'demo'
+      ? '<b>Demo rejim.</b> Model chaqirilmaydi — savol kalit so’zlar bo’yicha ' +
+        'yo’naltiriladi va tayyor ma’lumot ko’rsatiladi. Maqsad mexanizmni ' +
+        'ko’rsatish: qaysi tool chaqirilgani va u nima qaytargani.'
+      : '<b>Jonli rejim.</b> Har savol Claude API ga boradi va pul turadi. JWT shu ' +
+        'sahifada turadi — bu faqat sinov uchun.';
+
+    history = [];
+    renderEmpty();
+  }
+
+  $('#modeDemo').addEventListener('click', function(){ setMode('demo'); });
+  $('#modeLive').addEventListener('click', function(){
+    state.base = $('#baseUrl').value.trim();
+    state.jwt  = $('#jwt').value.trim();
+    setMode('live');
+  });
+
+  ['#baseUrl','#jwt'].forEach(function(sel){
+    $(sel).addEventListener('change', function(){
+      state.base = $('#baseUrl').value.trim();
+      state.jwt  = $('#jwt').value.trim();
+    });
+  });
+
+  setMode('demo');
+})();
+</script>
+<!-- ARTIFACT-END -->
+</body>
+</html>

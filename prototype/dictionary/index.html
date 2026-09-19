@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  body{margin:0}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<!-- ARTIFACT-START -->
+<title>Monello ma'lumotnomalari</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+/* ===========================================================================
+   Tokenlar — nazorat paneli prototipidagi bilan bir xil, ikkalasi bitta
+   ilovaning qismi bo'lib ko'rinishi uchun.
+   =========================================================================== */
+:root{
+  color-scheme: light;
+  --plane:#edf0f3;
+  --surface:#fbfcfc;
+  --surface-2:#f2f5f7;
+  --surface-3:#e8edf1;
+  --ink:#101720;
+  --ink-2:#4b555f;
+  --muted:#7b858f;
+  --grid:#e1e6ea;
+  --border:rgba(16,23,32,.12);
+  --border-strong:rgba(16,23,32,.22);
+  --accent:#184f95;
+  --accent-soft:#e3ecf8;
+  --on-accent:#ffffff;
+  --shadow:0 1px 2px rgba(16,23,32,.05), 0 10px 28px -20px rgba(16,23,32,.45);
+  --font-display:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --font-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* holat ranglari qat'iy */
+  --st-good:#0ca30c;
+  --st-warn:#fab219;
+  --st-crit:#d03b3b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --plane:#0d0f11;
+    --surface:#16191b;
+    --surface-2:#1c2023;
+    --surface-3:#23282c;
+    --ink:#f1f4f6;
+    --ink-2:#b4bec6;
+    --muted:#889199;
+    --grid:#262b2f;
+    --border:rgba(255,255,255,.12);
+    --border-strong:rgba(255,255,255,.24);
+    --accent:#6da7ec;
+    --accent-soft:#14263c;
+    --on-accent:#0b1420;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plane:#0d0f11;
+  --surface:#16191b;
+  --surface-2:#1c2023;
+  --surface-3:#23282c;
+  --ink:#f1f4f6;
+  --ink-2:#b4bec6;
+  --muted:#889199;
+  --grid:#262b2f;
+  --border:rgba(255,255,255,.12);
+  --border-strong:rgba(255,255,255,.24);
+  --accent:#6da7ec;
+  --accent-soft:#14263c;
+  --on-accent:#0b1420;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -20px rgba(0,0,0,.9);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--plane);color:var(--ink);font-family:var(--font-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.wrap{max-width:1280px;margin:0 auto;padding-inline:16px}
+
+/* ---------- Topbar ---------- */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--surface);border-bottom:1px solid var(--border)}
+.topbar-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:baseline;gap:9px;margin-right:auto}
+.brand-mark{font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:.02em;text-transform:uppercase}
+.brand-sub{font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.pill.is-demo .dot{background:var(--st-warn)}
+.pill.is-live .dot{background:var(--st-good)}
+.pill.is-err  .dot{background:var(--st-crit)}
+.pill.is-load .dot{background:var(--accent)}
+
+/* ---------- Ulanish ---------- */
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);margin-block:16px;overflow:hidden}
+.ctl-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.ctl-title{font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.ctl-body{padding:14px;display:grid;gap:14px}
+.seg-ctl{display:inline-flex;border:1px solid var(--border-strong);border-radius:7px;overflow:hidden}
+.seg-ctl button{font:inherit;font-size:12px;font-weight:500;padding:6px 13px;border:0;background:var(--surface);color:var(--ink-2);cursor:pointer}
+.seg-ctl button + button{border-left:1px solid var(--border)}
+.seg-ctl button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+
+.field-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,.field textarea{font:inherit;font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--border-strong);border-radius:7px;padding:7px 9px;min-width:0;max-width:100%}
+.field textarea{resize:vertical;min-height:70px;font-family:inherit}
+.field.mono input{font-family:var(--font-mono);font-size:12px}
+.field.grow{flex:1 1 220px}
+.field .hint{font-size:11px;color:var(--muted)}
+/* Kod o'zgartirilmaydi — input buni ko'rinishi bilan ham aytsin,
+   aks holda foydalanuvchi yozmoqchi bo'lib urinib ko'radi */
+.field input[readonly]{
+  background:var(--surface-3);color:var(--ink-2);
+  border-style:dashed;cursor:default;
+}
+
+.btn{font:inherit;font-size:13px;font-weight:500;padding:8px 16px;border-radius:7px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);white-space:nowrap}
+.btn.ghost{background:var(--surface);color:var(--ink-2);border-color:var(--border-strong)}
+.btn.danger{background:var(--surface);color:var(--st-crit);border-color:var(--st-crit)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.note{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.55;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--st-warn);border-radius:7px;padding:10px 12px}
+.note.err{border-left-color:var(--st-crit)}
+.note b{color:var(--ink);font-weight:600}
+.note code{font-family:var(--font-mono);font-size:11.5px;background:var(--surface-3);padding:1px 4px;border-radius:3px}
+
+/* ---------- Master-detail ---------- */
+.shell{display:grid;grid-template-columns:minmax(210px,250px) minmax(0,1fr);gap:16px;margin-bottom:28px;align-items:start}
+@media (max-width:760px){ .shell{grid-template-columns:1fr} }
+
+.sidebar{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px)}
+@media (max-width:760px){ .sidebar{position:static} }
+.side-head{padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface-2);font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.side-list{list-style:none;margin:0;padding:6px;display:grid;gap:2px;max-height:min(70vh,620px);overflow-y:auto}
+.side-list button{
+  width:100%;display:flex;align-items:center;gap:8px;text-align:left;
+  font:inherit;font-size:13px;color:var(--ink-2);
+  background:transparent;border:0;border-radius:7px;padding:7px 9px;cursor:pointer;
+}
+.side-list button:hover{background:var(--surface-2)}
+.side-list button[aria-current="true"]{background:var(--accent-soft);color:var(--ink);font-weight:500}
+.side-name{flex:1;min-width:0;overflow-wrap:anywhere}
+.side-count{font-family:var(--font-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.lock{font-size:11px;color:var(--muted)}
+
+/* ---------- Kontent ---------- */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.panel-head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;padding:13px 14px;border-bottom:1px solid var(--border)}
+.panel-titles{margin-right:auto;min-width:0}
+.panel-title{font-family:var(--font-display);font-weight:600;font-size:18px;letter-spacing:.01em}
+.panel-sub{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);word-break:break-all}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.toolbar input[type="search"]{flex:1 1 200px;font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--border-strong);border-radius:7px;padding:7px 10px;min-width:0}
+.count{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:540px}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+thead th{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--surface-2)}
+td.code{font-family:var(--font-mono);font-size:12px;white-space:nowrap}
+td.acts{text-align:right;white-space:nowrap}
+td.acts .btn{margin-left:6px}
+.cell-empty{color:var(--muted)}
+
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;padding:2px 8px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.badge i{width:6px;height:6px;border-radius:50%;flex:none;display:block;background:var(--muted)}
+.badge.on i{background:var(--st-good)}
+.badge.off i{background:var(--muted)}
+
+.empty{padding:34px 14px;text-align:center;color:var(--muted);font-size:13px}
+.pager{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-top:1px solid var(--border)}
+.pager-info{font-family:var(--font-mono);font-size:11.5px;color:var(--muted)}
+
+/* ---------- Tahrir oynasi ---------- */
+dialog{
+  border:1px solid var(--border-strong);border-radius:12px;padding:0;
+  background:var(--surface);color:var(--ink);
+  width:min(520px, calc(100vw - 32px));max-height:calc(100vh - 64px);
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.5);
+}
+dialog::backdrop{background:rgba(8,12,16,.55)}
+.dlg-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--border)}
+.dlg-title{font-family:var(--font-display);font-weight:600;font-size:17px;margin-right:auto}
+.dlg-sub{font-family:var(--font-mono);font-size:11.5px;color:var(--muted)}
+.dlg-body{padding:16px;display:grid;gap:13px;max-height:min(58vh,460px);overflow-y:auto}
+.dlg-foot{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding:13px 16px;border-top:1px solid var(--border);background:var(--surface-2)}
+.check{display:flex;align-items:center;gap:9px;font-size:13.5px}
+.check input{width:17px;height:17px;accent-color:var(--accent)}
+.req{color:var(--st-crit)}
+.dlg-err{display:none;font-size:12.5px;color:var(--st-crit);background:var(--surface-2);border:1px solid var(--st-crit);border-radius:7px;padding:9px 11px;line-height:1.5}
+.dlg-err.on{display:block}
+
+footer.page-foot{padding-block:20px 42px;color:var(--muted);font-size:12px;line-height:1.6;border-top:1px solid var(--border)}
+footer.page-foot code{font-family:var(--font-mono);font-size:11.5px}
+</style>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">
+      <span class="brand-mark">Monello</span>
+      <span class="brand-sub">Ma'lumotnomalar</span>
+    </div>
+    <span class="pill is-demo" id="srcPill"><span class="dot"></span><span id="srcText">Demo</span></span>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="controls" aria-labelledby="ctlTitle">
+    <div class="ctl-head">
+      <span class="ctl-title" id="ctlTitle">Manba</span>
+      <div class="seg-ctl" role="group" aria-label="Ma'lumot manbasi">
+        <button type="button" id="modeDemo" aria-pressed="true">Demo ma'lumot</button>
+        <button type="button" id="modeLive" aria-pressed="false">Jonli API</button>
+      </div>
+    </div>
+    <div class="ctl-body">
+      <div class="field-row" id="connRow" hidden>
+        <div class="field grow mono">
+          <label for="baseUrl">Monello manzili</label>
+          <input type="url" id="baseUrl" placeholder="https://erp.abmstore.uz" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field grow">
+          <label for="jwt">JWT token</label>
+          <input type="password" id="jwt" placeholder="Monello'ga kirganda olinadi" autocomplete="off" spellcheck="false">
+          <span class="hint">Ichki metodlar sessiya tokeni bilan ishlaydi, API tokeni bilan emas</span>
+        </div>
+        <button type="button" class="btn" id="connectBtn">Ulanish</button>
+      </div>
+      <div class="note" id="modeNote">
+        <span aria-hidden="true">&#9679;</span>
+        <span id="modeNoteText">
+          <b>Demo rejim.</b> Qo'shish, tahrirlash va o'chirish ishlaydi — o'zgarishlar
+          brauzer xotirasida qoladi, sahifa yangilansa qaytadi. Metadata
+          <code>Ipt_Dictionary</code> dagi sozlama bilan bir xil.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <div class="shell">
+    <nav class="sidebar" aria-label="Ma'lumotnomalar">
+      <div class="side-head">Ma'lumotnomalar</div>
+      <ul class="side-list" id="sideList"></ul>
+    </nav>
+
+    <section class="panel" aria-labelledby="dictTitle">
+      <div class="panel-head">
+        <div class="panel-titles">
+          <div class="panel-title" id="dictTitle">&nbsp;</div>
+          <div class="panel-sub" id="dictSub">&nbsp;</div>
+        </div>
+        <button type="button" class="btn" id="addBtn">+ Qo'shish</button>
+      </div>
+
+      <div style="padding:0 14px" id="lockWrap" hidden>
+        <div class="note" style="margin:12px 0 0" id="lockNote">
+          <span aria-hidden="true">&#9679;</span><span id="lockText"></span>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Kod yoki nom bo'yicha qidirish" autocomplete="off">
+        <span class="count" id="rowCount"></span>
+      </div>
+
+      <div id="tableArea"></div>
+      <div class="pager" id="pager" hidden></div>
+    </section>
+  </div>
+
+  <footer class="page-foot">
+    <p>
+      Bitta forma, 15 ta ma'lumotnoma. Forma o'zini <code>dictList</code>
+      qaytaradigan metadata'dan quradi — har ma'lumotnoma uchun alohida ekran
+      yozilmaydi. Yangi ma'lumotnoma qo'shilganda bu sahifa o'zgarmaydi.
+    </p>
+    <p>
+      Metodlar: <code>dictList</code>, <code>dictRows</code>,
+      <code>dictSave</code>, <code>dictDelete</code> —
+      hammasi <code>POST /api/app/request</code> orqali.
+    </p>
+  </footer>
+</main>
+
+<dialog id="editor" aria-labelledby="dlgTitle">
+  <form method="dialog" id="editForm">
+    <div class="dlg-head">
+      <span class="dlg-title" id="dlgTitle">Qator</span>
+      <span class="dlg-sub" id="dlgSub"></span>
+    </div>
+    <div class="dlg-body" id="dlgBody"></div>
+    <div class="dlg-foot">
+      <p class="dlg-err" id="dlgErr" style="margin:0;margin-right:auto;flex:1 1 200px"></p>
+      <button type="button" class="btn ghost" id="cancelBtn">Bekor qilish</button>
+      <button type="submit" class="btn" id="saveBtn">Saqlash</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function(){
+  "use strict";
+
+  var $  = function(s, r){ return (r||document).querySelector(s); };
+  var $$ = function(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+
+  function esc(s){
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* =========================================================================
+     METADATA — ipt_s_dictionaries va ipt_s_dictionary_cols dagi sozlamaning
+     aynan nusxasi. Jonli rejimda bu dictList dan keladi.
+     ========================================================================= */
+  function stateCol(required){
+    return { name:'condition', label_ru:'Состояние', label_uz:'Holati', type:'L',
+             required: !!required, lov:[{code:'A',name:'Faol'},{code:'P',name:'Nofaol'}] };
+  }
+
+  var META = [
+    { code:'categories', name_ru:'Категории товаров', name_uz:'Tovar kategoriyalari',
+      pk_column:'code', pk_type:'S', pk_max_len:30, state_column:'condition', order_column:'ord',
+      can_insert:true, can_delete:true,
+      columns:[
+        { name:'name_ru', label_ru:'Название (ru)', label_uz:'Nomi (ru)', type:'S', max_len:500, required:true },
+        { name:'name_uz', label_ru:'Название (uz)', label_uz:'Nomi (uz)', type:'S', max_len:500, required:false },
+        { name:'ord',     label_ru:'Порядок',       label_uz:'Tartib',    type:'N', required:false },
+        stateCol(false) ] },
+
+    { code:'brands', name_ru:'Бренды', name_uz:'Brendlar',
+      pk_column:'code', pk_type:'S', pk_max_len:30, state_column:'condition',
+      can_insert:true, can_delete:true,
+      columns:[ { name:'name', label_ru:'Название', label_uz:'Nomi', type:'S', max_len:500, required:true }, stateCol(false) ] },
+
+    { code:'colors', name_ru:'Цвета', name_uz:'Ranglar',
+      pk_column:'code', pk_type:'S', pk_max_len:30, state_column:'condition',
+      can_insert:true, can_delete:true,
+      columns:[
+        { name:'name_ru', label_ru:'Название (ru)', label_uz:'Nomi (ru)', type:'S', max_len:200, required:true },
+        { name:'name_uz', label_ru:'Название (uz)', label_uz:'Nomi (uz)', type:'S', max_len:200, required:false },
+        stateCol(false) ] },
+
+    { code:'attributes', name_ru:'Характеристики моделей', name_uz:'Model xarakteristikalari',
+      pk_column:'code', pk_type:'S', pk_max_len:40, state_column:'condition',
+      can_insert:true, can_delete:true,
+      columns:[
+        { name:'name_ru',    label_ru:'Название (ru)', label_uz:'Nomi (ru)',       type:'S', max_len:200, required:true },
+        { name:'name_uz',    label_ru:'Название (uz)', label_uz:'Nomi (uz)',       type:'S', max_len:200, required:false },
+        { name:'value_type', label_ru:'Тип значения',  label_uz:'Qiymat turi',     type:'L', required:true,
+          lov:[{code:'text',name:'Matn'},{code:'number',name:'Son'},{code:'bool',name:'Mantiqiy'}] },
+        { name:'is_multi',   label_ru:'Много значений',label_uz:"Ko'p qiymatli",   type:'B', required:true },
+        stateCol(false) ] },
+
+    { code:'sim_types', name_ru:'Типы SIM', name_uz:'SIM turlari',
+      pk_column:'code', pk_type:'S', pk_max_len:20, state_column:'condition',
+      can_insert:true, can_delete:true,
+      columns:[ { name:'name', label_ru:'Название', label_uz:'Nomi', type:'S', max_len:200, required:true }, stateCol(false) ] },
+
+    { code:'market_codes', name_ru:'Коды рынка', name_uz:'Bozor kodlari',
+      pk_column:'code', pk_type:'S', pk_max_len:20, state_column:'condition',
+      can_insert:true, can_delete:true,
+      columns:[ { name:'name', label_ru:'Название', label_uz:'Nomi', type:'S', max_len:200, required:true }, stateCol(false) ] },
+
+    { code:'replaced_parts', name_ru:'Заменённые детали', name_uz:'Almashtirilgan qismlar',
+      pk_column:'code', pk_type:'S', pk_max_len:30, state_column:'condition',
+      can_insert:true, can_delete:true,
+      columns:[
+        { name:'name_ru', label_ru:'Название (ru)', label_uz:'Nomi (ru)', type:'S', max_len:200, required:true },
+        { name:'name_uz', label_ru:'Название (uz)', label_uz:'Nomi (uz)', type:'S', max_len:200, required:false },
+        stateCol(false) ] },
+
+    { code:'expense_types', name_ru:'Виды расходов', name_uz:'Xarajat turlari',
+      pk_column:'code', pk_type:'N', state_column:'state',
+      can_insert:true, can_delete:true,
+      columns:[
+        { name:'name',  label_ru:'Название', label_uz:'Nomi', type:'S', max_len:500, required:false },
+        { name:'state', label_ru:'Состояние', label_uz:'Holati', type:'L', required:false,
+          lov:[{code:'A',name:'Faol'},{code:'P',name:'Nofaol'}] } ] },
+
+    { code:'client_guar_types', name_ru:'Виды обеспечения', name_uz:"Ta'minot turlari",
+      pk_column:'code', pk_type:'S', pk_max_len:2, state_column:'condition',
+      can_insert:true, can_delete:true,
+      columns:[ { name:'name', label_ru:'Название', label_uz:'Nomi', type:'S', max_len:1000, required:true }, stateCol(true) ] },
+
+    { code:'operations', name_ru:'Операции', name_uz:'Operatsiyalar',
+      pk_column:'code', pk_type:'S', pk_max_len:10, state_column:'condition',
+      can_insert:true, can_delete:true,
+      columns:[
+        { name:'name',       label_ru:'Название',  label_uz:'Nomi',         type:'S', max_len:500, required:true },
+        { name:'initiator',  label_ru:'Инициатор', label_uz:'Tashabbuskor', type:'S', max_len:2,   required:true },
+        { name:'is_expense', label_ru:'Расход',    label_uz:'Xarajat',      type:'F', required:false },
+        stateCol(true) ] },
+
+    { code:'balance_log_modules', name_ru:'Модули журнала баланса', name_uz:'Balans jurnali modullari',
+      pk_column:'code', pk_type:'S', pk_max_len:60, state_column:'condition',
+      can_insert:true, can_delete:true,
+      columns:[
+        { name:'name',        label_ru:'Название',      label_uz:'Nomi',                  type:'S', max_len:200,  required:true },
+        { name:'description', label_ru:'Описание',      label_uz:'Izoh',                  type:'S', max_len:1000, required:false },
+        { name:'has_context', label_ru:'Есть контекст', label_uz:'Kontekst bor',          type:'F', required:true },
+        { name:'affects',     label_ru:'Влияет на',     label_uz:"Nimaga ta'sir qiladi",  type:'S', max_len:40,   required:false },
+        stateCol(false) ] },
+
+    { code:'product_types', name_ru:'Типы товара', name_uz:'Tovar turlari',
+      pk_column:'code', pk_type:'S', pk_max_len:2, state_column:'condition',
+      can_insert:true, can_delete:false,
+      lock_reason:"Kod o'chirilsa mavjud tovarlar turi yo'qoladi. Nofaol qilish yetarli.",
+      columns:[ { name:'name', label_ru:'Название', label_uz:'Nomi', type:'S', max_len:500, required:true }, stateCol(true) ] },
+
+    { code:'filials', name_ru:'Филиалы', name_uz:'Filiallar',
+      pk_column:'code', pk_type:'S', pk_max_len:10, state_column:'condition',
+      can_insert:false, can_delete:false,
+      lock_reason:"Filial qo'shish bitta qator emas: sessiya filiali, hisobotlar va huquqlar bilan bog'liq. Nomi va site_code ni bu yerdan o'zgartirish mumkin.",
+      columns:[
+        { name:'name',      label_ru:'Название',    label_uz:'Nomi',          type:'S', max_len:1000, required:true },
+        { name:'type',      label_ru:'Тип',         label_uz:'Turi',          type:'S', max_len:100,  required:false },
+        { name:'site_code', label_ru:'Код витрины', label_uz:'Shourum kodi',  type:'S', max_len:30,   required:false },
+        stateCol(true) ] },
+
+    { code:'product_states', name_ru:'Состояния товара', name_uz:'Tovar holatlari',
+      pk_column:'code', pk_type:'S', pk_max_len:2, state_column:'condition',
+      can_insert:false, can_delete:false,
+      lock_reason:"Kodlar PL/SQL da qotirilgan (state = 'S' kabi). Yangi kodni hech qanday kod ishlatmaydi. Faqat nomini o'zgartirish mumkin.",
+      columns:[ { name:'name', label_ru:'Название', label_uz:'Nomi', type:'S', max_len:500, required:true }, stateCol(true) ] },
+
+    { code:'trade_states', name_ru:'Состояния сделки', name_uz:'Sdelka holatlari',
+      pk_column:'code', pk_type:'S', pk_max_len:3, state_column:'condition',
+      can_insert:false, can_delete:false,
+      lock_reason:"Kodlar PL/SQL da qotirilgan (state not in ('03','05','06','07') kabi). Faqat nomini o'zgartirish mumkin.",
+      columns:[ { name:'name', label_ru:'Название', label_uz:'Nomi', type:'S', max_len:500, required:true }, stateCol(true) ] }
+  ];
+
+  /* =========================================================================
+     DEMO QATORLARI — bazadagi haqiqiy kodlar
+     ========================================================================= */
+  function R(code, o){ o = o || {}; o.code = code; if (!('condition' in o) && !('state' in o)) o.condition = 'A'; return o; }
+
+  var DEMO = {
+    categories: [
+      R('iphone',{name_ru:'iPhone',name_uz:'iPhone',ord:10}),
+      R('ipad',{name_ru:'iPad',name_uz:'iPad',ord:20}),
+      R('mac',{name_ru:'Mac',name_uz:'Mac',ord:30}),
+      R('apple-watch',{name_ru:'Apple Watch',name_uz:'Apple Watch',ord:40}),
+      R('airpods',{name_ru:'AirPods',name_uz:'AirPods',ord:50}),
+      R('samsung',{name_ru:'Samsung',name_uz:'Samsung',ord:60}),
+      R('dyson',{name_ru:'Dyson',name_uz:'Dyson',ord:70}),
+      R('used',{name_ru:'Б/у техника',name_uz:'Ishlatilgan texnika',ord:80}),
+      R('iphone-bu',{name_ru:'iPhone б/у',name_uz:'iPhone, ishlatilgan',ord:90}),
+      R('ipad-bu',{name_ru:'iPad б/у',name_uz:'iPad, ishlatilgan',ord:100}),
+      R('mac-bu',{name_ru:'Mac б/у',name_uz:'Mac, ishlatilgan',ord:110}),
+      R('apple-watch-bu',{name_ru:'Apple Watch б/у',name_uz:'Apple Watch, ishlatilgan',ord:120}),
+      R('airpods-bu',{name_ru:'AirPods б/у',name_uz:'AirPods, ishlatilgan',ord:130}),
+      R('samsung-bu',{name_ru:'Samsung б/у',name_uz:'Samsung, ishlatilgan',ord:140}),
+      R('acc-glass',{name_ru:'Защитные стёкла',name_uz:'Himoya oynalari',ord:150}),
+      R('acc-cases',{name_ru:'Чехлы',name_uz:'Chexollar',ord:160}),
+      R('acc-chargers',{name_ru:'Зарядки и кабели',name_uz:'Zaryadkalar va kabellar',ord:170}),
+      R('acc-powerbanks',{name_ru:'Внешние аккумуляторы',name_uz:'Tashqi akkumulyatorlar',ord:180}),
+      R('acc-audio',{name_ru:'Наушники и колонки',name_uz:'Quloqchin va kolonkalar',ord:190}),
+      R('acc-bands',{name_ru:'Ремешки',name_uz:'Bandlar',ord:200}),
+      R('acc-camera',{name_ru:'Защита камеры',name_uz:'Kamera himoyasi',ord:210}),
+      R('acc-car',{name_ru:'Автоаксессуары',name_uz:'Avtoaksessuarlar',ord:220}),
+      R('acc-storage',{name_ru:'Флешки и карты памяти',name_uz:'Fleshka va xotira kartalari',ord:230}),
+      R('acc-gadgets',{name_ru:'Гаджеты и трекеры',name_uz:'Gadjet va trekerlar',ord:240})
+    ],
+    brands: [
+      R('apple',{name:'Apple'}), R('samsung',{name:'Samsung'}), R('xiaomi',{name:'Xiaomi'}),
+      R('dyson',{name:'Dyson'}), R('green',{name:'Green'}), R('baseus',{name:'Baseus'}),
+      R('hoco',{name:'Hoco'}), R('anker',{name:'Anker'}), R('other',{name:'Boshqa'})
+    ],
+    colors: [
+      R('silver',{name_ru:'Серебристый',name_uz:'Kumushrang'}),
+      R('space-black',{name_ru:'Чёрный космос',name_uz:'Kosmik qora'}),
+      R('black',{name_ru:'Чёрный',name_uz:'Qora'}),
+      R('white',{name_ru:'Белый',name_uz:'Oq'}),
+      R('desert',{name_ru:'Пустынный титан',name_uz:'Sahro titani'}),
+      R('natural-titanium',{name_ru:'Натуральный титан',name_uz:'Tabiiy titan'}),
+      R('blue-titanium',{name_ru:'Синий титан',name_uz:"Ko'k titan"}),
+      R('deep-blue',{name_ru:'Тёмно-синий',name_uz:"To'q ko'k"}),
+      R('gold',{name_ru:'Золотой',name_uz:'Oltin'}),
+      R('green',{name_ru:'Зелёный',name_uz:'Yashil'}),
+      R('pink',{name_ru:'Розовый',name_uz:'Pushti'}),
+      R('purple',{name_ru:'Фиолетовый',name_uz:'Binafsha'}),
+      R('red',{name_ru:'Красный',name_uz:'Qizil'}),
+      R('gray',{name_ru:'Серый',name_uz:'Kulrang'})
+    ],
+    attributes: [
+      R('chip',{name_ru:'Чип',name_uz:'Chip',value_type:'text',is_multi:false}),
+      R('screen_size',{name_ru:'Диагональ',name_uz:'Diagonal',value_type:'number',is_multi:false}),
+      R('network_5g',{name_ru:'5G',name_uz:'5G',value_type:'bool',is_multi:false}),
+      R('watch_case_mm',{name_ru:'Корпус часов, мм',name_uz:'Soat korpusi, mm',value_type:'number',is_multi:false}),
+      R('watch_band',{name_ru:'Ремешок',name_uz:'Band',value_type:'text',is_multi:false}),
+      R('acc_compat',{name_ru:'Совместимость',name_uz:'Moslik',value_type:'text',is_multi:true}),
+      R('acc_feature',{name_ru:'Особенности',name_uz:'Xususiyatlar',value_type:'text',is_multi:true}),
+      R('acc_material',{name_ru:'Материал',name_uz:'Material',value_type:'text',is_multi:false}),
+      R('power_w',{name_ru:'Мощность, Вт',name_uz:'Quvvat, Vt',value_type:'number',is_multi:false}),
+      R('capacity_mah',{name_ru:'Ёмкость, мА·ч',name_uz:'Sig‘imi, mA·s',value_type:'number',is_multi:false})
+    ],
+    sim_types: [
+      R('single',{name:'1 SIM'}), R('dual',{name:'2 SIM'}),
+      R('esim',{name:'Только eSIM'}), R('sim_esim',{name:'SIM + eSIM'})
+    ],
+    market_codes: [
+      R('LL/A',{name:'США'}), R('KHA',{name:'Корея'}), R('RUA',{name:'Россия'}),
+      R('LZA',{name:'Латинская Америка'}), R('JA',{name:'Япония'}),
+      R('ZA',{name:'Сингапур'}), R('AE',{name:'ОАЭ'})
+    ],
+    replaced_parts: [
+      R('screen',{name_ru:'Экран',name_uz:'Ekran'}),
+      R('glass',{name_ru:'Стекло',name_uz:'Oyna'}),
+      R('back_cover',{name_ru:'Задняя крышка',name_uz:'Orqa qopqoq'}),
+      R('body',{name_ru:'Корпус',name_uz:'Korpus'}),
+      R('battery',{name_ru:'Аккумулятор',name_uz:'Batareya'})
+    ],
+    expense_types: [
+      { code:10, name:'Аренда', state:'A' },
+      { code:20, name:'Зарплата', state:'A' },
+      { code:30, name:'Коммунальные', state:'A' },
+      { code:40, name:'Реклама', state:'A' },
+      { code:50, name:'Транспорт', state:'P' }
+    ],
+    client_guar_types: [
+      R('01',{name:'Паспорт'}), R('02',{name:'Справка с места работы'}),
+      R('03',{name:'Поручитель'}), R('04',{name:'Залог'})
+    ],
+    operations: [
+      R('IN',{name:'Приход товара',initiator:'I',is_expense:'N'}),
+      R('OUT',{name:'Продажа',initiator:'I',is_expense:'N'}),
+      R('PAY',{name:'Оплата по графику',initiator:'C',is_expense:'N'}),
+      R('EXP',{name:'Расход',initiator:'I',is_expense:'Y'}),
+      R('RET',{name:'Возврат',initiator:'C',is_expense:'N'})
+    ],
+    balance_log_modules: [
+      R('TRADE_CREATE',{name:'Создание сделки',description:'Сделка открыта продавцом',has_context:'Y',affects:'INVESTOR'}),
+      R('TRADE_PAY',{name:'Оплата по сделке',description:'Платёж клиента',has_context:'Y',affects:'INVESTOR'}),
+      R('PRODUCT_IN',{name:'Приход товара',description:null,has_context:'N',affects:'STOCK'}),
+      R('EXPENSE',{name:'Расход',description:'Операционные расходы',has_context:'N',affects:'CASH'})
+    ],
+    product_types: [
+      R('M',{name:'Мобильная техника'}), R('A',{name:'Автомобиль'}), R('B',{name:'Бытовая техника'})
+    ],
+    filials: [
+      R('01025',{name:'Mirobod',type:'MOBILE',site_code:'mirobod'}),
+      R('01026',{name:'Sebzor',type:'MOBILE',site_code:'sebzor'}),
+      R('01031',{name:'Chilonzor',type:'MOBILE',site_code:null}),
+      R('01042',{name:'Yunusobod',type:'MOBILE',site_code:null})
+    ],
+    product_states: [
+      R('S',{name:'На складе'}), R('K',{name:'В рассрочке'}), R('P',{name:'Продан за наличные'}),
+      R('R',{name:'Возвращён'}), R('C',{name:'Отменён'})
+    ],
+    trade_states: [
+      R('01',{name:'Активная'}), R('02',{name:'Просроченная'}), R('03',{name:'Погашена'}),
+      R('04',{name:'Ручная корректировка'}), R('05',{name:'Скрытая'}),
+      R('06',{name:'Отменена'}), R('07',{name:'Возвращена'})
+    ]
+  };
+
+  /* Demo o'zgarishlari shu nusxada saqlanadi — asl DEMO tegilmaydi */
+  var demoRows = JSON.parse(JSON.stringify(DEMO));
+
+  /* =========================================================================
+     Holat
+     ========================================================================= */
+  var state = { mode:'demo', base:'', jwt:'', dict:'categories', search:'', page:1, perPage:200 };
+  var meta = META;            // jonli rejimda dictList dan qayta yoziladi
+  var rows = [];              // joriy ma'lumotnomaning qatorlari
+  var total = 0;
+
+  function dictOf(code){
+    for (var i=0;i<meta.length;i++){ if (meta[i].code === code) return meta[i]; }
+    return null;
+  }
+
+  /* =========================================================================
+     Chaqiruvlar
+     ========================================================================= */
+  function call(method, params){
+    if (state.mode === 'demo') return Promise.resolve(demoCall(method, params));
+
+    return fetch(state.base.replace(/\/+$/,'') + '/api/app/request', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + state.jwt },
+      body: JSON.stringify({ method: method, params: params || {} })
+    }).then(function(r){
+      return r.text().then(function(text){
+        var body = null;
+        try { body = JSON.parse(text); } catch(e){}
+        if (!r.ok || !body) throw new Error('HTTP ' + r.status);
+        /* Konvert: { success, oper, message, data } */
+        if (body.success === false) throw new Error(body.message || 'Xato');
+        if (body.oper === false && body.message) throw new Error(body.message);
+        return body.data !== undefined ? body.data : body;
+      });
+    });
+  }
+
+  function demoCall(method, p){
+    p = p || {};
+    var d, list, i, idx, found;
+
+    if (method === 'dictList') return { dictionaries: META };
+
+    d = dictOf(p.dict);
+    list = demoRows[p.dict] || [];
+
+    if (method === 'dictRows'){
+      var q = (p.search || '').trim().toLowerCase();
+      var filtered = !q ? list.slice() : list.filter(function(r){
+        return Object.keys(r).some(function(k){
+          return String(r[k] === null || r[k] === undefined ? '' : r[k]).toLowerCase().indexOf(q) >= 0;
+        });
+      });
+      /* Backenddagi order by bilan bir xil: holat, tartib ustuni, kod */
+      filtered.sort(function(a,b){
+        var sa = a[d.state_column] || '', sb = b[d.state_column] || '';
+        if (sa !== sb) return sa < sb ? -1 : 1;
+
+        if (d.order_column){
+          var oa = a[d.order_column], ob = b[d.order_column];
+          if (oa !== ob) return (oa === null || oa === undefined) ? 1
+                              : (ob === null || ob === undefined) ? -1
+                              : (oa < ob ? -1 : 1);
+        }
+        return String(a.code) < String(b.code) ? -1 : 1;
+      });
+      return { dict:p.dict, total:filtered.length, page:1, per_page:state.perPage, rows:filtered };
+    }
+
+    if (method === 'dictSave'){
+      idx = -1;
+      for (i=0;i<list.length;i++){ if (String(list[i].code) === String(p.code)) { idx = i; break; } }
+
+      if (idx < 0 && !d.can_insert){
+        throw new Error('"' + d.name_ru + '" ma’lumotnomasiga yangi qator qo’shib bo’lmaydi. ' + (d.lock_reason||''));
+      }
+
+      /* Majburiy maydonlar — backend ham shuni tekshiradi */
+      if (idx < 0){
+        for (i=0;i<d.columns.length;i++){
+          var c = d.columns[i];
+          if (c.required && (p.values[c.name] === undefined || p.values[c.name] === null || p.values[c.name] === '')){
+            throw new Error('"' + c.name + '" to’ldirilishi shart.');
+          }
+        }
+      }
+
+      if (idx < 0){
+        found = { code: d.pk_type === 'N' ? Number(p.code) : p.code };
+        Object.keys(p.values).forEach(function(k){ found[k] = p.values[k]; });
+        list.push(found);
+        demoRows[p.dict] = list;
+        return { dict:p.dict, code:p.code, action:'I' };
+      }
+
+      Object.keys(p.values).forEach(function(k){ list[idx][k] = p.values[k]; });
+      return { dict:p.dict, code:p.code, action:'U' };
+    }
+
+    if (method === 'dictDelete'){
+      if (!d.can_delete){
+        throw new Error('"' + d.name_ru + '" ma’lumotnomasidan o’chirib bo’lmaydi. ' +
+                        (d.lock_reason||'') + ' Uning o’rniga qatorni nofaol qiling.');
+      }
+      demoRows[p.dict] = list.filter(function(r){ return String(r.code) !== String(p.code); });
+      return { dict:p.dict, code:p.code };
+    }
+
+    throw new Error('Noma’lum metod: ' + method);
+  }
+
+  /* =========================================================================
+     Chizish
+     ========================================================================= */
+  function setPill(cls, text){
+    $('#srcPill').className = 'pill ' + cls;
+    $('#srcText').textContent = text;
+  }
+
+  function renderSidebar(){
+    $('#sideList').innerHTML = meta.map(function(d){
+      var locked = !d.can_insert || !d.can_delete;
+      var n = state.mode === 'demo' ? (demoRows[d.code] || []).length : null;
+      return '<li><button type="button" data-dict="' + esc(d.code) + '"' +
+        (d.code === state.dict ? ' aria-current="true"' : '') + '>' +
+        '<span class="side-name">' + esc(d.name_uz || d.name_ru) + '</span>' +
+        (locked ? '<span class="lock" title="Qisman bloklangan" aria-label="Qisman bloklangan">&#128274;</span>' : '') +
+        (n !== null ? '<span class="side-count">' + n + '</span>' : '') +
+        '</button></li>';
+    }).join('');
+  }
+
+  function cellText(col, val){
+    if (val === null || val === undefined || val === '') return '<span class="cell-empty">&mdash;</span>';
+    if (col.type === 'B') return val === true || val === 1 || val === '1' ? 'Ha' : "Yo’q";
+    if (col.type === 'F') return String(val).toUpperCase() === 'Y' ? 'Ha' : "Yo’q";
+    if (col.type === 'L' && col.lov){
+      for (var i=0;i<col.lov.length;i++){ if (col.lov[i].code === val) return esc(col.lov[i].name); }
+    }
+    return esc(val);
+  }
+
+  function renderTable(){
+    var d = dictOf(state.dict);
+    var area = $('#tableArea');
+
+    $('#dictTitle').textContent = d.name_uz || d.name_ru;
+    $('#dictSub').textContent = d.name_ru + '  ·  ' + d.code + '  ·  pk: ' + d.pk_column +
+                                ' (' + (d.pk_type === 'N' ? 'son' : 'matn') + ')';
+    $('#addBtn').disabled = !d.can_insert;
+    $('#addBtn').title = d.can_insert ? '' : (d.lock_reason || '');
+
+    if (d.lock_reason){
+      $('#lockWrap').hidden = false;
+      $('#lockText').innerHTML = '<b>Qisman bloklangan.</b> ' + esc(d.lock_reason);
+    } else {
+      $('#lockWrap').hidden = true;
+    }
+
+    $('#rowCount').textContent = total + ' ta qator';
+
+    /* Sahifa hajmidan oshsa buni aytish kerak: jimgina kesib qo'ysak
+       xodim "qatorim yo'qolibdi" deb o'ylaydi. */
+    if (total > rows.length){
+      $('#pager').hidden = false;
+      $('#pager').innerHTML = '<span class="pager-info">Ko\u2019rsatilgan ' + rows.length +
+        ' / jami ' + total + '. Qolganini ko\u2019rish uchun qidiruvdan foydalaning.</span>';
+    } else {
+      $('#pager').hidden = true;
+    }
+
+    if (!rows.length){
+      area.innerHTML = '<div class="empty">' +
+        (state.search ? 'Qidiruv bo’yicha natija yo’q.' : 'Qator yo’q.') + '</div>';
+      return;
+    }
+
+    /* Ustunlar metadata'dan — shu sabab har ma'lumotnoma uchun alohida
+       jadval tavsifi kerak emas */
+    var head = '<tr><th>Kod</th>' +
+      d.columns.map(function(c){ return '<th>' + esc(c.label_uz || c.label_ru) + '</th>'; }).join('') +
+      '<th></th></tr>';
+
+    var body = rows.map(function(r){
+      return '<tr>' +
+        '<td class="code">' + esc(r[d.pk_column]) + '</td>' +
+        d.columns.map(function(c){
+          if (c.name === d.state_column){
+            var on = r[c.name] === 'A';
+            return '<td><span class="badge ' + (on ? 'on' : 'off') + '"><i></i>' +
+                   (on ? 'Faol' : 'Nofaol') + '</span></td>';
+          }
+          return '<td>' + cellText(c, r[c.name]) + '</td>';
+        }).join('') +
+        '<td class="acts">' +
+          '<button type="button" class="btn ghost sm" data-edit="' + esc(r[d.pk_column]) + '">Tahrir</button>' +
+          (d.can_delete ? '<button type="button" class="btn danger sm" data-del="' + esc(r[d.pk_column]) + '">O’chirish</button>' : '') +
+        '</td>' +
+      '</tr>';
+    }).join('');
+
+    area.innerHTML = '<div class="tablewrap"><table><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>';
+  }
+
+  /* =========================================================================
+     Tahrir oynasi — inputlar METADATA'dan quriladi
+     ========================================================================= */
+  var editing = null;
+
+  function openEditor(code){
+    var d = dictOf(state.dict);
+    var row = null;
+
+    if (code !== null && code !== undefined){
+      for (var i=0;i<rows.length;i++){
+        if (String(rows[i][d.pk_column]) === String(code)) { row = rows[i]; break; }
+      }
+    }
+
+    editing = row;
+    $('#dlgTitle').textContent = row ? 'Qatorni tahrirlash' : 'Yangi qator';
+    $('#dlgSub').textContent = d.code;
+    $('#dlgErr').className = 'dlg-err';
+    $('#dlgErr').textContent = '';
+
+    var html = '';
+
+    /* Kod maydoni: yangi qatorda tahrirlanadi, mavjudida faqat ko'rsatiladi */
+    html += '<div class="field mono">' +
+      '<label for="f_pk">Kod <span class="req">*</span></label>' +
+      '<input id="f_pk" type="' + (d.pk_type === 'N' ? 'number' : 'text') + '"' +
+        (d.pk_max_len ? ' maxlength="' + d.pk_max_len + '"' : '') +
+        (row ? ' value="' + esc(row[d.pk_column]) + '" readonly' : '') + '>' +
+      '<span class="hint">' + (row
+        ? 'Kodni o’zgartirib bo’lmaydi: u eski yozuvlarni bog’lab turadi'
+        : 'Keyin o’zgartirib bo’lmaydi') + '</span>' +
+    '</div>';
+
+    d.columns.forEach(function(c, i){
+      var id = 'f_' + i;
+      var val = row ? row[c.name] : null;
+      var req = c.required ? ' <span class="req">*</span>' : '';
+      var label = esc(c.label_uz || c.label_ru);
+
+      if (c.type === 'B' || c.type === 'F'){
+        var on = c.type === 'B'
+          ? (val === true || val === 1 || val === '1')
+          : (String(val || '').toUpperCase() === 'Y');
+        html += '<label class="check" for="' + id + '">' +
+                '<input type="checkbox" id="' + id + '" data-col="' + esc(c.name) + '" data-type="' + c.type + '"' +
+                (on ? ' checked' : '') + '>' + label + '</label>';
+        return;
+      }
+
+      if (c.type === 'L'){
+        html += '<div class="field"><label for="' + id + '">' + label + req + '</label>' +
+          '<select id="' + id + '" data-col="' + esc(c.name) + '" data-type="L">' +
+          (c.required ? '' : '<option value=""></option>') +
+          (c.lov || []).map(function(o){
+            return '<option value="' + esc(o.code) + '"' + (val === o.code ? ' selected' : '') + '>' +
+                   esc(o.name) + '</option>';
+          }).join('') +
+          '</select></div>';
+        return;
+      }
+
+      if (c.type === 'N'){
+        html += '<div class="field"><label for="' + id + '">' + label + req + '</label>' +
+          '<input type="number" id="' + id + '" data-col="' + esc(c.name) + '" data-type="N"' +
+          (val !== null && val !== undefined ? ' value="' + esc(val) + '"' : '') + '></div>';
+        return;
+      }
+
+      /* matn: uzun bo'lsa textarea */
+      var long = c.max_len && c.max_len > 500;
+      html += '<div class="field"><label for="' + id + '">' + label + req +
+        (c.max_len ? ' <span class="hint" style="text-transform:none;letter-spacing:0">&middot; ' + c.max_len + ' belgigacha</span>' : '') +
+        '</label>' +
+        (long
+          ? '<textarea id="' + id + '" data-col="' + esc(c.name) + '" data-type="S" maxlength="' + c.max_len + '">' + esc(val || '') + '</textarea>'
+          : '<input type="text" id="' + id + '" data-col="' + esc(c.name) + '" data-type="S"' +
+            (c.max_len ? ' maxlength="' + c.max_len + '"' : '') +
+            ' value="' + esc(val === null || val === undefined ? '' : val) + '">') +
+        '</div>';
+    });
+
+    $('#dlgBody').innerHTML = html;
+    $('#editor').showModal();
+
+    var first = $('#f_pk');
+    if (first && !first.readOnly) { first.focus(); }
+  }
+
+  function collectValues(){
+    var out = {};
+    $$('#dlgBody [data-col]').forEach(function(el){
+      var name = el.getAttribute('data-col');
+      var type = el.getAttribute('data-type');
+
+      if (type === 'B' || type === 'F'){ out[name] = el.checked; return; }
+      if (type === 'N'){ out[name] = el.value === '' ? null : Number(el.value); return; }
+
+      out[name] = el.value === '' ? null : el.value;
+    });
+    return out;
+  }
+
+  function dlgError(msg){
+    var e = $('#dlgErr');
+    e.textContent = msg;
+    e.className = 'dlg-err on';
+  }
+
+  /* =========================================================================
+     Yuklash
+     ========================================================================= */
+  function loadRows(){
+    return call('dictRows', {
+      dict: state.dict, search: state.search, page: state.page, per_page: state.perPage
+    }).then(function(res){
+      rows  = res.rows || [];
+      total = res.total || 0;
+      renderTable();
+      renderSidebar();
+    });
+  }
+
+  function loadAll(){
+    setPill(state.mode === 'demo' ? 'is-demo' : 'is-load',
+            state.mode === 'demo' ? 'Demo' : 'Yuklanmoqda');
+
+    return call('dictList', {})
+      .then(function(res){
+        meta = res.dictionaries || [];
+        if (!dictOf(state.dict) && meta.length) state.dict = meta[0].code;
+        return loadRows();
+      })
+      .then(function(){
+        setPill(state.mode === 'demo' ? 'is-demo' : 'is-live',
+                state.mode === 'demo' ? 'Demo' : 'Jonli');
+        noteReset();
+      })
+      .catch(function(e){
+        setPill('is-err', 'Xato');
+        var n = $('#modeNote');
+        n.className = 'note err';
+        $('#modeNoteText').innerHTML = '<b>So’rov bajarilmadi.</b> ' + esc(e.message || e) +
+          '<br>Manzil va JWT ni tekshiring. Sahifa o’z serveringizdan emas, boshqa joydan ' +
+          'ochilgan bo’lsa brauzer so’rovni to’sishi mumkin.';
+      });
+  }
+
+  function noteReset(){
+    var n = $('#modeNote');
+    n.className = 'note';
+    $('#modeNoteText').innerHTML = state.mode === 'demo'
+      ? '<b>Demo rejim.</b> Qo’shish, tahrirlash va o’chirish ishlaydi — o’zgarishlar ' +
+        'brauzer xotirasida qoladi, sahifa yangilansa qaytadi. Metadata <code>Ipt_Dictionary</code> ' +
+        'dagi sozlama bilan bir xil.'
+      : '<b>Jonli rejim.</b> JWT shu sahifada turadi va brauzer konsolidan ko’rinadi — ' +
+        'bu faqat sinov uchun yaraydi.';
+  }
+
+  /* =========================================================================
+     Hodisalar
+     ========================================================================= */
+  $('#sideList').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-dict]');
+    if (!b) return;
+    state.dict = b.getAttribute('data-dict');
+    state.search = '';
+    state.page = 1;
+    $('#search').value = '';
+    loadRows();
+  });
+
+  $('#tableArea').addEventListener('click', function(e){
+    var ed = e.target.closest('button[data-edit]');
+    if (ed){ openEditor(ed.getAttribute('data-edit')); return; }
+
+    var dl = e.target.closest('button[data-del]');
+    if (!dl) return;
+
+    var code = dl.getAttribute('data-del');
+    if (!window.confirm('"' + code + '" qatori o’chirilsinmi?\n\nIshlatilayotgan kodni baza o’chirtirmaydi — ' +
+                        'u holda uni nofaol qilish kerak bo’ladi.')) return;
+
+    call('dictDelete', { dict: state.dict, code: code })
+      .then(loadRows)
+      .catch(function(err){ window.alert(err.message || err); });
+  });
+
+  $('#addBtn').addEventListener('click', function(){ openEditor(null); });
+  $('#cancelBtn').addEventListener('click', function(){ $('#editor').close(); });
+
+  $('#editForm').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    var d = dictOf(state.dict);
+    var code = editing ? editing[d.pk_column] : $('#f_pk').value.trim();
+
+    if (!code){ dlgError('Kod kiritilmagan.'); return; }
+
+    call('dictSave', { dict: state.dict, code: code, values: collectValues() })
+      .then(function(){ $('#editor').close(); return loadRows(); })
+      .catch(function(err){ dlgError(err.message || String(err)); });
+  });
+
+  var searchTimer;
+  $('#search').addEventListener('input', function(){
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function(){
+      state.search = $('#search').value;
+      state.page = 1;
+      loadRows();
+    }, 250);
+  });
+
+  function setMode(mode){
+    state.mode = mode;
+    $('#modeDemo').setAttribute('aria-pressed', mode === 'demo' ? 'true' : 'false');
+    $('#modeLive').setAttribute('aria-pressed', mode === 'live' ? 'true' : 'false');
+    $('#connRow').hidden = (mode !== 'live');
+
+    if (mode === 'demo'){ meta = META; loadAll(); }
+    else { noteReset(); }
+  }
+
+  $('#modeDemo').addEventListener('click', function(){ setMode('demo'); });
+  $('#modeLive').addEventListener('click', function(){ setMode('live'); });
+
+  $('#connectBtn').addEventListener('click', function(){
+    state.base = $('#baseUrl').value.trim();
+    state.jwt  = $('#jwt').value.trim();
+
+    if (!state.base || !state.jwt){
+      var n = $('#modeNote');
+      n.className = 'note err';
+      $('#modeNoteText').innerHTML = '<b>Manzil va JWT kiritilmagan.</b>';
+      return;
+    }
+    loadAll();
+  });
+
+  setMode('demo');
+})();
+</script>
+<!-- ARTIFACT-END -->
+</body>
+</html>

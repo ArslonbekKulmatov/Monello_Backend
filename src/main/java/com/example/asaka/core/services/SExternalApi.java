@@ -33,6 +33,9 @@ public class SExternalApi {
 
   public static final String SCOPE_CATALOG = "catalog";
   public static final String SCOPE_REPORT  = "report";
+  // MCP mijozlari uchun. Bu qamrovda sessiya filiali yo'q, ya'ni barcha
+  // filiallar ko'rinadi — token faqat boshqaruvga beriladi.
+  public static final String SCOPE_CHAT    = "chat";
 
   @Autowired private HikariDataSource hds;
   @Autowired private SApp sApp;

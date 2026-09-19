@@ -4,6 +4,7 @@ import com.example.asaka.core.services.SApp;
 import com.example.asaka.util.DB;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.*;
 import org.json.JSONArray;
@@ -101,7 +102,10 @@ public class SPiReport {
         JSONObject request = new JSONObject();
         String response_data;
         JSONObject response_data_json;
-        SXSSFWorkbook wb = new SXSSFWorkbook(100); // keep 100 rows in memory, exceeding rows will be flushed to disk
+        // -1: xotirada barcha qatorlar saqlanadi. Bu addMergedRegion bilan bir qatorga
+        // yozib bo'lgan yacheykalarni qayta ishlash uchun kerak (window flush qilingandan
+        // keyin eski qatorlarni o'zgartirib bo'lmaydi).
+        SXSSFWorkbook wb = new SXSSFWorkbook(-1);
         try{
             request.put("method", "pi.accountingReport");
             request.put("params", pars);
@@ -153,6 +157,8 @@ public class SPiReport {
             centerStyle.setBorderRight(BorderStyle.THIN);
             centerStyle.setBorderBottom(BorderStyle.THIN);
             centerStyle.setAlignment(HorizontalAlignment.CENTER);
+            centerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+            centerStyle.setWrapText(true);
 
             XSSFDataFormat format = (XSSFDataFormat) wb.createDataFormat();
             decimalStyle.setDataFormat(format.getFormat("### ### ### ### ### ### ##0.00"));
@@ -162,6 +168,7 @@ public class SPiReport {
             decimalStyle.setBorderRight(BorderStyle.THIN);
             decimalStyle.setBorderBottom(BorderStyle.THIN);
             decimalStyle.setAlignment(HorizontalAlignment.CENTER);
+            decimalStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
             footerStyle.setDataFormat(format.getFormat("### ### ### ### ### ### ##0.00"));
             footerStyle.setFont(footerFont);
@@ -179,6 +186,7 @@ public class SPiReport {
             numStyle.setBorderRight(BorderStyle.THIN);
             numStyle.setBorderBottom(BorderStyle.THIN);
             numStyle.setAlignment(HorizontalAlignment.CENTER);
+            numStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             numStyle.setFillForegroundColor(new XSSFColor(new java.awt.Color(204, 203, 200)));
             numStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
@@ -226,52 +234,84 @@ public class SPiReport {
 
             JSONArray debtors = response_data_json.getJSONObject("data").getJSONArray("payments");
             JSONObject total = response_data_json.getJSONObject("data").getJSONObject("total");
-            for(int debtor = 0; debtor < debtors.length(); debtor++) {
+
+            // Har debtor uchun A(№), B(FIO), C(sum), D(sobr.), H(contract), I(pinfl),
+            // J(remaining), K(period1), L(polis) ustunlari sub-qatorlar bo'ylab
+            // birlashtiriladi. E, F, G ustunlari har paid_amount uchun alohida qatorga tushadi.
+            int[] mergeCols = {0, 1, 2, 3, 7, 8, 9, 10, 11};
+
+            for (int debtor = 0; debtor < debtors.length(); debtor++) {
                 JSONObject object = debtors.getJSONObject(debtor);
                 JSONArray paid_amounts = object.getJSONArray("paid_amounts");
                 JSONArray paid_dates = object.getJSONArray("paid_dates");
                 JSONArray pay_types = object.getJSONArray("pay_types");
-                for (int i = 0; i < paid_amounts.length(); i++) {
-                    sheet.createRow(++rowCount);
 
-                    sheet.getRow(rowCount).createCell(4).setCellValue(paid_amounts.getDouble(i));
-                    sheet.getRow(rowCount).getCell(4).setCellStyle(decimalStyle);
+                int subRowCount = Math.max(1, paid_amounts.length());
+                int startRow = rowCount + 1;
+                int endRow = startRow + subRowCount - 1;
 
-                    sheet.getRow(rowCount).createCell(5).setCellValue(paid_dates.getString(i));
-                    sheet.getRow(rowCount).getCell(5).setCellStyle(centerStyle);
+                // Sub-qatorlar (paid amounts)
+                for (int i = 0; i < subRowCount; i++) {
+                    Row subRow = sheet.createRow(++rowCount);
 
-                    sheet.getRow(rowCount).createCell(6).setCellValue(pay_types.getString(i));
-                    sheet.getRow(rowCount).getCell(6).setCellStyle(centerStyle);
+                    if (i < paid_amounts.length()) {
+                        subRow.createCell(4).setCellValue(paid_amounts.getDouble(i));
+                        subRow.getCell(4).setCellStyle(decimalStyle);
+
+                        subRow.createCell(5).setCellValue(paid_dates.getString(i));
+                        subRow.getCell(5).setCellStyle(centerStyle);
+
+                        subRow.createCell(6).setCellValue(pay_types.getString(i));
+                        subRow.getCell(6).setCellStyle(centerStyle);
+                    } else {
+                        subRow.createCell(4).setCellStyle(decimalStyle);
+                        subRow.createCell(5).setCellStyle(centerStyle);
+                        subRow.createCell(6).setCellStyle(centerStyle);
+                    }
+
+                    // Birlashtiriladigan ustunlar uchun bo'sh yacheykalar (border ko'rinishi uchun)
+                    if (i > 0) {
+                        for (int col : mergeCols) {
+                            subRow.createCell(col).setCellStyle(col == 0 ? numStyle : centerStyle);
+                        }
+                    }
                 }
-                sheet.getRow(rowCount).createCell(0).setCellValue(debtor + 1);
-                sheet.getRow(rowCount).getCell(0).setCellStyle(numStyle);
 
-                sheet.getRow(rowCount).createCell(1).setCellValue(object.getString("debtor_name"));
-                sheet.getRow(rowCount).getCell(1).setCellStyle(centerStyle);
+                // Birinchi qatorga debtor ma'lumotlari — merge shu qator qiymatini oladi
+                Row firstRow = sheet.getRow(startRow);
+                firstRow.createCell(0).setCellValue(debtor + 1);
+                firstRow.getCell(0).setCellStyle(numStyle);
 
-                sheet.getRow(rowCount).createCell(2).setCellValue(object.getDouble("regres_sum"));
-                sheet.getRow(rowCount).getCell(2).setCellStyle(decimalStyle);
+                firstRow.createCell(1).setCellValue(object.getString("debtor_name"));
+                firstRow.getCell(1).setCellStyle(centerStyle);
 
-                sheet.getRow(rowCount).createCell(3).setCellValue(object.getDouble("debited_sum"));
-                sheet.getRow(rowCount).getCell(3).setCellStyle(decimalStyle);
+                firstRow.createCell(2).setCellValue(object.getDouble("regres_sum"));
+                firstRow.getCell(2).setCellStyle(decimalStyle);
 
-                sheet.getRow(rowCount).createCell(7).setCellValue(object.getString("contract_num"));
-                sheet.getRow(rowCount).getCell(7).setCellStyle(centerStyle);
+                firstRow.createCell(3).setCellValue(object.getDouble("debited_sum"));
+                firstRow.getCell(3).setCellStyle(decimalStyle);
 
-                sheet.getRow(rowCount).createCell(8).setCellValue(object.getString("pinfl"));
-                sheet.getRow(rowCount).getCell(8).setCellStyle(centerStyle);
+                firstRow.createCell(7).setCellValue(object.getString("contract_num"));
+                firstRow.getCell(7).setCellStyle(centerStyle);
 
-                sheet.getRow(rowCount).createCell(9).setCellValue(object.getDouble("remaining_debt"));
-                sheet.getRow(rowCount).getCell(9).setCellStyle(decimalStyle);
+                firstRow.createCell(8).setCellValue(object.getString("pinfl"));
+                firstRow.getCell(8).setCellStyle(centerStyle);
 
-                sheet.getRow(rowCount).createCell(10).setCellValue(object.getDouble("first_period_paid_amount"));
-                sheet.getRow(rowCount).getCell(10).setCellStyle(decimalStyle);
+                firstRow.createCell(9).setCellValue(object.getDouble("remaining_debt"));
+                firstRow.getCell(9).setCellStyle(decimalStyle);
 
-                sheet.getRow(rowCount).createCell(11).setCellValue(object.getString("polis_num"));
-                sheet.getRow(rowCount).getCell(11).setCellStyle(centerStyle);
+                firstRow.createCell(10).setCellValue(object.getDouble("first_period_paid_amount"));
+                firstRow.getCell(10).setCellStyle(decimalStyle);
 
-//                ++rowCount;
+                firstRow.createCell(11).setCellValue(object.getString("polis_num"));
+                firstRow.getCell(11).setCellStyle(centerStyle);
 
+                // Bir necha to'lov bo'lsa — ustunlarni birlashtiramiz
+                if (subRowCount > 1) {
+                    for (int col : mergeCols) {
+                        sheet.addMergedRegion(new CellRangeAddress(startRow, endRow, col, col));
+                    }
+                }
             }
 
             sheet.createRow(++rowCount).createCell(1).setCellValue("Общий");

@@ -135,7 +135,12 @@ Select
     where t.replaced_parts is not null
       and ','||t.replaced_parts||',' like '%,'||p.code||',%') replaced_parts_name,
   t.has_box,
-  t.has_charger
+  t.has_charger,
+  -- --- fiskal maydonlar (6-bosqich) ---
+  t.mxik_code,
+  t.unit_code,
+  (select u.name_ru from ipt_s_units u where u.code = t.unit_code) unit_name,
+  t.vat_rate
   -- site_code va in_catalog ATAYLAB yo'q: ular joriy holatni ko'rsatadi,
   -- tarix esa o'sha paytdagi qiymatlarni. Tarix qatorida "hozir saytda bormi"
   -- degan ustun chalg'itadi — ipt_products_v da qarash kerak.

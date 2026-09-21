@@ -260,6 +260,16 @@ create or replace package body Ipt_Dashboard is
   --     or ipt_util.Has_Access_For_Role(<rahbariyat roli>) = 1
   -- Rol raqamini men bilmayman, shuning uchun qo'ymadim: noto'g'ri raqam
   -- qo'yilsa tekshiruv borga o'xshab turadi, lekin hech kimni to'smaydi.
+  --
+  -- IPT_S_FILIALS_V BILAN ALMASHTIRMAYDI. So'rovlardagi
+  -- "in (select k.code from ipt_s_filials_v k)" qaysi FILIAL ko'rinishini
+  -- cheklaydi. Agar o'sha view sessiyaga bog'liq bo'lmasa (ya'ni faol
+  -- filiallar ro'yxati bo'lsa), u hech kimni to'smaydi — har qanday
+  -- foydalanuvchi butun tarmoq raqamlarini ko'raveradi. Tekshirish:
+  --     select count(*) from ipt_s_filials_v;
+  --     select count(*) from ipt_s_filials where condition = 'A';
+  -- Ikkalasi teng chiqsa — view sessiyaga bog'liq emas, demak shu
+  -- Check_Access kerak.
 
   --Cr By: Arslonbek Kulmatov
   --Davr chegaralari. Berilmasa — joriy oy boshidan bugungacha.
@@ -334,6 +344,11 @@ create or replace package body Ipt_Dashboard is
                                 from ipt_clients cl) c
                      on c.filial_code = f.code
                   where (vFilial is null or f.code = vFilial)
+                    -- Shart FILIAL tomonida (f.code), mijoz tomonida emas.
+                    -- c.filial_code ga qo'yilsa mijozi yo'q filialda u NULL
+                    -- bo'ladi, NULL in (...) esa UNKNOWN — tashqi birikma
+                    -- ichkiga aylanadi va filial javobdan tushib qoladi.
+                    and f.code in (select k.code from ipt_s_filials_v k)
                   group by f.code, f.name
                   order by f.code)
     loop
@@ -412,6 +427,7 @@ create or replace package body Ipt_Dashboard is
                    from ipt_report_by_filials_v_t t
                   where t.calc_day between vFrom and vTo
                     and (vFilial is null or t.code = vFilial)
+                    and t.code in (select k.code from ipt_s_filials_v k)
                   order by t.calc_day desc, t.code)
     loop
       vRow := json_object_t();
@@ -472,7 +488,11 @@ create or replace package body Ipt_Dashboard is
       into vTotal, vSum
       from ipt_dashboard_overdue_v v
      where v.overdue_days >= vMin_Days
-       and (vFilial is null or v.filial_code = vFilial);
+       and (vFilial is null or v.filial_code = vFilial)
+       -- Jami hisoblaydigan so'rovda ham shu shart bo'lishi SHART: aks holda
+       -- total_trades hamma filialni sanaydi, rows esa faqat ko'rinadiganini
+       -- qaytaradi — sahifalash buziladi va jami raqam ortiqcha chiqadi.
+       and v.filial_code in (select k.code from ipt_s_filials_v k);
 
     vResponse.put('currency', 'USD');
     vResponse.put('total_trades', vTotal);
@@ -485,6 +505,7 @@ create or replace package body Ipt_Dashboard is
                    from ipt_dashboard_overdue_v v
                   where v.overdue_days >= vMin_Days
                     and (vFilial is null or v.filial_code = vFilial)
+                    and v.filial_code in (select k.code from ipt_s_filials_v k)
                   order by v.overdue_days desc, v.trade_id
                  offset vOffset rows fetch next vPerPage rows only)
     loop
@@ -549,6 +570,11 @@ create or replace package body Ipt_Dashboard is
                      on t.filial_code = f.code
                     and trunc(nvl(t.ip_date, t.cr_on)) between vFrom and vTo
                   where (vFilial is null or f.code = vFilial)
+                    -- Yuqoridagi izohning davomi: shart FILIAL tomonida.
+                    -- t.filial_code ga qo'yilsa o'sha davrda sotuvi yo'q
+                    -- filial NULL beradi va javobdan tushib qoladi — ya'ni
+                    -- left join dan foyda qolmaydi.
+                    and f.code in (select k.code from ipt_s_filials_v k)
                   group by f.code, f.name
                   order by f.code)
     loop

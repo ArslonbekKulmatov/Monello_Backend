@@ -116,7 +116,14 @@ alter table IPT_PRODUCTS_HIS add
 -- =============================================================================
 -- 3. PRODUCT_HIS — yangi ustunlarni tarixga yozish
 --
--- Pozitsion insert, shuning uchun uchta yangi ustun OXIRIGA qo'shiladi.
+-- DIQQAT: bu blok ESKIRGAN. Uning o'rniga db/ipt_products_his_dml.sql ni
+-- bajaring — u ustunlarni aniq sanab o'tadi.
+--
+-- Nega: quyidagi variant pozitsion insert ishlatadi va jadvalda ustun soni
+-- kutilgandan farq qilsa ORA-00947 bilan yiqiladi. 62 ustunli jadvalda bu
+-- juda mo'rt.
+--
+-- Shu blokni o'tkazib yuboring.
 -- =============================================================================
 
 prompt 3.1 IPT_METHODS_DML

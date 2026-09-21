@@ -229,6 +229,39 @@ create or replace package body Ipt_Dashboard is
   end;
 
   --Cr By: Arslonbek Kulmatov
+  --Hisobot ko'rish huquqi.
+  --
+  --Bu paketda filial filtri ATAYLAB yo'q: boshqaruv paneliga hamma filial
+  --kerak. Lekin metodlar core_methods da ro'yxatda turibdi, ya'ni ularni
+  --/api/app/request orqali ISTALGAN tizimga kirgan foydalanuvchi ham
+  --chaqira oladi. Tekshiruvsiz qolsa oddiy sotuvchi butun tarmoqning
+  --qarzdorlik raqamlarini va mijozlar reyestrini ko'rib qolardi.
+  --
+  --Shuning uchun: faqat "report" qamrovli token egasi. Amalda bu
+  --/api/report/* yo'li — token qaysi foydalanuvchiga berilgan bo'lsa,
+  --sessiya ham o'shaniki.
+  Procedure Check_Access
+  is
+    vCount pls_integer;
+  begin
+    select count(*) into vCount
+      from core_api_tokens t
+     where t.user_id   = core_session.Get_User_Id
+       and t.scope     = 'report'
+       and t.condition = 'A';
+
+    if vCount = 0 then
+      Ipt_Methods.Raise_Error('Bu hisobotni ko''rish uchun ruxsat yo''q. '||
+                              'Hisobot API si "report" qamrovli token bilan ishlaydi.');
+    end if;
+  end;
+  -- Monello web ga ham nazorat paneli kerak bo'lsa shu yerga rol sharti
+  -- qo'shiladi, masalan:
+  --     or ipt_util.Has_Access_For_Role(<rahbariyat roli>) = 1
+  -- Rol raqamini men bilmayman, shuning uchun qo'ymadim: noto'g'ri raqam
+  -- qo'yilsa tekshiruv borga o'xshab turadi, lekin hech kimni to'smaydi.
+
+  --Cr By: Arslonbek Kulmatov
   --Davr chegaralari. Berilmasa — joriy oy boshidan bugungacha.
   Procedure Read_Period(iParams json_object_t,
                         oFrom   out date,
@@ -270,6 +303,8 @@ create or replace package body Ipt_Dashboard is
     vFrom     date;
     vTo       date;
   begin
+    Check_Access;
+
     Read_Period(vParams, vFrom, vTo);
     vFilial := trim(vParams.get_String('filial_code'));
 
@@ -337,6 +372,8 @@ create or replace package body Ipt_Dashboard is
     vTo       date;
     vLast_Day date;
   begin
+    Check_Access;
+
     vFilial := trim(vParams.get_String('filial_code'));
     vFrom   := Parse_Date(vParams.get_String('date_from'));
     vTo     := Parse_Date(vParams.get_String('date_to'));
@@ -414,6 +451,8 @@ create or replace package body Ipt_Dashboard is
     vTotal    number;
     vSum      number;
   begin
+    Check_Access;
+
     vFilial   := trim(vParams.get_String('filial_code'));
     vMin_Days := nvl(vParams.get_Number('min_days'), 1);
     vPage     := nvl(vParams.get_Number('page'), 1);
@@ -484,6 +523,8 @@ create or replace package body Ipt_Dashboard is
     vFrom     date;
     vTo       date;
   begin
+    Check_Access;
+
     Read_Period(vParams, vFrom, vTo);
     vFilial := trim(vParams.get_String('filial_code'));
 

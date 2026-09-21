@@ -85,7 +85,7 @@ GET /api/catalog/products?page=1&per_page=200
       "color": { "code": "silver", "name_ru": "Серебристый", "name_uz": "Kumushrang" },
       "warranty_months": 12,
       "images": [
-        { "url": "https://erp.abmstore.uz/api/app/get-file?file=ipt_iphone-17-pro-max_412_20260919143012.jpg",
+        { "url": "http://37.140.216.159:9999/api/app/get-file?file=ipt_iphone-17-pro-max_412_20260919143012.jpg",
           "color": "silver", "is_primary": true }
       ],
       "attributes": {},
@@ -210,9 +210,9 @@ GET /api/catalog/stock
 
 ```json
 "images": [
-  { "url": "https://erp.abmstore.uz/api/app/get-file?file=ipt_iphone-17-pro-max_412_20260919143012.jpg",
+  { "url": "http://37.140.216.159:9999/api/app/get-file?file=ipt_iphone-17-pro-max_412_20260919143012.jpg",
     "color": "silver", "is_primary": true },
-  { "url": "https://erp.abmstore.uz/api/app/get-file?file=ipt_iphone-17-pro-max_413_20260919143055.jpg",
+  { "url": "http://37.140.216.159:9999/api/app/get-file?file=ipt_iphone-17-pro-max_413_20260919143055.jpg",
     "color": "silver", "is_primary": false }
 ]
 ```

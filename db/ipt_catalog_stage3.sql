@@ -401,10 +401,14 @@ prompt 4.4 Rasmlar uchun bazaviy havola
 -- Keyinchalik rasmlarni alohida static hostga ko'chirsangiz, faqat shu
 -- qiymatni o'zgartirasiz — kodga tegish shart emas.
 --
--- DOMENNI O'ZINGIZNIKIGA ALMASHTIRING:
+-- Hozirgi host: http://37.140.216.159:9999. Domen olinib https ga o'tilganda
+-- shu bitta qiymat yangilanadi (merge faqat yo'q bo'lsa qo'yadi, shuning
+-- uchun mavjud bazada update bilan):
+--   update core_properties set param_value = 'https://<domen>/api/app/get-file?file='
+--    where param_name = 'catalog_file_url';
 merge into core_properties t
 using (select 'catalog_file_url' param_name,
-              'https://erp.abmstore.uz/api/app/get-file?file=' param_value from dual) s
+              'http://37.140.216.159:9999/api/app/get-file?file=' param_value from dual) s
 on (t.param_name = s.param_name)
 when not matched then
   insert (param_name, param_value, condition) values (s.param_name, s.param_value, 'A');

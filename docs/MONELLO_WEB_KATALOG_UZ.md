@@ -222,7 +222,7 @@ Javob:
 ```json
 { "oper": true, "data": { "id": 412,
   "file_name": "ipt_iphone-17-pro-max_412_20260919143012.jpg",
-  "url": "https://erp.abmstore.uz/api/app/get-file?file=ipt_..." } }
+  "url": "http://37.140.216.159:9999/api/app/get-file?file=ipt_..." } }
 ```
 
 Fayl nomini baza beradi, Java shu nom bilan diskka yozadi. **Har yuklashda nom

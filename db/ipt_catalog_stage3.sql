@@ -462,6 +462,9 @@ prompt 5.2 IPT_CATALOG_V — yangi maydonlar bilan
 -- Chiqish sharti 1-bosqichdagidek: omborda, soni > 0, majburiy beshta
 -- maydon to'ldirilgan, filiali vitrina. Yangi maydonlar IXTIYORIY —
 -- ular bo'lmasa ham tovar katalogda ko'rinadi.
+-- DIQQAT: bu ta'rifni ipt_catalog_stage5.sql ALMASHTIRADI — u yerda id
+-- konfiguratsiya bo'yicha birlashtiriladi. stage5 bajarilgandan keyin bu
+-- blokni qayta ishga tushirmang, aks holda birlashtirish yo'qoladi.
 create or replace force view ipt_catalog_v as
 select
   t.id,

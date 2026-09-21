@@ -297,17 +297,29 @@ create or replace package body Ipt_Catalog is
   --Cr By: Arslonbek Kulmatov
   --quantity obyektini yig'ish: {"mirobod": 2, "sebzor": 0}
   --Qolgan shourumlarga 0 qo'yiladi — sayt tomonda obyekt shakli o'zgarmasin.
-  Function Build_Quantity(iSites json_array_t,
-                          iSite  varchar2,
-                          iQty   number) return json_object_t
+  --Cr By: Arslonbek Kulmatov
+  --Shourumlar bo'yicha qoldiq.
+  --
+  --View allaqachon {"mirobod":2} ko'rinishidagi JSON beradi, lekin unda
+  --faqat qoldig'i BOR shourumlar bo'ladi. Sayt esa barcha shourumlar har
+  --doim bo'lishini so'ragan — obyekt shakli pozitsiyadan pozitsiyaga
+  --o'zgarmasligi uchun. Yo'qlari shu yerda nol bilan to'ldiriladi.
+  Function Build_Quantity(iSites   json_array_t,
+                          iQtyJson varchar2) return json_object_t
   is
     vQty  json_object_t := json_object_t();
+    vSrc  json_object_t;
     vCode varchar2(30);
   begin
+    if iQtyJson is not null then
+      vSrc := json_object_t.parse(iQtyJson);
+    end if;
+
     for i in 0 .. iSites.get_size - 1
     loop
       vCode := iSites.get_string(i);
-      vQty.put(vCode, case when vCode = iSite then nvl(iQty, 0) else 0 end);
+      vQty.put(vCode, case when vSrc is null then 0
+                           else nvl(vSrc.get_Number(vCode), 0) end);
     end loop;
 
     return vQty;
@@ -1115,7 +1127,9 @@ create or replace package body Ipt_Catalog is
     vItem  json_object_t := json_object_t();
     vColor json_object_t;
   begin
-    vItem.put('id', to_char(iRow.Id));
+    -- Id endi matn: yangi tovarda konfiguratsiyadan yasalgan kalit,
+    -- ishlatilganda ombor qatorining raqami. to_char kerak emas.
+    vItem.put('id', iRow.Id);
     vItem.put('model_code', iRow.Model_Code);
     vItem.put('model_name', iRow.Model_Name);
     Put_Str(vItem, 'model_name_uz', iRow.Model_Name_Uz);
@@ -1124,7 +1138,10 @@ create or replace package body Ipt_Catalog is
     vItem.put('condition', iRow.Condition);
     vItem.put('price', round(iRow.Price));
     Put_Num(vItem, 'old_price', round(iRow.Old_Price));
-    vItem.put('quantity', Build_Quantity(iSites, iRow.Site_Code, iRow.Quantity));
+    vItem.put('quantity', Build_Quantity(iSites, iRow.Quantity_Json));
+    -- Umumiy qoldiq: sayt shourumlar bo'yicha taqsimotni hozircha
+    -- yoqmasligini aytdi va umumiy sonni ko'rsatadi
+    vItem.put('quantity_total', nvl(iRow.Quantity_Total, 0));
     Put_Str(vItem, 'sku', iRow.Sku);
     Put_Num(vItem, 'storage_gb', iRow.Storage_Gb);
     Put_Num(vItem, 'ram_gb', iRow.Ram_Gb);
@@ -1242,15 +1259,16 @@ create or replace package body Ipt_Catalog is
   begin
     for rows in (select t.id,
                         t.price,
-                        t.quantity,
-                        t.site_code
+                        t.quantity_json,
+                        t.quantity_total
                    from ipt_catalog_v t
                   order by t.id)
     loop
       vItem := json_object_t();
-      vItem.put('id', to_char(rows.id));
+      vItem.put('id', rows.id);
       vItem.put('price', round(rows.price));
-      vItem.put('quantity', Build_Quantity(vSites, rows.site_code, rows.quantity));
+      vItem.put('quantity', Build_Quantity(vSites, rows.quantity_json));
+      vItem.put('quantity_total', nvl(rows.quantity_total, 0));
       vItems.append(vItem);
     end loop;
 

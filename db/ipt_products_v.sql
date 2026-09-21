@@ -145,6 +145,11 @@ Select
   -- Bazada 1/0 saqlanadi, forma esa true/false yuboradi
   t.has_box,
   t.has_charger,
+  -- --- fiskal maydonlar (6-bosqich) ---
+  t.mxik_code,
+  t.unit_code,
+  (select u.name_ru from ipt_s_units u where u.code = t.unit_code) unit_name,
+  t.vat_rate,
   -- ===========================================================================
   -- SAYTGA CHIQADIMI
   --

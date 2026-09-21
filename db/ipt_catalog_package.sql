@@ -369,7 +369,8 @@ create or replace package body Ipt_Catalog is
       'model_code,model_name,model_name_uz,category_code,brand_code,item_condition,'||
       'retail_price_uzs,old_price_uzs,phys_filial_code,storage_gb,ram_gb,color_code,'||
       'sku,warranty_months,description_ru,description_uz,battery_health_pct,imei,'||
-      'serial,sim_type,market_code,replaced_parts,has_box,has_charger';
+      'serial,sim_type,market_code,replaced_parts,has_box,has_charger,'||
+      'mxik_code,unit_code,vat_rate';
     vKeys json_array_t := Split_Csv(cKeys);
   begin
     for i in 0 .. vKeys.get_size - 1
@@ -397,6 +398,27 @@ create or replace package body Ipt_Catalog is
 
     if vCount = 0 then
       Ipt_Methods.Raise_Error('Bunday rang yo''q yoki faol emas: '||iCode);
+    end if;
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --O'lchov birligi ma'lumotnomada bormi
+  Procedure Check_Unit(iCode varchar2)
+  is
+    vCount pls_integer;
+  begin
+    if iCode is null then
+      return;
+    end if;
+
+    select count(*) into vCount
+      from ipt_s_units u
+     where u.code = iCode
+       and u.condition = 'A';
+
+    if vCount = 0 then
+      Ipt_Methods.Raise_Error('Bunday o''lchov birligi yo''q yoki faol emas: '||iCode||
+                              '. Mumkin qiymatlar ipt_s_units_v da.');
     end if;
   end;
 
@@ -582,6 +604,40 @@ create or replace package body Ipt_Catalog is
     if iParams.has('replaced_parts') then
       ioProduct.Replaced_Parts := lower(replace(trim(iParams.get_String('replaced_parts')), ' ', ''));
       Check_Replaced_Parts(ioProduct.Replaced_Parts);
+    end if;
+
+    -- --- fiskal maydonlar ---
+    if iParams.has('mxik_code') then
+      ioProduct.Mxik_Code := trim(iParams.get_String('mxik_code'));
+
+      if ioProduct.Mxik_Code is not null then
+        if not regexp_like(ioProduct.Mxik_Code, '^[0-9]+$') then
+          Ipt_Methods.Raise_Error('"mxik_code" faqat raqamdan iborat bo''lishi kerak.');
+        end if;
+
+        -- MXIK standart bo'yicha 17 raqam. Boshqa uzunlikdagi kodlar
+        -- uchrasa shu shartni yumshating — tekshiruv faqat shu yerda.
+        if length(ioProduct.Mxik_Code) <> 17 then
+          Ipt_Methods.Raise_Error('"mxik_code" 17 raqamdan iborat bo''lishi kerak, '||
+                                  'hozir '||length(ioProduct.Mxik_Code)||' ta.');
+        end if;
+      end if;
+    end if;
+
+    if iParams.has('unit_code') then
+      ioProduct.Unit_Code := trim(iParams.get_String('unit_code'));
+      Check_Unit(ioProduct.Unit_Code);
+    end if;
+
+    -- QQS FOIZDA saqlanadi: 12 = 12%. Tiyin ham, koeffitsient ham emas.
+    if iParams.has('vat_rate') then
+      ioProduct.Vat_Rate := iParams.get_Number('vat_rate');
+
+      if ioProduct.Vat_Rate is not null
+         and (ioProduct.Vat_Rate < 0 or ioProduct.Vat_Rate > 100) then
+        Ipt_Methods.Raise_Error('"vat_rate" 0 va 100 oralig''ida bo''lishi kerak '||
+                                '(foizda: 12 = 12%).');
+      end if;
     end if;
 
     -- --- narxlar: SOMDA keladi, TIYINDA saqlanadi ---
@@ -1126,6 +1182,7 @@ create or replace package body Ipt_Catalog is
   is
     vItem  json_object_t := json_object_t();
     vColor json_object_t;
+    vUnit  json_object_t;
   begin
     -- Id endi matn: yangi tovarda konfiguratsiyadan yasalgan kalit,
     -- ishlatilganda ombor qatorining raqami. to_char kerak emas.
@@ -1172,6 +1229,19 @@ create or replace package body Ipt_Catalog is
         vItem.put('replaced_parts', Build_Replaced_Parts(iRow.Replaced_Parts));
       end if;
     end if;
+
+    -- Fiskal maydonlar: sayt onlayn to'lov chekini shular bilan yig'adi
+    Put_Str(vItem, 'mxik_code', iRow.Mxik_Code);
+
+    if iRow.Unit_Code is not null then
+      vUnit := json_object_t();
+      vUnit.put('code', iRow.Unit_Code);
+      Put_Str(vUnit, 'name_ru', iRow.Unit_Name_Ru);
+      Put_Str(vUnit, 'name_uz', iRow.Unit_Name_Uz);
+      vItem.put('unit', vUnit);
+    end if;
+
+    Put_Num(vItem, 'vat_rate', iRow.Vat_Rate);
 
     vItem.put('images', Build_Images(iRow.Model_Code));
     vItem.put('attributes', Build_Attributes(iRow.Model_Code));

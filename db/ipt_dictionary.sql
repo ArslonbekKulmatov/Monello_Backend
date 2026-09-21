@@ -36,6 +36,7 @@ create table IPT_S_DICTIONARIES
   pk_column     VARCHAR2(30) default 'CODE' not null,
   pk_type       VARCHAR2(1)  default 'S' not null,
   pk_max_len    NUMBER(6),
+  seq_name      VARCHAR2(60),
   state_column  VARCHAR2(30),
   order_column  VARCHAR2(30),
   state_active  VARCHAR2(2) default 'A',
@@ -51,6 +52,8 @@ comment on table IPT_S_DICTIONARIES
   is 'Tahrirlanadigan ma''lumotnomalar ro''yxati. Yangi ma''lumotnoma shu yerga qator qo''shish bilan qo''shiladi';
 comment on column IPT_S_DICTIONARIES.pk_type
   is 'S - matn kod, N - son kod';
+comment on column IPT_S_DICTIONARIES.seq_name
+  is 'Son kod uchun ketma-ketlik nomi. Berilgan bo''lsa forma kodni so''ramaydi, baza o''zi qo''yadi';
 comment on column IPT_S_DICTIONARIES.state_column
   is 'Faol/nofaol ustuni nomi: CONDITION yoki STATE. Yo''q bo''lsa NULL';
 comment on column IPT_S_DICTIONARIES.order_column
@@ -386,6 +389,10 @@ create or replace package body Ipt_Dictionary is
     vDict.Table_Name := Safe_Name(vDict.Table_Name);
     vDict.Pk_Column  := Safe_Name(vDict.Pk_Column);
 
+    if vDict.Seq_Name is not null then
+      vDict.Seq_Name := Safe_Name(vDict.Seq_Name);
+    end if;
+
     return vDict;
   end;
 
@@ -582,6 +589,9 @@ create or replace package body Ipt_Dictionary is
       Put_Str(vDict, 'name_uz', d.name_uz);
       vDict.put('pk_column', lower(d.pk_column));
       vDict.put('pk_type', d.pk_type);
+      -- Y bo'lsa forma qo'shishda kod maydonini so'ramaydi: dictSave ga
+      -- "code" siz yuboriladi, kodni baza qo'yadi.
+      vDict.put('auto_code', d.seq_name is not null);
 
       if d.pk_max_len is not null then
         vDict.put('pk_max_len', d.pk_max_len);
@@ -764,7 +774,7 @@ create or replace package body Ipt_Dictionary is
     vCursor   integer;
     vDummy    integer;
     vExists   pls_integer;
-    vIsNew    boolean;
+    vIsNew    boolean := false;
     vUsed     pls_integer := 0;
     vBindName varchar2(40);
 
@@ -781,6 +791,14 @@ create or replace package body Ipt_Dictionary is
     vCols := Get_Cols(vDict.Code);
 
     vPk := trim(Json_Scalar(vParams, 'code'));
+
+    -- Kodi ma'noga ega bo'lmagan ma'lumotnomalarda (masalan nom tahlili
+    -- qoidalari) kodni forma emas, baza qo'yadi: qo'shishda "code" bo'sh
+    -- keladi. Tahrirda esa har doim to'ladi.
+    if vPk is null and vDict.Seq_Name is not null then
+      execute immediate 'select '||vDict.Seq_Name||'.nextval from dual' into vPk;
+      vIsNew := true;
+    end if;
 
     if vPk is null then
       Ipt_Methods.Raise_Error('"code" ko''rsatilmagan.');
@@ -806,11 +824,13 @@ create or replace package body Ipt_Dictionary is
       Ipt_Methods.Raise_Error('"values" ko''rsatilmagan.');
     end if;
 
-    execute immediate
-      'select count(*) from '||vDict.Table_Name||' where '||vDict.Pk_Column||' = :p'
-      into vExists using vPk;
+    if not vIsNew then
+      execute immediate
+        'select count(*) from '||vDict.Table_Name||' where '||vDict.Pk_Column||' = :p'
+        into vExists using vPk;
 
-    vIsNew := (vExists = 0);
+      vIsNew := (vExists = 0);
+    end if;
 
     if vIsNew and vDict.Can_Insert = 'N' then
       Ipt_Methods.Raise_Error('"'||vDict.Name_Ru||'" ma''lumotnomasiga yangi qator '||

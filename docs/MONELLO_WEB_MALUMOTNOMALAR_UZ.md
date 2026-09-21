@@ -52,6 +52,7 @@ ma'lumotnoma × ~4 ustun.
       "pk_column": "code",
       "pk_type": "S",
       "pk_max_len": 30,
+      "auto_code": false,
       "state_column": "condition",
       "can_insert": true,
       "can_delete": true,
@@ -85,6 +86,17 @@ backend o'zi o'giradi.
 Qaysi ustun "faol/nofaol" ekanini aytadi. U `columns` ichida ham bor
 (odatda `L` turi bilan), shuning uchun alohida ishlov shart emas — lekin
 gridda uni rang yoki belgi bilan ajratib ko'rsatish qulay.
+
+### `auto_code`
+
+`true` bo'lsa kod ma'noga ega emas — uni baza ketma-ketlikdan o'zi qo'yadi.
+Bunday ma'lumotnomada qo'shish oynasida **kod maydonini umuman
+ko'rsatmang**, `dictSave` ga `code` siz yuboring; javobda berilgan kod
+qaytadi. Tahrirlashda `code` har doim yuboriladi.
+
+Hozircha bitta shunday ma'lumotnoma bor: **Nom tahlili qoidalari**
+(`parse_aliases`). Qolganlarida `auto_code` yo'q yoki `false` — kodni
+foydalanuvchi yozadi.
 
 ### `can_insert` / `can_delete`
 

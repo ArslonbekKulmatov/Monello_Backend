@@ -13,50 +13,46 @@
 
 ## 1. Qisqa javob
 
-**Ikkita subdomen oling, bitta emas:**
+**Ikkita subdomen: biri front, biri butun backend.**
 
-| Subdomen | Nima turadi | Kim ishlatadi |
-|---|---|---|
-| `monello.abmstore.uz` | ERP front + uning to'liq API'si | **xodimlar** |
-| `monello-api.abmstore.uz` | faqat katalog/hisobot API va rasmlar | **ABM Store sayti** |
+| Subdomen | Nima turadi | Port | Kim ishlatadi |
+|---|---|---|---|
+| `monello.abmstore.uz` | faqat front | 4201 | xodimlar |
+| `monello-api.abmstore.uz` | **butun Monello backend API** + katalog rasmlari | 9999 | xodimlar va ABM Store sayti |
 
 Ikkalasi ham o'sha bitta serverga (`37.140.216.159`) ketadi, oldida nginx
-turadi. Port raqamlari (`4201`, `9999`) tashqariga umuman chiqmaydi.
+turadi. Port raqamlari tashqariga umuman chiqmaydi.
 
-### Nega ikkita?
+Bu — tanlangan variant: vazifalar bo'yicha toza bo'linish. Front bir
+joyda, API bir joyda; ikkalasini keyinchalik boshqa serverga ajratish
+ham oson.
 
-`/api/app/request` — bu **butun ERP**. Mijozlar, sdelkalar, to'lovlar,
-hujjatlar — hammasi shu bitta yo'ldan o'tadi. U JWT bilan himoyalangan,
-lekin sayt jamoasiga beriladigan spetsifikatsiyada turadigan manzil bilan
-bir xil bo'lishi shart emas.
+### Nimaga e'tibor berish kerak
 
-Ikkiga ajratsangiz:
+Butun API bitta manzilda turgani uchun sayt jamoasi biladigan hostda
+`/api/app/request` ham ochiq bo'ladi — bu butun ERP kiradigan yo'l.
+Uni ushlab turadigan narsalar:
 
-- Saytga beriladigan manzilda **faqat** `/api/catalog/` va `/api/report/`
-  ochiq bo'ladi. Qolgani o'sha subdomenda umuman yo'q — 404.
-- Keyinchalik `monello.` ni IP bo'yicha cheklash yoki VPN orqasiga olish
-  mumkin, sayt esa ishlayveradi.
-- Sayt API'sini boshqa serverga ko'chirsangiz, sayt jamoasining
-  sozlamasi o'zgarmaydi.
+| To'siq | Nimani ushlaydi |
+|---|---|
+| `/api/app/request` — JWT majburiy | tizimga kirmagan hech kim o'tmaydi |
+| `/api/catalog/`, `/api/report/` — token **qamrovi** | katalog tokeni hisobotga kira olmaydi, aksincha ham |
+| `Ipt_Dashboard.Check_Access` | hisobotni faqat `report` tokeni ko'radi |
+| Metodlar ichidagi `Check_For_Seller` | katalog va chat metodlari uchun rol sharti |
 
-Qo'shimcha xarajat yo'q: bitta nginx, bitta sertifikat buyrug'i, ikkita
-`server` bloki.
+Ya'ni chegara **tokenning qamrovi** bo'ladi, host emas. U allaqachon
+qurilgan va ishlaydi.
 
-### Agar soddaroq yo'l kerak bo'lsa
+Keyinchalik kerak bo'lsa `/api/app/` ni nginx'da IP bo'yicha cheklash
+bir necha qator ish — 3.4-bo'limda tayyor turibdi, hozir o'chirilgan.
 
-Bitta subdomen ham ishlaydi: `monello.abmstore.uz`, front `/` da, API
-`/api/` da. Lekin u holda ERP ning butun yuzasi sayt jamoasi biladigan
-manzilda ochiq turadi. Boshidan ikkiga ajratish keyin ajratishdan arzon.
+### Nomlar
 
-### Nomlar — tanlangan
-
-`monello-api.` generik `api.` dan yaxshiroq: `api.abmstore.uz` keyinchalik
-do'konning o'z API'si uchun kerak bo'lib qolishi mumkin, u holda ikkitasi
-bir nomga da'vogar bo'lardi.
+`monello-api.` generik `api.` dan yaxshiroq: `api.abmstore.uz`
+keyinchalik do'konning o'z API'si uchun kerak bo'lib qolishi mumkin.
 
 `erp.abmstore.uz` ishlatilmaydi: u avvalgi spetsifikatsiyada o'rinbosar
-sifatida turgan va sayt jamoasi uni sinab ko'rib chalkashgan edi. O'sha
-nomni endi haqiqiy qilib qo'yish yana chalkashtiradi.
+sifatida turgan va sayt jamoasi uni sinab ko'rib chalkashgan edi.
 
 ---
 
@@ -131,13 +127,10 @@ server {
     ssl_certificate     /etc/letsencrypt/live/monello.abmstore.uz/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/monello.abmstore.uz/privkey.pem;
 
-    # Rasm yuklash 10 MB gacha — zapas bilan
-    client_max_body_size 12m;
-
     access_log /var/log/nginx/monello.access.log;
     error_log  /var/log/nginx/monello.error.log;
 
-    # --- Front ---
+    # Bu yerda faqat front. API monello-api.abmstore.uz da.
     location / {
         proxy_pass http://127.0.0.1:4201;
         proxy_http_version 1.1;
@@ -148,24 +141,10 @@ server {
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
-
-    # --- Backend ---
-    location /api/ {
-        proxy_pass http://127.0.0.1:9999/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Host              $host;
-        proxy_set_header X-Real-IP         $remote_addr;
-        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Chat javobi uzoq kelishi mumkin
-        proxy_read_timeout 300s;
-        proxy_send_timeout 300s;
-    }
 }
 ```
 
-### 3.3 `monello-api.abmstore.uz` — sayt uchun
+### 3.3 `monello-api.abmstore.uz` — butun backend
 
 `/etc/nginx/sites-available/monello-api.abmstore.uz`:
 
@@ -184,11 +163,16 @@ server {
     ssl_certificate     /etc/letsencrypt/live/monello-api.abmstore.uz/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/monello-api.abmstore.uz/privkey.pem;
 
-    access_log /var/log/nginx/api.access.log;
-    error_log  /var/log/nginx/api.error.log;
+    # Rasm yuklash 10 MB gacha — zapas bilan
+    client_max_body_size 12m;
+
+    access_log /var/log/nginx/monello-api.access.log;
+    error_log  /var/log/nginx/monello-api.error.log;
 
     # --- Katalog rasmlari: to'g'ridan-to'g'ri diskdan ---
-    # Java umuman ishtirok etmaydi. Sababi 5-bo'limda.
+    # Java umuman ishtirok etmaydi. Sababi 7-bo'limda.
+    # Bu blok /api/ dan YUQORIDA turishi kerak emas — yo'llari
+    # kesishmaydi, lekin tartib o'qishga qulay.
     location /files/catalog/ {
         alias /opt/monello71/files/catalog/;
         try_files $uri =404;
@@ -200,7 +184,9 @@ server {
         access_log off;
     }
 
-    # --- Sayt oladigan API ---
+    # --- Sayt oladigan yo'llar: chegara bilan ---
+    # Ular tashqi tarmoqdan keladi, shuning uchun sekundiga 10 so'rov.
+    # Xodimlar yo'llariga bu chegara qo'yilmaydi.
     location /api/catalog/ {
         limit_req zone=api_zone burst=20 nodelay;
         proxy_pass http://127.0.0.1:9999/api/catalog/;
@@ -219,11 +205,51 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Qolgan hamma narsa yo'q
+    # --- Qolgan butun API ---
+    location /api/ {
+        proxy_pass http://127.0.0.1:9999/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Chat javobi uzoq kelishi mumkin
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    # API dan boshqa narsa bu yerda yo'q
     location / {
         return 404;
     }
 }
+```
+
+### 3.4 Keyinroq: `/api/app/` ni IP bo'yicha cheklash
+
+Hozir kerak emas, lekin kerak bo'lsa tayyor. Ofis IP manzili doimiy
+bo'lsa, ERP yo'lini faqat o'sha manzilga ochish mumkin — sayt oladigan
+`/api/catalog/` va `/api/report/` tegilmaydi:
+
+```nginx
+    location /api/app/ {
+        allow 213.xxx.xxx.0/24;   # ofis
+        allow 37.140.216.159;     # serverning o'zi
+        deny  all;
+
+        proxy_pass http://127.0.0.1:9999/api/app/;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+    }
+```
+
+Nginx aniqroq `location` ni tanlaydi, shuning uchun bu blok yuqoridagi
+`/api/` dan ustun bo'ladi. Xodimlar uydan ishlasa bu to'siq halaqit
+beradi — shuning uchun hozir qo'yilmadi.
 ```
 
 Yoqish:
@@ -325,18 +351,21 @@ Keyin brauzerda bitta rasmni ochib ko'ring.
 
 ### 6.2 Front
 
-API manzili endi **nisbiy** bo'lsin: `/api/...`, to'liq host bilan emas.
-Front va backend bir xil subdomenda turgani uchun bu ishlaydi va
-kelajakda host o'zgarsa front tegilmaydi.
+Front va API **turli subdomenda** turgani uchun API manzili to'liq
+yozilishi kerak — nisbiy `/api` ishlamaydi.
 
 Angular `environment.prod.ts`:
 
 ```ts
 export const environment = {
   production: true,
-  apiUrl: '/api'
+  apiUrl: 'https://monello-api.abmstore.uz/api'
 };
 ```
+
+Manzil bitta joyda turgani muhim: keyin host o'zgarsa shu bitta qator
+tuzatiladi. Xizmatlar ichida `http://37.140.216.159:9999` qotirib
+yozilgan joy qolmasin — qidirib chiqing.
 
 > **Alohida masala:** `4201` porti `ng serve` ga o'xshaydi. Agar
 > shunday bo'lsa, ishlab chiqarish uchun `ng build --configuration
@@ -351,7 +380,35 @@ export const environment = {
 > location / { try_files $uri $uri/ /index.html; }
 > ```
 
-### 6.3 Spring
+### 6.3 CORS — tekshirildi, ishlaydi
+
+Front `monello.abmstore.uz` dan `monello-api.abmstore.uz` ga murojaat
+qiladi. Bu **boshqa origin**, ya'ni brauzer CORS qoidalarini qo'llaydi.
+
+Kodni ko'rib chiqdim, qo'shimcha sozlash kerak emas:
+
+| Nima | Holati |
+|---|---|
+| Kontrollerlarda `@CrossOrigin(origins = "*", maxAge = 3600)` | `CApp`, `CAuth`, `CUser`, `CDocument`, `CChat` — hammasida bor |
+| Autentifikatsiya | `Authorization: Bearer <JWT>` sarlavhasida |
+| Cookie bilan sessiya | ishlatilmaydi |
+
+**Cookie emas, sarlavha bo'lgani muhim.** `Access-Control-Allow-Origin: *`
+bo'lganda brauzer cookie yubormaydi — agar tizim sessiya cookie'siga
+tayangan bo'lsa, frontni boshqa subdomenga ko'chirish login'ni buzardi.
+Bu yerda JWT sarlavhada ketadi, shuning uchun muammo yo'q.
+
+Bitta o'zgarish seziladi: endi har bir so'rovdan oldin brauzer `OPTIONS`
+(preflight) yuboradi — `Authorization` sarlavhasi shuni talab qiladi.
+`maxAge = 3600` tufayli javob bir soat keshlanadi, ya'ni qo'shimcha
+so'rov soatiga bir marta. Nginx `OPTIONS` ni o'zi o'tkazib yuboradi,
+alohida sozlash shart emas.
+
+> `WebConfig.java` dagi global CORS sozlamasi **o'chirilgan**
+> (`//@Configuration`). Uni yoqmang — kontrollerlardagi annotatsiyalar
+> bilan ikki marta sozlash bir-biriga xalaqit berishi mumkin.
+
+### 6.4 Spring
 
 `application.properties` ga:
 
@@ -366,7 +423,7 @@ server.servlet.session.cookie.http-only=true
 
 Birinchisisiz loglarda hamma so'rov `127.0.0.1` dan kelgandek ko'rinadi.
 
-### 6.4 Sayt jamoasiga yangi manzil
+### 6.5 Sayt jamoasiga yangi manzil
 
 Ularga beriladigan bazaviy manzil:
 
@@ -437,7 +494,7 @@ diskdan beradi, kesh sarlavhalari bilan. Java umuman qatnashmaydi.
 | 3 | 80/443 portlarni ochish | server | tashqaridan `curl -I http://monello.abmstore.uz` |
 | 4 | Certbot bilan sertifikat | server | `sudo certbot renew --dry-run` |
 | 5 | `catalog_file_url` ni yangilash | baza | brauzerda rasm ochiladi |
-| 6 | Front `apiUrl` ni `/api` ga o'tkazish | front | login ishlaydi |
+| 6 | Front `apiUrl` ni to'liq manzilga o'tkazish | front | login ishlaydi, konsolda CORS xatosi yo'q |
 | 7 | Spring `forward-headers-strategy` | backend | logda haqiqiy IP |
 | 8 | `4201` va `9999` ni yopish | server | tashqaridan ochilmasligi |
 | 9 | Sayt jamoasiga yangi manzil | biz | ularning sinovi |
@@ -460,8 +517,13 @@ curl -I https://monello-api.abmstore.uz/api/catalog/products   # 401 kutiladi (t
 # HTTP dan HTTPS ga yo'naltirish
 curl -I http://monello.abmstore.uz            # 301 kutiladi
 
-# Sayt subdomenida ERP yopiqligi
-curl -i https://monello-api.abmstore.uz/api/app/request   # 404 kutiladi
+# ERP yo'li ochiq, lekin JWT so'raydi
+curl -i -X POST https://monello-api.abmstore.uz/api/app/request \
+     -H 'Content-Type: application/json' -d '{"method":"test"}'
+#   401/403 kutiladi — 200 kelsa TO'XTANG va ayting
+
+# API subdomenida front yo'qligi
+curl -I https://monello-api.abmstore.uz/            # 404 kutiladi
 
 # Rasm nginx'dan kelyaptimi
 curl -I https://monello-api.abmstore.uz/files/catalog/<fayl-nomi>.jpg
@@ -469,7 +531,11 @@ curl -I https://monello-api.abmstore.uz/files/catalog/<fayl-nomi>.jpg
 ```
 
 Brauzerda: front ochilsin, login ishlasin, katalog rasmi ko'rinsin,
-konsolda "mixed content" ogohlantirishi bo'lmasin.
+konsolda "mixed content" va **CORS** ogohlantirishi bo'lmasin.
+
+> CORS xatosi chiqsa, brauzer konsolida u aniq yoziladi: "blocked by
+> CORS policy". U holda 6.3-bo'limga qarang — kontrollerda
+> `@CrossOrigin` yo'q bo'lishi mumkin.
 
 > **Aralash kontent.** Sayt `https` da bo'lib, rasm havolasi `http`
 > bo'lsa brauzer rasmni **bloklaydi**. 5-qadam shuning uchun majburiy,

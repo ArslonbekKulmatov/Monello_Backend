@@ -452,8 +452,9 @@ create or replace package body Ipt_Catalog is
   Procedure Apply_Catalog_Fields(iParams   json_object_t,
                                  ioProduct in out nocopy ipt_products%rowtype)
   is
-    vCount pls_integer;
-    vPrice number;
+    vCount        pls_integer;
+    vPrice        number;
+    vIs_Container pls_integer;
   begin
     -- --- matn maydonlari, tekshiruvsiz ---
     Read_Str(iParams, 'model_name',     ioProduct.Model_Name);
@@ -490,11 +491,24 @@ create or replace package body Ipt_Catalog is
       ioProduct.Category_Code := trim(iParams.get_String('category_code'));
 
       if ioProduct.Category_Code is not null then
-        select count(*) into vCount from ipt_s_categories c
-         where c.code = ioProduct.Category_Code and c.condition = 'A';
+        begin
+          select c.is_container into vIs_Container
+            from ipt_s_categories c
+           where c.code = ioProduct.Category_Code
+             and c.condition = 'A';
+        exception
+          when no_data_found then
+            Ipt_Methods.Raise_Error('Bunday kategoriya yo''q yoki faol emas: '||
+                                    ioProduct.Category_Code);
+        end;
 
-        if vCount = 0 then
-          Ipt_Methods.Raise_Error('Bunday kategoriya yo''q yoki faol emas: '||ioProduct.Category_Code);
+        -- Konteyner bo'lim saytda ro'yxat bo'lib ko'rinadi, tovar esa aniq
+        -- bo'limga tushishi kerak. Sayt jamoasi 21.09.2026 da shuni so'radi:
+        -- "accessories" va "used" ga tovar qo'yilmaydi.
+        if vIs_Container = 1 then
+          Ipt_Methods.Raise_Error('"'||ioProduct.Category_Code||'" — konteyner bo''lim, '||
+                                  'unga tovar qo''yilmaydi. Aniq bo''limni tanlang: '||
+                                  'aksessuar uchun acc-*, ishlatilgan texnika uchun *-bu.');
         end if;
       end if;
     end if;

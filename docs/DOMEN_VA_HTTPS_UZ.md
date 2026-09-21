@@ -18,7 +18,7 @@
 | Subdomen | Nima turadi | Kim ishlatadi |
 |---|---|---|
 | `monello.abmstore.uz` | ERP front + uning to'liq API'si | **xodimlar** |
-| `api.abmstore.uz` | faqat katalog/hisobot API va rasmlar | **ABM Store sayti** |
+| `monello-api.abmstore.uz` | faqat katalog/hisobot API va rasmlar | **ABM Store sayti** |
 
 Ikkalasi ham o'sha bitta serverga (`37.140.216.159`) ketadi, oldida nginx
 turadi. Port raqamlari (`4201`, `9999`) tashqariga umuman chiqmaydi.
@@ -48,13 +48,15 @@ Bitta subdomen ham ishlaydi: `monello.abmstore.uz`, front `/` da, API
 `/api/` da. Lekin u holda ERP ning butun yuzasi sayt jamoasi biladigan
 manzilda ochiq turadi. Boshidan ikkiga ajratish keyin ajratishdan arzon.
 
-### Nom tanlash haqida
+### Nomlar — tanlangan
 
-`erp.abmstore.uz` ham bo'laveradi, lekin `monello.` ni tavsiya qilaman:
-xodimlar tizimni shu nom bilan biladi. `erp.abmstore.uz` nomi avvalgi
-spetsifikatsiyada o'rinbosar sifatida ishlatilgan va sayt jamoasi uni
-sinab ko'rib chalkashgan edi — o'sha nomni endi haqiqiy qilib qo'yish
-yana chalkashtirishi mumkin.
+`monello-api.` generik `api.` dan yaxshiroq: `api.abmstore.uz` keyinchalik
+do'konning o'z API'si uchun kerak bo'lib qolishi mumkin, u holda ikkitasi
+bir nomga da'vogar bo'lardi.
+
+`erp.abmstore.uz` ishlatilmaydi: u avvalgi spetsifikatsiyada o'rinbosar
+sifatida turgan va sayt jamoasi uni sinab ko'rib chalkashgan edi. O'sha
+nomni endi haqiqiy qilib qo'yish yana chalkashtiradi.
 
 ---
 
@@ -65,7 +67,7 @@ Domen panelida ikkita `A` yozuv:
 | Nomi | Turi | Qiymati | TTL |
 |---|---|---|---|
 | `monello` | A | `37.140.216.159` | 300 |
-| `api` | A | `37.140.216.159` | 300 |
+| `monello-api` | A | `37.140.216.159` | 300 |
 
 TTL ni boshida 300 (5 daqiqa) qo'ying — xato bo'lsa tez tuzatasiz.
 Hammasi ishlagach 3600 ga ko'taring.
@@ -74,7 +76,7 @@ Tekshirish:
 
 ```bash
 dig +short monello.abmstore.uz
-dig +short api.abmstore.uz
+dig +short monello-api.abmstore.uz
 ```
 
 Ikkalasi ham `37.140.216.159` qaytarishi kerak. DNS tarqalishi
@@ -163,24 +165,24 @@ server {
 }
 ```
 
-### 3.3 `api.abmstore.uz` — sayt uchun
+### 3.3 `monello-api.abmstore.uz` — sayt uchun
 
-`/etc/nginx/sites-available/api.abmstore.uz`:
+`/etc/nginx/sites-available/monello-api.abmstore.uz`:
 
 ```nginx
 server {
     listen 80;
-    server_name api.abmstore.uz;
+    server_name monello-api.abmstore.uz;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
     http2 on;
-    server_name api.abmstore.uz;
+    server_name monello-api.abmstore.uz;
 
-    ssl_certificate     /etc/letsencrypt/live/api.abmstore.uz/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/api.abmstore.uz/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/monello-api.abmstore.uz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/monello-api.abmstore.uz/privkey.pem;
 
     access_log /var/log/nginx/api.access.log;
     error_log  /var/log/nginx/api.error.log;
@@ -228,7 +230,7 @@ Yoqish:
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/monello.abmstore.uz /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/api.abmstore.uz     /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/monello-api.abmstore.uz /etc/nginx/sites-enabled/
 sudo nginx -t          # sintaksis tekshiruvi
 sudo systemctl reload nginx
 ```
@@ -245,7 +247,7 @@ sudo apt install certbot python3-certbot-nginx
 
 sudo certbot --nginx \
   -d monello.abmstore.uz \
-  -d api.abmstore.uz \
+  -d monello-api.abmstore.uz \
   --agree-tos -m <sizning-pochtangiz> --redirect
 ```
 
@@ -304,7 +306,7 @@ Angular dev-server uchun `--host 127.0.0.1`.
 
 ```sql
 update core_properties
-   set param_value = 'https://api.abmstore.uz/files/catalog/'
+   set param_value = 'https://monello-api.abmstore.uz/files/catalog/'
  where param_name = 'catalog_file_url';
 commit;
 ```
@@ -369,11 +371,15 @@ Birinchisisiz loglarda hamma so'rov `127.0.0.1` dan kelgandek ko'rinadi.
 Ularga beriladigan bazaviy manzil:
 
 ```
-https://api.abmstore.uz/api/catalog/
+https://monello-api.abmstore.uz/api/catalog/
 ```
 
-`ABM_STORE_KATALOG_API_RU.md` dagi misollarni shunga qarab yangilash
-kerak — ayting, men qilib beraman.
+> **Manzilni DNS ishlagandan KEYIN bering.** Spetsifikatsiyada hali
+> ochilmaydigan host turishi bir marta bo'lgan: sayt jamoasi
+> `erp.abmstore.uz` ni sinab ko'rib, mavjud emasligini aytgan edi.
+> Shuning uchun `ABM_STORE_KATALOG_API_RU.md` hozircha ishlaydigan IP
+> bilan qoldirildi — 4-qadam bajarilib, `curl` javob bergach ayting,
+> men yangilab beraman.
 
 ---
 
@@ -397,7 +403,7 @@ fayllarda.
 
 **Shuning uchun** yuqoridagi nginx konfiguratsiyasida katalog rasmlari
 `/files/catalog/` dan beriladi: o'sha bitta papka ochiq bo'ladi, qolgani
-emas. `/api/app/` esa `api.abmstore.uz` da umuman yo'q.
+emas. `/api/app/` esa `monello-api.abmstore.uz` da umuman yo'q.
 
 Tekshirib ko'ring, o'sha papkada nima borligini:
 
@@ -449,16 +455,16 @@ Domen ishga tushgach:
 ```bash
 # Sertifikat va sxema
 curl -I https://monello.abmstore.uz
-curl -I https://api.abmstore.uz/api/catalog/products   # 401 kutiladi (tokensiz)
+curl -I https://monello-api.abmstore.uz/api/catalog/products   # 401 kutiladi (tokensiz)
 
 # HTTP dan HTTPS ga yo'naltirish
 curl -I http://monello.abmstore.uz            # 301 kutiladi
 
 # Sayt subdomenida ERP yopiqligi
-curl -i https://api.abmstore.uz/api/app/request   # 404 kutiladi
+curl -i https://monello-api.abmstore.uz/api/app/request   # 404 kutiladi
 
 # Rasm nginx'dan kelyaptimi
-curl -I https://api.abmstore.uz/files/catalog/<fayl-nomi>.jpg
+curl -I https://monello-api.abmstore.uz/files/catalog/<fayl-nomi>.jpg
 #   Server: nginx bo'lsin, Cache-Control: public, immutable bo'lsin
 ```
 

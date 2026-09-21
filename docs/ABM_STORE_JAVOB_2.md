@@ -1,8 +1,7 @@
 # Ответ ABM Store — по шести уточнениям
 
-> **Арслонбек, перед отправкой заполните три места, отмеченные 〈…〉:**
-> срок по `phys_filial_code` (п. 4), боевой домен (п. 5) и решение по МХИК (п. 6).
-> Остальное готово.
+> **Арслонбек, осталось заполнить одно место, отмеченное 〈…〉:**
+> срок по `phys_filial_code` (п. 4). Остальное готово.
 
 ---
 
@@ -56,13 +55,25 @@
 
 **5. Адреса.**
 
-- **HTTPS — принято.** Постоянный токен в открытом виде недопустим, здесь
-  вы правы.
 - **`erp.abmstore.uz` не открывается, потому что этого хоста не существует** —
   в спецификации он стоял как заполнитель в примерах, и это наша недоработка:
   выглядел как настоящий. Извините за потерянное время.
-- Боевой адрес API и фотографий — один и тот же хост: 〈домен〉. Фотографии
-  отдаются по `https://〈домен〉/api/app/get-file?file=…`, без авторизации.
+- **Боевой адрес сейчас — `http://37.140.216.159:9999`.** API и фотографии
+  на одном хосте, фотографии по
+  `http://37.140.216.159:9999/api/app/get-file?file=…`, без авторизации.
+- **HTTPS — принято, но пока домена нет.** Сертификат на голый IP получить
+  нельзя, поэтому переход упирается в домен; займёмся им.
+
+**Что это значит для вас прямо сейчас.** Ваш сайт на `https`, наши
+фотографии на `http` — браузер их заблокирует, карточки будут без картинок.
+Это не настройка, а правило браузера, и обойти его с нашей стороны нельзя.
+Пока домена нет, единственный рабочий вариант: **забирайте фотографию к себе
+и отдавайте со своего https**. Заодно это снимет нагрузку с нашего сервера.
+
+**Про токен.** Вы правы, по `http` он уходит открытым. До перехода на
+`https` предлагаем ограничить доступ по IP — пришлите адрес вашего сервера,
+и токен станет бесполезен для всех остальных. После перехода на `https`
+выпустим новый токен, старый погасим: тот какое-то время ходил открытым.
 
 **6. МХИК, единица измерения, ставка НДС — этих полей у нас нет.**
 
@@ -71,15 +82,19 @@
 чеки там и выбиваются, то кассовым ПО, а не этой системой, и к нам эти
 значения не попадают.
 
-Два варианта:
+**Решили завести их у себя.** Три поля уже добавлены, заполнять их будут
+через нашу админку вместе с остальной карточкой:
 
-1. **Заводим поля у себя** — добавляем три поля в карточку товара, и кто-то
-   проставляет их для восьмисот позиций. Работа ручная и небыстрая.
-2. **Вы берёте их оттуда, где они уже есть** — из кассового ПО или из
-   номенклатуры, которую ведёт бухгалтерия.
+| Поле | Тип | Примечание |
+|---|---|---|
+| `mxik_code` | строка | МХИК, только цифры |
+| `unit` | объект | `{code, name_ru, name_uz}` — единица измерения |
+| `vat_rate` | число | Ставка НДС **в процентах**: `12` это 12% |
 
-Скажите, где МХИК ведётся сегодня, и мы поймём, какой вариант дешевле.
-Наш выбор: 〈вариант 1 / вариант 2〉.
+Обратите внимание на `vat_rate`: это проценты, не доля и не копейки.
+
+Появятся в выдаче по мере заполнения — как и остальные поля, незаполненное
+просто не приходит.
 
 ---
 
@@ -134,14 +149,29 @@ kerak bo'ladi.
 
 **5. Manzillar.**
 
-- **HTTPS — qabul qilindi.** Doimiy token ochiq matnda ketishi mumkin emas,
-  bu yerda haqsiz.
 - **`erp.abmstore.uz` ochilmaydi, chunki bunday xost yo'q** — u
   spetsifikatsiyada misollar uchun o'rinbosar sifatida turgan edi, va bu
   bizning kamchiligimiz: haqiqiydek ko'rinibdi. Yo'qotilgan vaqt uchun uzr.
-- API va rasmlarning asosiy manzili — bitta xost: 〈domen〉. Rasmlar
-  `https://〈domen〉/api/app/get-file?file=…` orqali, avtorizatsiyasiz
-  beriladi.
+- **Hozirgi manzil — `http://37.140.216.159:9999`.** API ham, rasmlar ham
+  shu xostda; rasmlar
+  `http://37.140.216.159:9999/api/app/get-file?file=…` orqali,
+  avtorizatsiyasiz.
+- **HTTPS — qabul qilindi, lekin hozircha domen yo'q.** Yalang'och IP ga
+  sertifikat olib bo'lmaydi, shuning uchun o'tish domenga bog'liq; shu
+  bilan shug'ullanamiz.
+
+**Bu siz uchun hozir nimani anglatadi.** Saytingiz `https`, rasmlarimiz
+`http` — brauzer ularni bloklaydi va kartochkalar rasmsiz chiqadi. Bu
+sozlama emas, brauzerning qoidasi, uni biz tomondan chetlab o'tib bo'lmaydi.
+Domen olinmaguncha yagona ishlaydigan yo'l: **rasmni o'zingizga ko'chirib
+olib, o'z https manzilingizdan bering**. Bu ayni paytda bizning serverimizga
+yukni ham kamaytiradi.
+
+**Token haqida.** Haqsiz, `http` orqali u ochiq ketadi. `https` ga
+o'tgunimizcha IP bo'yicha cheklashni taklif qilamiz — serveringiz manzilini
+yuboring, shunda token qolganlar uchun foydasiz bo'ladi. `https` ga
+o'tgandan keyin yangi token chiqaramiz, eskisini bekor qilamiz: u bir muddat
+ochiq yurgan.
 
 **6. MXIK, o'lchov birligi, QQS stavkasi — bu maydonlar bizda yo'q.**
 
@@ -150,16 +180,19 @@ yonida bor. Siz ularni do'kondagi savdo uchun allaqachon yuritamiz deb
 o'ylabsiz — agar u yerda fiskal chek chiqarilsa ham, buni kassa dasturi
 qiladi, bu tizim emas, va o'sha qiymatlar bizga kelmaydi.
 
-Ikki yo'l:
+**O'zimizda ochishga qaror qildik.** Uchta maydon allaqachon qo'shildi,
+ularni admin panelimiz orqali qolgan kartochka bilan birga to'ldiramiz:
 
-1. **Maydonlarni o'zimizda ochamiz** — tovar kartochkasiga uchta maydon
-   qo'shiladi va kimdir ularni sakkiz yuz pozitsiya uchun to'ldiradi. Bu
-   qo'l mehnati va tez emas.
-2. **Siz ularni bor joyidan olasiz** — kassa dasturidan yoki buxgalteriya
-   yuritadigan nomenklaturadan.
+| Maydon | Turi | Izoh |
+|---|---|---|
+| `mxik_code` | matn | MXIK, faqat raqam |
+| `unit` | obyekt | `{code, name_ru, name_uz}` — o'lchov birligi |
+| `vat_rate` | son | QQS stavkasi **foizda**: `12` bu 12% |
 
-MXIK bugun qayerda yuritilishini ayting, shunda qaysi yo'l arzonroq ekani
-ma'lum bo'ladi. Bizning tanlovimiz: 〈1-variant / 2-variant〉.
+`vat_rate` ga e'tibor bering: bu foiz, ulush ham, tiyin ham emas.
+
+To'ldirilgan sari javobda paydo bo'ladi — qolgan maydonlar kabi,
+to'ldirilmagani umuman kelmaydi.
 
 ---
 

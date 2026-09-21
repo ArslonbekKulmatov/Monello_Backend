@@ -216,15 +216,19 @@ shoxida. Baza skriptlari qo'llangani bilan bu qism ishlamaydi.
 Ikki qator, lekin yettinchi shart shu. Qo'yilmasa qolgan hamma maydon
 to'ldirilgan bo'lsa ham **hech bir tovar** saytga chiqmaydi.
 
-- [ ] Filiallarni ko'rish va kodlarni aniqlash:
+- [x] Filiallarni ko'rish va kodlarni aniqlash:
 
       select code, name, type from ipt_s_filials order by code;
 
-- [ ] Belgilash:
+- [x] Belgilash — **bajarilgan**:
 
-      update ipt_s_filials set site_code = 'mirobod' where code = '?????';
-      update ipt_s_filials set site_code = 'sebzor'  where code = '?????';
+      update ipt_s_filials set site_code = 'mirobod' where code = '01030';
+      update ipt_s_filials set site_code = 'sebzor'  where code in ('01060', '01070');
       commit;
+
+`01060` va `01070` — **bitta shourum** (21.09.2026 da tasdiqlangan). Ikkalasi
+ham `sebzor` bo'lgani uchun saytda ular bitta vitrina bo'lib ko'rinadi va
+qoldiqlari qo'shiladi. Shunday bo'lishi kerak.
 
 ### 3.4 Ma'lumot to'ldirish
 
@@ -355,7 +359,7 @@ Ulanishdan **oldin** hal qilish kerak, keyin qimmatroq.
 ### Sayt jamoasidan kutilayotgani
 
 - [ ] Server IP manzili (cheklov qo'yish uchun)
-- [ ] Qaysi filiallar `mirobod` va `sebzor`
+- [x] Qaysi filiallar `mirobod` va `sebzor` — 01030 / 01060 + 01070
 - [ ] MXIK bugun qayerda yuritiladi
 
 ### Bizdan kutilayotgani

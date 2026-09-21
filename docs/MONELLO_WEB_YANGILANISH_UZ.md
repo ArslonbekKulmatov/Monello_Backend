@@ -375,21 +375,27 @@ Bo'sh chiqishi kerak.
 
 ---
 
-## 12. Hali hal bo'lmagan savol
+## 12. Vitrina filiallari
 
-Filiallar jadvalida `01060` va `01070` ning ikkalasida ham
-`site_code = 'sebzor'` turibdi. Shuning uchun saytda ular **bitta** shourum
-bo'lib ko'rinadi va qoldiqlari qo'shiladi.
+| Filial | `site_code` | Saytda |
+|---|---|---|
+| 01030 | `mirobod` | Mirobod vitrinasi |
+| 01060 | `sebzor` | Sebzor vitrinasi |
+| 01070 | `sebzor` | **xuddi o'sha** Sebzor vitrinasi |
 
-| Filial | `site_code` |
-|---|---|
-| 01030 | `mirobod` |
-| 01060 | `sebzor` |
-| 01070 | `sebzor` |
+`01060` va `01070` — bitta shourum, ikkita hisob filiali. Shuning uchun
+saytda ular bitta vitrina bo'lib ko'rinadi va qoldiqlari **qo'shiladi**.
+Sozlama to'g'ri, o'zgartirish kerak emas.
 
-Ikkisi haqiqatan bitta shourum bo'lsa — hammasi joyida, hech narsa qilish
-kerak emas. Alohida bo'lsa `01070` ga o'z `site_code` i kerak va uni sayt
-jamoasi bilan kelishish lozim. **Javob kutilmoqda.**
+**Web tomonda bundan kelib chiqadigan narsa:** katalog bilan bog'liq
+ekranlarda (ish ro'yxati, nom tahlili, qoldiq) filialni `site_code` bo'yicha
+guruhlash kerak, `filial_code` bo'yicha emas. Aks holda xodim gridda ikkita
+"Sebzor" ko'radi, saytda esa bitta — va nega raqamlar mos kelmayapti deb
+o'ylaydi.
+
+`site_code` i bo'sh filialdagi tovar saytga **umuman chiqmaydi** — bu
+katalogga chiqishning yettinchi sharti. `ipt_products_v.site_code` va
+`ipt_catalog_todo_v.no_site_code` shuni ko'rsatadi.
 
 ---
 

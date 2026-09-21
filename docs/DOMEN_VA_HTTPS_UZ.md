@@ -56,31 +56,142 @@ sifatida turgan va sayt jamoasi uni sinab ko'rib chalkashgan edi.
 
 ---
 
-## 2. DNS
+## 2. DNS — subdomen qanday yaratiladi
 
-Domen panelida ikkita `A` yozuv:
+### 2.0 Asosiy narsa
 
-| Nomi | Turi | Qiymati | TTL |
-|---|---|---|---|
-| `monello` | A | `37.140.216.159` | 300 |
-| `monello-api` | A | `37.140.216.159` | 300 |
+**Subdomen sotib olinmaydi.** U — DNS jadvalidagi bitta qator, xolos.
+`abmstore.uz` sizda bo'lgani uchun uning istalgan subdomenini
+yaratishingiz mumkin: pulsiz, chegarasiz, bir necha daqiqada.
 
-TTL ni boshida 300 (5 daqiqa) qo'ying — xato bo'lsa tez tuzatasiz.
-Hammasi ishlagach 3600 ga ko'taring.
+Ya'ni qilinadigan ish: domen panelidagi DNS bo'limiga kirib, ikkita
+yozuv qo'shish.
 
-Tekshirish:
+### 2.1 Avval: DNS qayerda boshqarilishini toping
+
+Bu eng ko'p vaqt oladigan qadam, chunki uch xil joyda bo'lishi mumkin:
+
+| Qayerda | Qanday tushunasiz |
+|---|---|
+| **Registrator** (domen sotib olingan joy) | `abmstore.uz` ni uzaytirish xatlari qaysi kompaniyadan kelsa — o'sha |
+| **Hosting provayder** | sayt qayerda joylashgan bo'lsa, DNS ham ko'pincha o'sha yerda |
+| **Cloudflare** yoki shunga o'xshash xizmat | saytni tezlashtirish/himoya uchun ulangan bo'lsa |
+
+Aniq javobni NS yozuvi beradi:
+
+```bash
+dig NS abmstore.uz +short
+```
+
+Yoki brauzerda: `https://www.whatsmydns.net/#NS/abmstore.uz`
+
+Chiqqan nom (masalan `ns1.ahost.uz` yoki `xxx.ns.cloudflare.com`) —
+DNS aynan o'sha yerda boshqariladi. Panelga kirish ma'lumotlari ham
+o'sha kompaniyaniki.
+
+> Registrator va DNS boshqaruvchi **har xil** bo'lishi mumkin. Domen
+> bir joyda sotib olinib, NS boshqa joyga yo'naltirilgan bo'lsa,
+> yozuvlarni NS ko'rsatgan joyda qo'shasiz — registratorda emas.
+
+### 2.2 Ikkita yozuv qo'shish
+
+Panelda "DNS", "DNS записи", "DNS Management", "Zone Editor" yoki
+"DNS Records" nomli bo'lim bo'ladi. "Add record" / "Добавить запись"
+tugmasi.
+
+**Birinchi yozuv — front:**
+
+| Maydon | Nima yoziladi |
+|---|---|
+| Type / Тип | `A` |
+| Name / Host / Имя | `monello` |
+| Value / Points to / Значение | `37.140.216.159` |
+| TTL | `300` |
+
+**Ikkinchi yozuv — API:**
+
+| Maydon | Nima yoziladi |
+|---|---|
+| Type | `A` |
+| Name / Host | `monello-api` |
+| Value / Points to | `37.140.216.159` |
+| TTL | `300` |
+
+Saqlaysiz. Tamom — subdomen yaratildi.
+
+### 2.3 Eng ko'p uchraydigan xato: to'liq nom yozish
+
+Ko'pchilik panelda **faqat chap qismi** yoziladi:
+
+| To'g'ri | Noto'g'ri | Natija |
+|---|---|---|
+| `monello` | `monello.abmstore.uz` | `monello.abmstore.uz.abmstore.uz` bo'lib ketadi |
+
+Panel domen nomini o'zi qo'shadi. Agar panel to'liq nomni talab qilsa
+(zona fayli ko'rinishidagi eski panellarda), u holda **oxiriga nuqta**
+qo'yiladi: `monello.abmstore.uz.`
+
+Qaysi ko'rinish kerakligini bilish oson: mavjud yozuvlarga qarang.
+Asosiy sayt `@` yoki `abmstore.uz` deb turgan bo'lsa — qaysi uslub
+ekani ko'rinadi.
+
+### 2.4 Boshqa savollar
+
+**`A` yozuvmi yoki `CNAME`?** Bu yerda `A`. `A` — nomni **IP manzilga**
+bog'laydi, `CNAME` esa **boshqa nomga**. Bizda IP bor, shuning uchun `A`.
+
+**`www` kerakmi?** Yo'q. `www.monello.abmstore.uz` hech kimga kerak
+emas.
+
+**Wildcard (`*`) qo'ysam bo'ladimi?** Texnik jihatdan ha, lekin qo'ymang:
+u holda `xyz.abmstore.uz` ham serverga tushadi va nginx'da ushlanmagan
+so'rovlar paydo bo'ladi. Ikkita aniq yozuv aniqroq.
+
+**Asosiy saytga ta'sir qiladimi?** Yo'q. `abmstore.uz` va
+`www.abmstore.uz` yozuvlariga **tegmaysiz**. Subdomen — butunlay
+alohida qator.
+
+### 2.5 Tekshirish
+
+Yozuvlar qo'shilgach:
 
 ```bash
 dig +short monello.abmstore.uz
 dig +short monello-api.abmstore.uz
 ```
 
-Ikkalasi ham `37.140.216.159` qaytarishi kerak. DNS tarqalishi
-odatda 5–30 daqiqa.
+Ikkalasi ham `37.140.216.159` qaytarishi kerak.
 
-> **Cloudflare ishlatilsa:** boshida "proxy" (to'q sariq bulut) ni
-> **o'chiring** — sertifikat olishda xalaqit qiladi. Hammasi ishlagach
-> yoqsangiz bo'ladi.
+`dig` bo'lmasa (Windows): `nslookup monello.abmstore.uz`
+
+Yoki brauzerda: `https://www.whatsmydns.net/#A/monello.abmstore.uz` —
+dunyo bo'ylab qayerda tarqalganini ko'rsatadi.
+
+**Tarqalish vaqti** odatda 5–30 daqiqa. TTL 300 qo'yilgani uchun xato
+bo'lsa tuzatish ham 5 daqiqada ishlaydi. Hammasi ishlagach TTL ni 3600
+ga ko'tarsangiz bo'ladi.
+
+> Agar 30 daqiqadan keyin ham chiqmasa: yozuv saqlanganini tekshiring
+> (ba'zi panellarda alohida "Apply changes" tugmasi bor), nomda
+> ortiqcha `.abmstore.uz` yo'qligini ko'ring, va boshqa tarmoqdan
+> (telefon internetidan) sinab ko'ring — kompyuteringiz eski javobni
+> keshlab qolgan bo'lishi mumkin.
+
+### 2.6 Cloudflare ishlatilsa
+
+Yozuv qo'shishda yonida bulut belgisi bo'ladi:
+
+| Holat | Ma'nosi |
+|---|---|
+| Kulrang bulut — **DNS only** | trafik to'g'ridan-to'g'ri serveringizga ketadi |
+| To'q sariq bulut — **Proxied** | trafik Cloudflare orqali o'tadi |
+
+**Boshida kulrang qiling.** To'q sariq bo'lsa certbot sertifikat
+ololmaydi (HTTP-01 tekshiruvi serveringizga yetib bormaydi) va
+serverda haqiqiy IP o'rniga Cloudflare IP'si ko'rinadi.
+
+Hammasi ishlab, sertifikat olingach yoqsangiz bo'ladi — lekin u holda
+Cloudflare'da SSL rejimi **Full (strict)** bo'lishi kerak.
 
 ---
 

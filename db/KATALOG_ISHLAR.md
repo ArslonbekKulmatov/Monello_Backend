@@ -64,8 +64,13 @@ Ro'yxatdan o'tgan metodlar tekshirildi: 889 `catalogProducts`,
 
 ## 2. A qism — Monello webda, shu ketma-ketlikda
 
-### 2.0 `IPT_PRODUCTS_V` ni yangilash
+### 2.0 Bazadagi qolgan skriptlar
 
+- [ ] `db/ipt_catalog_stage4.sql` — kategoriyalar 28 taga, konteyner bo'limlar
+- [ ] `db/ipt_catalog_stage5.sql` — `id` ni konfiguratsiya bo'yicha birlashtirish
+- [ ] `db/ipt_catalog_package.sql` — **qayta** kompilyatsiya (stage4 va stage5
+      dan keyin shart: konteyner tekshiruvi va yangi `quantity` mantiqi
+      o'sha yerda)
 - [ ] `db/ipt_products_v.sql` ni bazada bajarish
 - [ ] `db/ipt_products_his_v.sql` ni bazada bajarish
 
@@ -325,14 +330,22 @@ Tekshirish nuqtalari:
 
 ---
 
-## 4. Yopilmagan ikkita qaror
+## 4. Yopilmagan qarorlar
 
 Ulanishdan **oldin** hal qilish kerak, keyin qimmatroq.
 
-- [ ] **`id` nimani anglatadi.** Hozir ombor qatorining id'si. Bir xil ikkita
-      yangi apparat ikkita yozuv bo'lib keladi. Agar yopishtirishni biz
-      qiladigan bo'lsak, `id` konfiguratsiya identifikatoriga aylanadi va
-      sayt bir marta qayta bog'lashi kerak bo'ladi.
+- [x] **`id` nimani anglatadi — hal qilindi 21.09.2026.** Yangi tovar
+      konfiguratsiya bo'yicha birlashadi, ishlatilgani birlashmaydi.
+      `db/ipt_catalog_stage5.sql`.
+
+- [ ] **MXIK, o'lchov birligi, QQS stavkasi.** Sayt so'radi, bazada bu
+      maydonlar umuman yo'q. Ikki yo'l: o'zimizda ochib 800 pozitsiyani
+      qo'lda to'ldirish, yoki sayt ularni kassa dasturidan olishi. MXIK
+      bugun qayerda yuritilishini aniqlash kerak.
+
+- [ ] **HTTPS va haqiqiy domen.** Doimiy token hozir ochiq matnda ketmoqda —
+      sayt jamoasi haq. Spetsifikatsiyadagi `erp.abmstore.uz` o'rinbosar
+      edi, ular uni haqiqiy deb urinib ko'rishibdi.
 
 - [ ] **`quantity` nimani anglatadi.** Hozir hisobdagi bog'lanish.
       `phys_filial_code` to'ldirilmaguncha «Mirobodda» holati API'da
@@ -343,7 +356,16 @@ Ulanishdan **oldin** hal qilish kerak, keyin qimmatroq.
 
 - [ ] Server IP manzili (cheklov qo'yish uchun)
 - [ ] Qaysi filiallar `mirobod` va `sebzor`
-- [ ] `model_code` shakllantirish qoidalari
+- [ ] MXIK bugun qayerda yuritiladi
+
+### Bizdan kutilayotgani
+
+- [ ] **Har turdan bittadan to'ldirilgan pozitsiya** — yangi tovar,
+      ishlatilgan apparat va aksessuar, `model_code` bilan. Ommaviy
+      to'ldirishdan OLDIN: `id` konfiguratsiyadan yasaladi, ya'ni
+      `model_code` keyin tuzatilsa sayt tomonida yangi kartochka bo'ladi
+- [ ] `phys_filial_code` qachon to'ldirilishi — muddat aytish kerak
+- [ ] Haqiqiy domen va HTTPS
 
 ---
 
@@ -383,6 +405,8 @@ Manzil kelganda qo'shiladi.
 | `db/ipt_catalog_stage1.sql` | Asosiy maydonlar, kategoriya, brend, `ipt_catalog_v` |
 | `db/ipt_catalog_stage2.sql` | `core_api_tokens` jadvali |
 | `db/ipt_catalog_stage3.sql` | Qolgan maydonlar, rasm va xarakteristika jadvallari |
+| `db/ipt_catalog_stage4.sql` | Kategoriyalar 28 ta, konteyner bo'limlar |
+| `db/ipt_catalog_stage5.sql` | `id` ni konfiguratsiya bo'yicha birlashtirish |
 | `db/ipt_catalog_package.sql` | `Ipt_Catalog` paketi, `core_methods` yozuvlari |
 | `db/ipt_catalog_product_action.sql` | `Product_Action` — qo'lda qo'llanadi |
 | `db/ipt_products_v.sql` | `IPT_PRODUCTS_V` — katalog ustunlari qo'shilgan |

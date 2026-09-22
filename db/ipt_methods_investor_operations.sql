@@ -23,14 +23,29 @@
 --   xato OINC ni bekor qilish uchun yana EXP yozishga to'g'ri kelardi, u esa
 --   total_investment ni tushirib yuborardi.
 --
--- ISHGA TUSHIRISHDAN OLDIN
---   Ikkala kod ipt_s_operations da initiator = 'I' bilan turganini tekshiring:
+-- IPT_S_OPERATIONS HOLATI (22.09.2026 da tekshirilgan)
 --
---     select code, name, initiator, is_expense
---       from ipt_s_operations
---      where code in ('OINC', 'OEXP');
+--   | code | name            | condition | initiator | is_expense |
+--   |------|-----------------|-----------|-----------|------------|
+--   | OINC | Прочее приход   | A         | I         | N          |
+--   | OEXP | Расход          | P         | I         | Y          |
 --
---   Bo'lmasa qo'shing — aks holda "этот код операции не существует" chiqadi.
+--   Ikkalasi ham bor, ya'ni yangi tarmoqlar ishlaydi: proceduradagi tekshiruv
+--   faqat initiator ni ko'radi, condition ni EMAS.
+--
+--   OINC allaqachon faol (A) edi — ya'ni u formadagi ro'yxatda turgan, lekin
+--   tanlansa "Неправильная операция" chiqarardi. Shu tuzatildi.
+--
+--   OEXP passiv (P). API orqali ishlayveradi, lekin forma ro'yxati condition
+--   bo'yicha filtrlansa ko'rinmaydi. Ko'rinishi kerak bo'lsa:
+--
+--     update ipt_s_operations t
+--        set t.name = 'Прочее расход', t.condition = 'A'
+--      where t.code = 'OEXP' and t.initiator = 'I';
+--     commit;
+--
+--   Nomi ataylab o'zgartiriladi: hozir shunchaki "Расход", bu "Инвест. Расход"
+--   (EXP) bilan chalkashadi. "Прочее приход"/"Прочее расход" juftligi aniq.
 --
 -- ESLATMA: TELEGRAM
 --   Qo'lda kiritilgan OINC/OEXP Telegramga YUBORILMAYDI. Sabab:

@@ -204,14 +204,30 @@ qilish uchun.
 
 **BT-6.15.** Sdelka holatlari:
 
-| Kod | Ma'nosi | Keyingi amallar |
-|---|---|---|
-| `01` | Amaldagi | to'lov qabul qilinadi |
-| `02` | Kechikkan | to'lov qabul qilinadi, undiruvda |
-| `03` | To'liq to'langan | yopiq |
-| `05` | 〈tasdiqlash kerak — kodda ishlatiladi, nomi aniqlanmagan〉 | — |
-| `06` | Bekor qilingan | yopiq, tovar omborga qaytgan |
-| `07` | Qaytarib olingan (izyatiye) | yopiq, tovar omborga qaytgan |
+| Kod | Nomi | Qarz hisoblanadimi | Izoh |
+|---|---|---|---|
+| `01` | Действующий | **Ha** | amaldagi, to'lov qabul qilinadi |
+| `02` | Просроченный | **Ha** | kechikkan, undiruvda |
+| `04` | Блок icloud | **Ha** | qurilma iCloud orqali bloklangan, qarz saqlanadi |
+| `03` | Оплачен | Yo'q | to'liq to'langan |
+| `05` | Умидсиз | Yo'q | umidsiz qarz, undirish to'xtatilgan |
+| `06` | Возврат | Yo'q | bekor qilingan, tovar omborga qaytgan |
+| `07` | Изъятие | Yo'q | qaytarib olingan, to'langani qaytarilmaydi |
+
+**BT-6.15.1.** "Qarz hisoblanadimi" ustuni mijozning **ochiq sdelkasi bor**
+deb sanalishini belgilaydi. `01`, `02` va `04` — sanaladi; qolganlari yo'q.
+
+> **`04` alohida e'tiborga loyiq.** Qurilma bloklangan bo'lsa ham mijoz
+> qarzdor bo'lib qoladi — shuning uchun u ochiq sdelka sifatida sanaladi.
+> Bu to'g'ri: blok qarzni bekor qilmaydi.
+
+**BT-6.15.2.** Bekor qilish (`06`) va qaytarib olish (`07`) faqat `01` va
+`02` holatidan mumkin.
+
+> **Bu cheklov `04` uchun muammo.** iCloud bloklangan qurilma — aynan
+> qaytarib olish yoki umidsiz deb belgilash kerak bo'ladigan holat, lekin
+> `04` dan to'g'ridan-to'g'ri o'tib bo'lmaydi: avval sdelkani `01`/`02`
+> ga qaytarish kerak. 〈biznes tasdiqlasin: shunday bo'lishi kerakmi〉
 
 **BT-6.16.** Sdelka ochilgandan keyin **o'zgartirib bo'lmaydigan**
 maydonlar: mijoz, tovar, chiqish narxi, boshlang'ich to'lov, muddat,
@@ -663,7 +679,7 @@ xatoning manbai.
 | 3 | Fayl berish xizmati autentifikatsiyasiz | nomi topilgan har qanday fayl ochiladi | Ochiq — katalog rasmlari nginx'ga ko'chiriladi |
 | 4 | Fayl qidirish har so'rovda butun papkani aylanadi | rasm ko'p bo'lsa sekinlashadi | Ochiq — yuqoridagi bilan birga hal bo'ladi |
 | 5 | Operatsiya kodining "faol/nofaol" belgisi tekshirilmaydi | nofaol kodni API orqali chaqirish mumkin | Ochiq — ma'lumot tozalanmaguncha tuzatilmaydi |
-| 6 | Sdelka holati `05` ning ma'nosi hujjatlashtirilmagan | — | Ochiq |
+| 6 | `04` (Блок icloud) holatidan bekor qilish va qaytarib olish yopiq | bloklangan qurilmani rasmiylashtirish uchun avval holatni qaytarish kerak | Ochiq — BT-6.15.2 |
 | 7 | Katalog kaliti model kodidan yasaladi | model kodi tuzatilsa saytda yangi kartochka paydo bo'ladi | Qabul qilingan — formada ogohlantirish |
 
 ---
@@ -687,7 +703,7 @@ Bu tizim quyidagilarni **qilmaydi**:
 
 | # | Savol | Kimdan |
 |---|---|---|
-| 1 | Sdelka holati `05` nimani anglatadi? | biznes |
+| 1 | `04` holatidan `07` (Изъятие) ga o'tish yo'li kerakmi? | biznes |
 | 2 | Buxgalter roli qaysi amallarga ruxsat oladi? | rahbariyat |
 | 3 | `PRFIX` operatsiyasi sarmoyaga tegadimi? | biznes |
 | 4 | Qaytarilgan sarmoya alohida hisoblanishi kerakmi? | buxgalteriya |

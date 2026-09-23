@@ -230,10 +230,22 @@ having g.paid_amount_uzs <> sum(case when p.dc_sign = 4 then p.paid_amount_uzs
 prompt 4.2 Qoldiqni oxirgi to'lovga berib, grafikka tenglashtirish
 
 -- Add_Paid_Amounts dagi naqsh: qoldiq oxirgi qatorga beriladi.
+--
+-- IKKI QISM ALOHIDA HISOBLANADI, ATAYLAB:
+--
+--   tot — farq. Yig'indiga BEKOR QILISH qatorlari ham kiradi (manfiy
+--         ishora bilan), chunki grafikdagi paid_amount_uzs ham NETTO.
+--         Ularni chiqarib tashlasak farq noto'g'ri chiqadi.
+--
+--   tgt — qoldiq beriladigan qator. U faqat shu skript QAYTA QURGAN
+--         qatorlardan tanlanadi (zaxira jadvalida bor bo'lganlari).
+--         Natively som to'lovida paid_amount_uzs — mijoz haqiqatan
+--         to'lagan summa, unga yaxlitlash qoldig'ini qo'shib bo'lmaydi.
 merge into ipt_trade_graph_paid_amounts d
 using (
-  select x.last_id, x.diff
-    from (select max(p.id) keep (dense_rank last order by p.cr_on, p.id) last_id,
+  select tgt.last_id, tot.diff
+    from (select p.trade_id,
+                 p.graph_order_num,
                  g.paid_amount_uzs
                  - sum(case when p.dc_sign = 4 then p.paid_amount_uzs
                             else -p.paid_amount_uzs end)                  diff
@@ -244,9 +256,18 @@ using (
               on  g.trade_id  = p.trade_id
               and g.order_num = p.graph_order_num
            where nvl(t.currency_code, '840') = '860'
-             and p.dc_sign = 4
-           group by p.trade_id, p.graph_order_num, g.paid_amount_uzs) x
-   where x.diff <> 0
+           group by p.trade_id, p.graph_order_num, g.paid_amount_uzs) tot
+    join (select p.trade_id,
+                 p.graph_order_num,
+                 max(p.id) keep (dense_rank last order by p.cr_on, p.id) last_id
+            from ipt_trade_graph_paid_amounts p
+           where p.dc_sign = 4
+             and exists (select 1 from ipt_tgpa_uzs_backup b
+                          where b.id = p.id)
+           group by p.trade_id, p.graph_order_num) tgt
+      on  tgt.trade_id        = tot.trade_id
+      and tgt.graph_order_num = tot.graph_order_num
+   where tot.diff <> 0
 ) s
 on (d.id = s.last_id)
 when matched then
@@ -289,6 +310,9 @@ using (
      and nvl(p.paid_amount_uzs, 0) <> 0
      and nvl(p.course_usd, 0) > 0
      and p.paid_amount <> ipt_util.Uzs_To_Usd(p.paid_amount_uzs, p.course_usd)
+     -- Faqat shu skript qayta qurgan qatorlar. Natively som to'lovida
+     -- rate_diff Apply_Rate_Difference tomonidan to'g'ri yozilgan.
+     and exists (select 1 from ipt_tgpa_uzs_backup b where b.id = p.id)
 ) s
 on (d.id = s.row_id)
 when matched then
@@ -333,6 +357,41 @@ select p.graph_order_num,
 --                d.rate_diff_amount  = s.old_rate_diff_amount;
 --   commit;
 --
+-- =============================================================================
+-- GRAFIK QO'LDA TUZATILGANDAN KEYIN QAYTA ISHGA TUSHIRISH
+--
+-- ipt_trade_graphs qo'lda to'g'rilangan bo'lsa, to'lov qatorlari eski
+-- qiymatlar bilan qolib ketadi. Skriptni shunchaki qayta bajarish YETARLI
+-- EMAS: 3-bo'lim faqat paid_amount_uzs = 0 bo'lgan qatorlarni to'ldiradi,
+-- ular esa endi to'la.
+--
+-- TO'G'RI TARTIB:
+--
+--   1) Yuqoridagi ORQAGA QAYTARISH ni bajaring.
+--      Shunda zaxiradagi qatorlar yana bo'sh holatga qaytadi.
+--
+--   2) 2-BO'LIMNI O'TKAZIB YUBORING.
+--      Zaxira jadvali allaqachon bor va unda ENG ASLI qiymatlar turibdi.
+--      Qayta yaratmoqchi bo'lsangiz ORA-00955 chiqadi — yaxshi, chunki
+--      qayta yaratilsa asl nusxa yo'qolardi.
+--
+--   3) 1, 3, 4, 5, 6 bo'limlarni odatdagidek bajaring.
+--      Endi ular tuzatilgan grafikka qarab ishlaydi.
+--
+-- NEGA BU USUL XAVFSIZ
+--   Zaxirada faqat shu skript to'ldirgan qatorlar bor, ya'ni qayta
+--   qurilganlari. Natively som to'lovlariga na qaytarish, na to'ldirish
+--   tegadi — ularning qiymati mijoz haqiqatan to'lagan summa.
+--
+--   Shu sababli qamrovni qo'lda belgilash ham shart emas.
+--
+-- QACHON BU USUL YARAMAYDI
+--   - Zaxira jadvali o'chirilgan bo'lsa
+--   - Tuzatish natively som sdelkasiga tegsa (zaxirada bunday qator yo'q)
+--   Bunday hollarda db/ipt_paid_amounts_uzs_resync.sql ishlatiladi:
+--   u qamrovni qo'lda oladi va mavjud qiymatlarni qayta yozadi.
+--
+-- =============================================================================
 -- Hammasi joyida bo'lsa, bir necha kundan keyin:
 --   drop table ipt_tgpa_uzs_backup;
 -- =============================================================================

@@ -250,7 +250,7 @@ public class SFondBatch {
       Map<String, String> m = new LinkedHashMap<>();
       for (String key : o.keySet()) {
         if (o.isNull(key)) continue;
-        String normalized = normalizeKey(key);
+        String normalized = normalizeKey(key, cols);
         if (!cols.contains(normalized)) {
           // Aks holda noto'g'ri sarlavha jimgina yo'qoladi va jadvalda bo'sh
           // ustun qoladi — shuning uchun logga yozamiz.
@@ -268,32 +268,49 @@ public class SFondBatch {
   }
 
   /**
-   * Excel sarlavhalari nuqtali yozuvda keladi, masalan
-   * "applicant.person.passportData.pinfl" yoki "damage[].claimedDamage".
-   * Jadval ustunlari lower_snake_case: "applicant_person_passportdata_pinfl".
+   * Excel sarlavhasini jadval ustuni nomiga o'giradi.
    *
-   * Qoida: nuqta -> pastki chiziq, "[]" va probel olib tashlanadi, hammasi
-   * kichik harfga o'tadi. camelCase so'zlari AJRATILMAYDI ("polisUuid" ->
-   * "polisuuid"), chunki jadval ustunlari ham shunday nomlangan.
+   * Asosiy qoida: nuqta -> pastki chiziq, "[]" va probel olib tashlanadi,
+   * hammasi kichik harfga o'tadi. camelCase so'zlari AJRATILMAYDI
+   * ("applicant.person.passportData.pinfl" -> "applicant_person_passportdata_pinfl",
+   * "polisUuid" -> "polisuuid"), chunki Ariza jadvalining ustunlari aynan
+   * shunday nomlangan.
+   *
+   * Agar natija jadvalda topilmasa, {@link #KEY_ALIASES} bo'yicha qaraladi.
+   * Aniq mos kelgan ustun har doim aliasdan ustun turadi.
    */
-  private String normalizeKey(String k) {
+  private String normalizeKey(String k, Set<String> cols) {
     String n = k.toLowerCase(Locale.ROOT)
         .replace(".", "_")
         .replace("[]", "")
         .replace(" ", "");
-    String alias = KEY_ALIASES.get(n);
-    return alias == null ? n : alias;
+    if (cols.contains(n)) return n;
+    return KEY_ALIASES.getOrDefault(n, n);
   }
 
   /**
-   * Umumiy qoidaga bo'ysunmaydigan kalitlar.
+   * Shablon sarlavhasi jadval ustuni nomiga mos kelmaydigan holatlar.
    *
-   * Ariza shablonida sarlavha "damageType", lekin PI_FOND_CLAIMS'dagi ustun
-   * "damage_type" deb nomlangan (160 ta kalitdan yagona bunday holat).
-   * Alias bo'lmasa qiymat jimgina tashlanib ketardi.
+   * Ariza shablonida deyarli hamma sarlavha ustun nomi bilan bir xil (160 tadan
+   * faqat damageType farq qiladi), lekin Qaror va To'lov shablonlari butunlay
+   * boshqa nomlashdan foydalanadi — ular Fond API maydonlari nomi bilan
+   * yozilgan, jadval ustunlari esa lower_snake_case.
    */
-  private static final Map<String, String> KEY_ALIASES = Map.of(
-      "damagetype", "damage_type");
+  private static final Map<String, String> KEY_ALIASES = Map.ofEntries(
+      // --- Ariza (PI_FOND_CLAIMS) ---
+      Map.entry("damagetype",                       "damage_type"),
+      // --- Qaror (PI_FOND_DECISIONS) ---
+      Map.entry("claimuuid",                        "claim_uuid"),
+      Map.entry("decision_decisionid",              "decision_id"),
+      Map.entry("decision_rejectionreason",         "rejection_reason"),
+      Map.entry("decision_reasonforpayment",        "payment_reason"),
+      Map.entry("decisiondate",                     "decision_date"),
+      // --- To'lov (PI_FOND_PAYOUTS) ---
+      Map.entry("decisionuuid",                     "decision_uuid"),
+      Map.entry("payoutsum",                        "payment_sum"),
+      Map.entry("payoutdate",                       "payment_date"),
+      Map.entry("paymentordernumber",               "payment_order_number"),
+      Map.entry("inheritancedocumentnumberanddate", "inheritance_document_number"));
 
   // ------------------------------------------------------------------
   // Dynamic INSERT

@@ -4,7 +4,14 @@
 **Nima uchun:** ABM Store sayti katalogni Monello bazasidan oladi. Ma'lumotni
 kiritish joyi — Monello web. Quyida nima o'zgargani va nima qurish kerakligi.
 **Holati:** baza tomoni ishga tushirilgan, metodlar `core_methods` da faol
-**Sana:** 19.09.2026
+**Sana:** 19.09.2026, **yangilandi:** 21.09.2026
+
+> **21.09 yangilanishi.** Sayt jamoasining javobidan keyin uchta narsa
+> qo'shildi: fiskal maydonlar (MXIK, o'lchov birligi, QQS), 28 ta
+> kategoriya konteyner bo'limlar bilan, va bir xil konfiguratsiyali
+> tovarlarni saytda bitta kartochkaga birlashtirish. Shu hujjat
+> yangilangan. Ekran-ekran ish ro'yxati esa alohida:
+> `MONELLO_WEB_FRONT_ISHLAR_UZ.md`.
 
 ---
 
@@ -12,10 +19,11 @@ kiritish joyi — Monello web. Quyida nima o'zgargani va nima qurish kerakligi.
 
 | | |
 |---|---|
-| O'zgargan metod | `ipt.productAction` — 24 ta ixtiyoriy maydon qo'shildi |
+| O'zgargan metod | `ipt.productAction` — **27 ta** ixtiyoriy maydon qo'shildi |
 | Yangi metodlar | 6 ta: rasm, xarakteristika, ommaviy to'ldirish |
-| Yangi ma'lumotnomalar | kategoriya, brend, rang, SIM, bozor kodi, almashtirilgan qism, xarakteristika |
+| Yangi ma'lumotnomalar | kategoriya, brend, rang, SIM, bozor kodi, almashtirilgan qism, xarakteristika, **o'lchov birligi**, **nom tahlili qoidalari** |
 | Yangi ish ro'yxati | `ipt_catalog_todo_v` — saytga chiqmayotgan tovarlar |
+| Yangi yordamchi | `ipt_catalog_parse_v` — tovar nomidan maydonlarni taxmin qilish |
 | Moliyaviy mantiq | **tegilmagan** |
 
 Eng muhim qoida: **bitta mahsulotni saqlash uchun bitta chaqiruv**. Katalog
@@ -131,6 +139,26 @@ qilmang.
 | `has_box` | mantiqiy | `true` / `false` |
 | `has_charger` | mantiqiy | `true` / `false` |
 
+### Fiskal maydonlar — 21.09 da qo'shildi
+
+Sayt onlayn to'lov chekini shular bilan yig'adi. Bazada bunday maydonlar
+umuman yo'q edi.
+
+| Maydon | Tur | Tekshiruv |
+|---|---|---|
+| `mxik_code` | matn | faqat raqam, **aniq 17 ta** |
+| `unit_code` | matn | `ipt_s_units_v` da bo'lishi shart |
+| `vat_rate` | son | 0–100 |
+
+> **`vat_rate` FOIZDA saqlanadi: `12` = 12%.**
+>
+> Tizimda pul tiyinda (×100), `interest_rate` ham ×100. Bu esa oddiy foiz —
+> fiskal hujjatlarda stavka shunday yoziladi. Formada `%` belgisini yoniga
+> qo'ying, aks holda xodim `1200` yozib yuboradi.
+
+MXIK uzunligi tekshiruvi bitta joyda — `Ipt_Catalog.Read_Catalog_Fields`.
+Boshqa uzunlikdagi kodlar uchrasa o'sha shartni yumshatasiz.
+
 ### Faqat b/u texnika uchun
 
 | Maydon | Tur | Tekshiruv |
@@ -159,16 +187,38 @@ bilan. To'g'ridan-to'g'ri grid yoki `execSelect` orqali o'qiladi.
 
 | View | Nima uchun |
 |---|---|
-| `ipt_s_categories_v` | Kategoriya — 24 ta kod |
+| `ipt_s_categories_v` | Kategoriya — **28 ta** kod, `is_container` ustuni bilan |
 | `ipt_s_brands_v` | Brend |
 | `ipt_s_colors_v` | Rang |
 | `ipt_s_sim_types_v` | SIM turi |
 | `ipt_s_market_codes_v` | Bozor kodi: `LL/A`, `KHA`, `RUA`, `LZA`, `JA` |
 | `ipt_s_replaced_parts_v` | Almashtirilgan qism |
 | `ipt_s_attributes_v` | Xarakteristikalar ro'yxati, turi bilan |
+| `ipt_s_units_v` | O'lchov birligi: `dona`, `komplekt`, `upakovka`, `kg`, `litr`, `metr` |
 
 Ro'yxatlar kengaytiriladigan: yangi rang yoki kategoriya kerak bo'lsa
-ma'lumotnomaga qator qo'shiladi, kod o'zgarmaydi.
+ma'lumotnomaga qator qo'shiladi, kod o'zgarmaydi. Hammasini bitta formadan
+tahrirlash uchun — `MONELLO_WEB_MALUMOTNOMALAR_UZ.md`.
+
+### Konteyner kategoriyalar — dropdownda tanlab bo'lmaydi
+
+`ipt_s_categories_v.is_container = 1` bo'lgan ikkita kod saytda **bo'lim
+sarlavhasi**, tovar kategoriyasi emas:
+
+| Kod | Nomi | Ichida nima bor |
+|---|---|---|
+| `accessories` | Aksessuarlar | `acc-glass`, `acc-cases`, `acc-chargers`, … |
+| `used` | Ishlatilgan texnika | `iphone-bu`, `ipad-bu`, `mac-bu`, … |
+
+Formada ularni `<optgroup>` sarlavhasi qiling yoki `disabled`. Baza baribir
+to'sadi:
+
+```
+"accessories" — konteyner bo'lim, unga tovar qo'yilmaydi. Aniq bo'limni
+tanlang: aksessuar uchun acc-*, ishlatilgan texnika uchun *-bu.
+```
+
+Lekin tanlab bo'lgandan keyin xato olish yomon — tanlab bo'lmasligi kerak.
 
 ---
 
@@ -192,6 +242,44 @@ Shuning uchun interfeysda ikkita alohida joy kerak:
 
 Model kartochkasiga o'tish mahsulot formasidan `model_code` orqali bo'lsa
 qulay: "Bu modelning rasmlari" tugmasi.
+
+### Uchinchi daraja: saytdagi kartochka — 21.09 da qo'shildi
+
+Sayt jamoasining talabi: bir xil telefonning 10 ta donasi katalogda 10 ta
+kartochka bo'lib ko'rinmasin. Shuning uchun saytga chiqadigan element
+kaliti shunday yig'iladi:
+
+| Tovar holati | Katalog kaliti |
+|---|---|
+| Yangi | `model_code ~ xotira ~ ram ~ rang` |
+| Ishlatilgan (`used`) | qatorning **o'z** `id` si |
+
+Ya'ni endi uch daraja bor:
+
+| Daraja | Nechta | Misol |
+|---|---|---|
+| Model | 1 | `iphone-17-pro-max` |
+| **Sayt kartochkasi** | bir nechta | `iphone-17-pro-max` + 256Gb + silver |
+| Ombor qatori | ko'p | o'sha konfiguratsiyadagi 8 ta dona |
+
+Ishlatilgan texnika birlashmaydi — har bir dona o'ziga xos (batareya, IMEI).
+
+**Bundan kelib chiqadigan uchta narsa:**
+
+1. **`model_code` ni o'zgartirish — sayt uchun yangi kartochka.** Kalit
+   konfiguratsiyadan yasalgani uchun xatoni tuzatsangiz eski kartochka
+   yo'qoladi, o'rniga yangisi paydo bo'ladi: havola va statistika uziladi.
+   Allaqachon saytga chiqqan tovarda formada tasdiq so'rang.
+
+2. **Bir konfiguratsiyada har xil narx bo'lsa — eng pasti olinadi.**
+   E'lon qilingan narxni ko'tarib bo'lmaydi, shuning uchun eng past narx
+   tanlandi: u har doim bajarib bo'ladigan va'da. Lekin narxlar farq
+   qilishi odatda **xato** — tekshiruv so'rovi
+   `db/ipt_catalog_stage5.sql` ning 3-bo'limida.
+
+3. **Sku, kafolat va tavsif guruhdagi eng kichik `id` li qatordan
+   olinadi** — hammasi bitta qatordan. Har maydonni alohida olsak sku bir
+   qatordan, tavsif boshqasidan kelib, mavjud bo'lmagan tovar yasalardi.
 
 ---
 
@@ -222,7 +310,7 @@ Javob:
 ```json
 { "oper": true, "data": { "id": 412,
   "file_name": "ipt_iphone-17-pro-max_412_20260919143012.jpg",
-  "url": "https://erp.abmstore.uz/api/app/get-file?file=ipt_..." } }
+  "url": "http://37.140.216.159:9999/api/app/get-file?file=ipt_..." } }
 ```
 
 Fayl nomini baza beradi, Java shu nom bilan diskka yozadi. **Har yuklashda nom
@@ -320,6 +408,10 @@ Javob: `{ "oper": true, "data": { "updated": 3 } }`
 Bu metod ~800 ta mavjud qatorni birinchi marta to'ldirish uchun eng tez yo'l.
 Har biriga alohida forma ochish shart emas.
 
+Fiskal maydonlar uchun ayniqsa qulay: telefon va aksessuarda `unit_code`
+deyarli har doim `dona`, `vat_rate` esa bir xil. Ularni butun guruhga
+bitta chaqiruv bilan qo'yib chiqish mumkin.
+
 ---
 
 ## 9. Ish ro'yxati ekrani — `ipt_catalog_todo_v`
@@ -345,6 +437,48 @@ Har birida `Y` yoki `N`. Ro'yxat bo'shashi — katalog to'liq to'ldirilgani.
 Ekranga qo'yish uchun `core_grids` ga yozuv kerak — `module_id` ni siz
 belgilaysiz, men bilmayman.
 
+### 9.1 Nom tahlili — `ipt_catalog_parse_v` (21.09)
+
+Ish ro'yxati "nima qolgani" ni ko'rsatadi. Bu view esa **qolganini
+to'ldirishga yordam beradi**.
+
+Omborchi hamma narsani tovar nomiga yozgan:
+
+```
+iPhone 17 Pro Max 256Gb Silver sim+esim New imei 073349
+```
+
+Model, xotira, rang, SIM, holat, batareya, IMEI — hammasi shu yerda, faqat
+alohida maydonlarga ajratilmagan. View har bir to'ldirilmagan qator uchun
+nomdan **taxmin** qiladi:
+
+| Ustun | Nima |
+|---|---|
+| `id`, `name`, `filial_code`, `quantity` | asl qator |
+| `p_model_code`, `p_model_name` | model |
+| `p_category_code`, `p_brand_code` | kategoriya, brend |
+| `p_condition` | `new` / `used` |
+| `p_storage_gb`, `p_ram_gb`, `p_color_code` | konfiguratsiya |
+| `p_sim_type`, `p_market_code` | SIM, bozor kodi |
+| `p_battery_pct`, `p_imei`, `p_serial` | b/u uchun |
+| `topildi` | nechta maydon topilgani, **0–6** |
+
+**View hech narsa yozmaydi.** Bu ataylab: yuklamada `Desert`/`Desret`,
+`imei`/`imie` kabi xatolar bor, narx esa nomda umuman yo'q. Xodim ekranda
+ko'z bilan tekshirib, to'g'rilarini belgilab `catalogSaveProduct` bilan
+qo'llaydi.
+
+Ekran talablari va ish tartibi — `MONELLO_WEB_FRONT_ISHLAR_UZ.md` ning
+4-bo'limida.
+
+**Qoidalar kodda emas.** Rang, brend, kategoriya va bozor kodi
+`IPT_S_PARSE_ALIASES` jadvalidan o'qiladi, u esa ma'lumotnomalar
+formasiga ulangan. Yangi rang uchrasa dasturchi kerak emas — forma orqali
+qator qo'shiladi, view darhol yangi qoidani ishlatadi.
+
+Bu ham `core_grids` orqali chiqariladi: ichida `name` ustuni bor, API'ga
+chiqmaydi.
+
 ---
 
 ## 10. Huquqlar va xatolar
@@ -369,27 +503,51 @@ holat bo'lmaydi.
 
 ## 11. Qurish kerak bo'lgan ekranlar
 
-Ustuvorlik bo'yicha:
+Ustuvorlik **21.09 da o'zgardi**: nom tahlili birinchi o'ringa chiqdi.
 
-1. **Mahsulot formasiga yangi maydonlar** — `productAction` allaqachon
-   qabul qiladi, forma qo'shilsa bo'ldi. Eng katta foyda shu yerda.
-2. **Ish ro'yxati** (`ipt_catalog_todo_v`) — nima qolganini ko'rsatadi.
-3. **Ommaviy to'ldirish** — gridda belgilab, `catalogSaveProduct`.
-   ~800 qatorni to'ldirish uchun shu kerak.
-4. **Model kartochkasi** — rasm yuklash va xarakteristika.
+1. **Nom tahlili** (`ipt_catalog_parse_v`, 9.1) — ~800 qatorni
+   to'ldirishning yagona tez yo'li. Bu bo'lmasa qolgani qo'lda ketadi.
+2. **Mahsulot formasiga yangi maydonlar** — `productAction` allaqachon
+   qabul qiladi, forma qo'shilsa bo'ldi. Fiskal uchtasi ham shu yerda.
+3. **Ish ro'yxati** (`ipt_catalog_todo_v`) — nima qolganini ko'rsatadi.
+4. **Ommaviy to'ldirish** — gridda belgilab, `catalogSaveProduct`.
+5. **Model kartochkasi** — rasm yuklash va xarakteristika.
    Bularsiz sayt kartochkasi bo'sh ko'rinadi, lekin tovar baribir chiqadi.
+
+Har ekran uchun aniq talablar va qabul mezoni —
+`MONELLO_WEB_FRONT_ISHLAR_UZ.md`.
 
 ---
 
 ## 12. Ishga tushirishdan oldin
 
 - `core_properties.catalog_file_url` haqiqiy manzilga qo'yilgan bo'lsin —
-  rasm havolalari shu prefiks bilan yig'iladi
+  rasm havolalari shu prefiks bilan yig'iladi. Hozir
+  `http://37.140.216.159:9999`; domen olinsa **faqat shu qator**
+  o'zgaradi, front kodda host qotirib yozilmasin
 - serverda papka oldindan yaratilgan bo'lsin, Java uni o'zi yaratmaydi:
   `mkdir -p /opt/monello71/files/catalog`
-- filiallarning `site_code` i to'ldirilgan bo'lsin (`mirobod`, `sebzor`),
-  aks holda o'sha filial tovarlari saytga umuman chiqmaydi
+- filiallarning `site_code` i to'ldirilgan bo'lsin — **bajarilgan**:
+  `01030` → `mirobod`, `01060` va `01070` → `sebzor`.
+  `01060` va `01070` bitta shourum, saytda bitta vitrina bo'lib ko'rinadi
+  va qoldiqlari qo'shiladi. Katalog ekranlarida qoldiqni `site_code`
+  bo'yicha guruhlang, `filial_code` bo'yicha emas
+- `ipt_s_units` dagi birlik kodlari buxgalteriya bilan tekshirilsin —
+  boshlang'ich ro'yxat taxminiy, fiskal chek uchun soliq
+  klassifikatoridagi kodlar bilan mos bo'lishi kerak
 
 ---
 
-*Monello backend · 19.09.2026*
+## 13. Bog'liq hujjatlar
+
+| Hujjat | Nima uchun |
+|---|---|
+| `MONELLO_WEB_FRONT_ISHLAR_UZ.md` | ekran-ekran ish ro'yxati va qabul mezoni |
+| `MONELLO_WEB_YANGILANISH_UZ.md` | 19.09 dan keyingi o'zgarishlar ro'yxati |
+| `MONELLO_WEB_MALUMOTNOMALAR_UZ.md` | 17 ta ma'lumotnomani bitta formadan tahrirlash |
+| `MONELLO_CHAT_UZ.md` | chat formasi |
+| `ABM_STORE_KATALOG_API_RU.md` | sayt jamoasi oladigan API |
+
+---
+
+*Monello backend · 19.09.2026, yangilandi 21.09.2026*

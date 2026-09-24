@@ -297,17 +297,29 @@ create or replace package body Ipt_Catalog is
   --Cr By: Arslonbek Kulmatov
   --quantity obyektini yig'ish: {"mirobod": 2, "sebzor": 0}
   --Qolgan shourumlarga 0 qo'yiladi — sayt tomonda obyekt shakli o'zgarmasin.
-  Function Build_Quantity(iSites json_array_t,
-                          iSite  varchar2,
-                          iQty   number) return json_object_t
+  --Cr By: Arslonbek Kulmatov
+  --Shourumlar bo'yicha qoldiq.
+  --
+  --View allaqachon {"mirobod":2} ko'rinishidagi JSON beradi, lekin unda
+  --faqat qoldig'i BOR shourumlar bo'ladi. Sayt esa barcha shourumlar har
+  --doim bo'lishini so'ragan — obyekt shakli pozitsiyadan pozitsiyaga
+  --o'zgarmasligi uchun. Yo'qlari shu yerda nol bilan to'ldiriladi.
+  Function Build_Quantity(iSites   json_array_t,
+                          iQtyJson varchar2) return json_object_t
   is
     vQty  json_object_t := json_object_t();
+    vSrc  json_object_t;
     vCode varchar2(30);
   begin
+    if iQtyJson is not null then
+      vSrc := json_object_t.parse(iQtyJson);
+    end if;
+
     for i in 0 .. iSites.get_size - 1
     loop
       vCode := iSites.get_string(i);
-      vQty.put(vCode, case when vCode = iSite then nvl(iQty, 0) else 0 end);
+      vQty.put(vCode, case when vSrc is null then 0
+                           else nvl(vSrc.get_Number(vCode), 0) end);
     end loop;
 
     return vQty;
@@ -357,7 +369,8 @@ create or replace package body Ipt_Catalog is
       'model_code,model_name,model_name_uz,category_code,brand_code,item_condition,'||
       'retail_price_uzs,old_price_uzs,phys_filial_code,storage_gb,ram_gb,color_code,'||
       'sku,warranty_months,description_ru,description_uz,battery_health_pct,imei,'||
-      'serial,sim_type,market_code,replaced_parts,has_box,has_charger';
+      'serial,sim_type,market_code,replaced_parts,has_box,has_charger,'||
+      'mxik_code,unit_code,vat_rate';
     vKeys json_array_t := Split_Csv(cKeys);
   begin
     for i in 0 .. vKeys.get_size - 1
@@ -385,6 +398,27 @@ create or replace package body Ipt_Catalog is
 
     if vCount = 0 then
       Ipt_Methods.Raise_Error('Bunday rang yo''q yoki faol emas: '||iCode);
+    end if;
+  end;
+
+  --Cr By: Arslonbek Kulmatov
+  --O'lchov birligi ma'lumotnomada bormi
+  Procedure Check_Unit(iCode varchar2)
+  is
+    vCount pls_integer;
+  begin
+    if iCode is null then
+      return;
+    end if;
+
+    select count(*) into vCount
+      from ipt_s_units u
+     where u.code = iCode
+       and u.condition = 'A';
+
+    if vCount = 0 then
+      Ipt_Methods.Raise_Error('Bunday o''lchov birligi yo''q yoki faol emas: '||iCode||
+                              '. Mumkin qiymatlar ipt_s_units_v da.');
     end if;
   end;
 
@@ -452,8 +486,9 @@ create or replace package body Ipt_Catalog is
   Procedure Apply_Catalog_Fields(iParams   json_object_t,
                                  ioProduct in out nocopy ipt_products%rowtype)
   is
-    vCount pls_integer;
-    vPrice number;
+    vCount        pls_integer;
+    vPrice        number;
+    vIs_Container pls_integer;
   begin
     -- --- matn maydonlari, tekshiruvsiz ---
     Read_Str(iParams, 'model_name',     ioProduct.Model_Name);
@@ -490,11 +525,24 @@ create or replace package body Ipt_Catalog is
       ioProduct.Category_Code := trim(iParams.get_String('category_code'));
 
       if ioProduct.Category_Code is not null then
-        select count(*) into vCount from ipt_s_categories c
-         where c.code = ioProduct.Category_Code and c.condition = 'A';
+        begin
+          select c.is_container into vIs_Container
+            from ipt_s_categories c
+           where c.code = ioProduct.Category_Code
+             and c.condition = 'A';
+        exception
+          when no_data_found then
+            Ipt_Methods.Raise_Error('Bunday kategoriya yo''q yoki faol emas: '||
+                                    ioProduct.Category_Code);
+        end;
 
-        if vCount = 0 then
-          Ipt_Methods.Raise_Error('Bunday kategoriya yo''q yoki faol emas: '||ioProduct.Category_Code);
+        -- Konteyner bo'lim saytda ro'yxat bo'lib ko'rinadi, tovar esa aniq
+        -- bo'limga tushishi kerak. Sayt jamoasi 21.09.2026 da shuni so'radi:
+        -- "accessories" va "used" ga tovar qo'yilmaydi.
+        if vIs_Container = 1 then
+          Ipt_Methods.Raise_Error('"'||ioProduct.Category_Code||'" — konteyner bo''lim, '||
+                                  'unga tovar qo''yilmaydi. Aniq bo''limni tanlang: '||
+                                  'aksessuar uchun acc-*, ishlatilgan texnika uchun *-bu.');
         end if;
       end if;
     end if;
@@ -556,6 +604,40 @@ create or replace package body Ipt_Catalog is
     if iParams.has('replaced_parts') then
       ioProduct.Replaced_Parts := lower(replace(trim(iParams.get_String('replaced_parts')), ' ', ''));
       Check_Replaced_Parts(ioProduct.Replaced_Parts);
+    end if;
+
+    -- --- fiskal maydonlar ---
+    if iParams.has('mxik_code') then
+      ioProduct.Mxik_Code := trim(iParams.get_String('mxik_code'));
+
+      if ioProduct.Mxik_Code is not null then
+        if not regexp_like(ioProduct.Mxik_Code, '^[0-9]+$') then
+          Ipt_Methods.Raise_Error('"mxik_code" faqat raqamdan iborat bo''lishi kerak.');
+        end if;
+
+        -- MXIK standart bo'yicha 17 raqam. Boshqa uzunlikdagi kodlar
+        -- uchrasa shu shartni yumshating — tekshiruv faqat shu yerda.
+        if length(ioProduct.Mxik_Code) <> 17 then
+          Ipt_Methods.Raise_Error('"mxik_code" 17 raqamdan iborat bo''lishi kerak, '||
+                                  'hozir '||length(ioProduct.Mxik_Code)||' ta.');
+        end if;
+      end if;
+    end if;
+
+    if iParams.has('unit_code') then
+      ioProduct.Unit_Code := trim(iParams.get_String('unit_code'));
+      Check_Unit(ioProduct.Unit_Code);
+    end if;
+
+    -- QQS FOIZDA saqlanadi: 12 = 12%. Tiyin ham, koeffitsient ham emas.
+    if iParams.has('vat_rate') then
+      ioProduct.Vat_Rate := iParams.get_Number('vat_rate');
+
+      if ioProduct.Vat_Rate is not null
+         and (ioProduct.Vat_Rate < 0 or ioProduct.Vat_Rate > 100) then
+        Ipt_Methods.Raise_Error('"vat_rate" 0 va 100 oralig''ida bo''lishi kerak '||
+                                '(foizda: 12 = 12%).');
+      end if;
     end if;
 
     -- --- narxlar: SOMDA keladi, TIYINDA saqlanadi ---
@@ -1100,8 +1182,11 @@ create or replace package body Ipt_Catalog is
   is
     vItem  json_object_t := json_object_t();
     vColor json_object_t;
+    vUnit  json_object_t;
   begin
-    vItem.put('id', to_char(iRow.Id));
+    -- Id endi matn: yangi tovarda konfiguratsiyadan yasalgan kalit,
+    -- ishlatilganda ombor qatorining raqami. to_char kerak emas.
+    vItem.put('id', iRow.Id);
     vItem.put('model_code', iRow.Model_Code);
     vItem.put('model_name', iRow.Model_Name);
     Put_Str(vItem, 'model_name_uz', iRow.Model_Name_Uz);
@@ -1110,7 +1195,10 @@ create or replace package body Ipt_Catalog is
     vItem.put('condition', iRow.Condition);
     vItem.put('price', round(iRow.Price));
     Put_Num(vItem, 'old_price', round(iRow.Old_Price));
-    vItem.put('quantity', Build_Quantity(iSites, iRow.Site_Code, iRow.Quantity));
+    vItem.put('quantity', Build_Quantity(iSites, iRow.Quantity_Json));
+    -- Umumiy qoldiq: sayt shourumlar bo'yicha taqsimotni hozircha
+    -- yoqmasligini aytdi va umumiy sonni ko'rsatadi
+    vItem.put('quantity_total', nvl(iRow.Quantity_Total, 0));
     Put_Str(vItem, 'sku', iRow.Sku);
     Put_Num(vItem, 'storage_gb', iRow.Storage_Gb);
     Put_Num(vItem, 'ram_gb', iRow.Ram_Gb);
@@ -1141,6 +1229,19 @@ create or replace package body Ipt_Catalog is
         vItem.put('replaced_parts', Build_Replaced_Parts(iRow.Replaced_Parts));
       end if;
     end if;
+
+    -- Fiskal maydonlar: sayt onlayn to'lov chekini shular bilan yig'adi
+    Put_Str(vItem, 'mxik_code', iRow.Mxik_Code);
+
+    if iRow.Unit_Code is not null then
+      vUnit := json_object_t();
+      vUnit.put('code', iRow.Unit_Code);
+      Put_Str(vUnit, 'name_ru', iRow.Unit_Name_Ru);
+      Put_Str(vUnit, 'name_uz', iRow.Unit_Name_Uz);
+      vItem.put('unit', vUnit);
+    end if;
+
+    Put_Num(vItem, 'vat_rate', iRow.Vat_Rate);
 
     vItem.put('images', Build_Images(iRow.Model_Code));
     vItem.put('attributes', Build_Attributes(iRow.Model_Code));
@@ -1228,15 +1329,16 @@ create or replace package body Ipt_Catalog is
   begin
     for rows in (select t.id,
                         t.price,
-                        t.quantity,
-                        t.site_code
+                        t.quantity_json,
+                        t.quantity_total
                    from ipt_catalog_v t
                   order by t.id)
     loop
       vItem := json_object_t();
-      vItem.put('id', to_char(rows.id));
+      vItem.put('id', rows.id);
       vItem.put('price', round(rows.price));
-      vItem.put('quantity', Build_Quantity(vSites, rows.site_code, rows.quantity));
+      vItem.put('quantity', Build_Quantity(vSites, rows.quantity_json));
+      vItem.put('quantity_total', nvl(rows.quantity_total, 0));
       vItems.append(vItem);
     end loop;
 

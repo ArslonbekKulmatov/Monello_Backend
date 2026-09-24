@@ -401,10 +401,14 @@ prompt 4.4 Rasmlar uchun bazaviy havola
 -- Keyinchalik rasmlarni alohida static hostga ko'chirsangiz, faqat shu
 -- qiymatni o'zgartirasiz — kodga tegish shart emas.
 --
--- DOMENNI O'ZINGIZNIKIGA ALMASHTIRING:
+-- Hozirgi host: http://37.140.216.159:9999. Domen olinib https ga o'tilganda
+-- shu bitta qiymat yangilanadi (merge faqat yo'q bo'lsa qo'yadi, shuning
+-- uchun mavjud bazada update bilan):
+--   update core_properties set param_value = 'https://<domen>/api/app/get-file?file='
+--    where param_name = 'catalog_file_url';
 merge into core_properties t
 using (select 'catalog_file_url' param_name,
-              'https://erp.abmstore.uz/api/app/get-file?file=' param_value from dual) s
+              'http://37.140.216.159:9999/api/app/get-file?file=' param_value from dual) s
 on (t.param_name = s.param_name)
 when not matched then
   insert (param_name, param_value, condition) values (s.param_name, s.param_value, 'A');
@@ -462,6 +466,9 @@ prompt 5.2 IPT_CATALOG_V — yangi maydonlar bilan
 -- Chiqish sharti 1-bosqichdagidek: omborda, soni > 0, majburiy beshta
 -- maydon to'ldirilgan, filiali vitrina. Yangi maydonlar IXTIYORIY —
 -- ular bo'lmasa ham tovar katalogda ko'rinadi.
+-- DIQQAT: bu ta'rifni ipt_catalog_stage5.sql ALMASHTIRADI — u yerda id
+-- konfiguratsiya bo'yicha birlashtiriladi. stage5 bajarilgandan keyin bu
+-- blokni qayta ishga tushirmang, aks holda birlashtirish yo'qoladi.
 create or replace force view ipt_catalog_v as
 select
   t.id,

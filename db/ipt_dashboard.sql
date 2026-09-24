@@ -229,6 +229,49 @@ create or replace package body Ipt_Dashboard is
   end;
 
   --Cr By: Arslonbek Kulmatov
+  --Hisobot ko'rish huquqi.
+  --
+  --Bu paketda filial filtri ATAYLAB yo'q: boshqaruv paneliga hamma filial
+  --kerak. Lekin metodlar core_methods da ro'yxatda turibdi, ya'ni ularni
+  --/api/app/request orqali ISTALGAN tizimga kirgan foydalanuvchi ham
+  --chaqira oladi. Tekshiruvsiz qolsa oddiy sotuvchi butun tarmoqning
+  --qarzdorlik raqamlarini va mijozlar reyestrini ko'rib qolardi.
+  --
+  --Shuning uchun: faqat "report" qamrovli token egasi. Amalda bu
+  --/api/report/* yo'li — token qaysi foydalanuvchiga berilgan bo'lsa,
+  --sessiya ham o'shaniki.
+  Procedure Check_Access
+  is
+    vCount pls_integer;
+  begin
+    select count(*) into vCount
+      from core_api_tokens t
+     where t.user_id   = core_session.Get_User_Id
+       and t.scope     = 'report'
+       and t.condition = 'A';
+
+    if vCount = 0 then
+      Ipt_Methods.Raise_Error('Bu hisobotni ko''rish uchun ruxsat yo''q. '||
+                              'Hisobot API si "report" qamrovli token bilan ishlaydi.');
+    end if;
+  end;
+  -- Monello web ga ham nazorat paneli kerak bo'lsa shu yerga rol sharti
+  -- qo'shiladi, masalan:
+  --     or ipt_util.Has_Access_For_Role(<rahbariyat roli>) = 1
+  -- Rol raqamini men bilmayman, shuning uchun qo'ymadim: noto'g'ri raqam
+  -- qo'yilsa tekshiruv borga o'xshab turadi, lekin hech kimni to'smaydi.
+  --
+  -- IPT_S_FILIALS_V BILAN ALMASHTIRMAYDI. So'rovlardagi
+  -- "in (select k.code from ipt_s_filials_v k)" qaysi FILIAL ko'rinishini
+  -- cheklaydi. Agar o'sha view sessiyaga bog'liq bo'lmasa (ya'ni faol
+  -- filiallar ro'yxati bo'lsa), u hech kimni to'smaydi — har qanday
+  -- foydalanuvchi butun tarmoq raqamlarini ko'raveradi. Tekshirish:
+  --     select count(*) from ipt_s_filials_v;
+  --     select count(*) from ipt_s_filials where condition = 'A';
+  -- Ikkalasi teng chiqsa — view sessiyaga bog'liq emas, demak shu
+  -- Check_Access kerak.
+
+  --Cr By: Arslonbek Kulmatov
   --Davr chegaralari. Berilmasa — joriy oy boshidan bugungacha.
   Procedure Read_Period(iParams json_object_t,
                         oFrom   out date,
@@ -270,6 +313,8 @@ create or replace package body Ipt_Dashboard is
     vFrom     date;
     vTo       date;
   begin
+    Check_Access;
+
     Read_Period(vParams, vFrom, vTo);
     vFilial := trim(vParams.get_String('filial_code'));
 
@@ -299,6 +344,11 @@ create or replace package body Ipt_Dashboard is
                                 from ipt_clients cl) c
                      on c.filial_code = f.code
                   where (vFilial is null or f.code = vFilial)
+                    -- Shart FILIAL tomonida (f.code), mijoz tomonida emas.
+                    -- c.filial_code ga qo'yilsa mijozi yo'q filialda u NULL
+                    -- bo'ladi, NULL in (...) esa UNKNOWN — tashqi birikma
+                    -- ichkiga aylanadi va filial javobdan tushib qoladi.
+                    and f.code in (select k.code from ipt_s_filials_v k)
                   group by f.code, f.name
                   order by f.code)
     loop
@@ -337,6 +387,8 @@ create or replace package body Ipt_Dashboard is
     vTo       date;
     vLast_Day date;
   begin
+    Check_Access;
+
     vFilial := trim(vParams.get_String('filial_code'));
     vFrom   := Parse_Date(vParams.get_String('date_from'));
     vTo     := Parse_Date(vParams.get_String('date_to'));
@@ -375,6 +427,7 @@ create or replace package body Ipt_Dashboard is
                    from ipt_report_by_filials_v_t t
                   where t.calc_day between vFrom and vTo
                     and (vFilial is null or t.code = vFilial)
+                    and t.code in (select k.code from ipt_s_filials_v k)
                   order by t.calc_day desc, t.code)
     loop
       vRow := json_object_t();
@@ -414,6 +467,8 @@ create or replace package body Ipt_Dashboard is
     vTotal    number;
     vSum      number;
   begin
+    Check_Access;
+
     vFilial   := trim(vParams.get_String('filial_code'));
     vMin_Days := nvl(vParams.get_Number('min_days'), 1);
     vPage     := nvl(vParams.get_Number('page'), 1);
@@ -433,7 +488,11 @@ create or replace package body Ipt_Dashboard is
       into vTotal, vSum
       from ipt_dashboard_overdue_v v
      where v.overdue_days >= vMin_Days
-       and (vFilial is null or v.filial_code = vFilial);
+       and (vFilial is null or v.filial_code = vFilial)
+       -- Jami hisoblaydigan so'rovda ham shu shart bo'lishi SHART: aks holda
+       -- total_trades hamma filialni sanaydi, rows esa faqat ko'rinadiganini
+       -- qaytaradi — sahifalash buziladi va jami raqam ortiqcha chiqadi.
+       and v.filial_code in (select k.code from ipt_s_filials_v k);
 
     vResponse.put('currency', 'USD');
     vResponse.put('total_trades', vTotal);
@@ -446,6 +505,7 @@ create or replace package body Ipt_Dashboard is
                    from ipt_dashboard_overdue_v v
                   where v.overdue_days >= vMin_Days
                     and (vFilial is null or v.filial_code = vFilial)
+                    and v.filial_code in (select k.code from ipt_s_filials_v k)
                   order by v.overdue_days desc, v.trade_id
                  offset vOffset rows fetch next vPerPage rows only)
     loop
@@ -484,6 +544,8 @@ create or replace package body Ipt_Dashboard is
     vFrom     date;
     vTo       date;
   begin
+    Check_Access;
+
     Read_Period(vParams, vFrom, vTo);
     vFilial := trim(vParams.get_String('filial_code'));
 
@@ -508,6 +570,11 @@ create or replace package body Ipt_Dashboard is
                      on t.filial_code = f.code
                     and trunc(nvl(t.ip_date, t.cr_on)) between vFrom and vTo
                   where (vFilial is null or f.code = vFilial)
+                    -- Yuqoridagi izohning davomi: shart FILIAL tomonida.
+                    -- t.filial_code ga qo'yilsa o'sha davrda sotuvi yo'q
+                    -- filial NULL beradi va javobdan tushib qoladi — ya'ni
+                    -- left join dan foyda qolmaydi.
+                    and f.code in (select k.code from ipt_s_filials_v k)
                   group by f.code, f.name
                   order by f.code)
     loop

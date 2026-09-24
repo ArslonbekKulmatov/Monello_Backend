@@ -160,20 +160,22 @@ public class SFondBatch {
   // ------------------------------------------------------------------
 
   public JSONObject importClaim(String jsonData) throws Exception {
+    // damage_type ham majburiy: Generate_Damage() butunlay shu ustunga qarab
+    // shoxlanadi, u bo'sh bo'lsa 'null' qaytarib JSON'ni buzadi.
     return runImport(jsonData, "PI_FOND_CLAIMS",
-        CLAIM_COLS, "polisuuid",
+        CLAIM_COLS, Arrays.asList("polisuuid", "damage_type"),
         "Pi_Insurance_Service.Send_Claim_Batch");
   }
 
   public JSONObject importDecision(String jsonData) throws Exception {
     return runImport(jsonData, "PI_FOND_DECISIONS",
-        DECISION_COLS, "claim_uuid",
+        DECISION_COLS, Arrays.asList("claim_uuid"),
         "Pi_Insurance_Service.Send_Decision_Batch");
   }
 
   public JSONObject importPayout(String jsonData) throws Exception {
     return runImport(jsonData, "PI_FOND_PAYOUTS",
-        PAYOUT_COLS, "decision_uuid",
+        PAYOUT_COLS, Arrays.asList("decision_uuid"),
         "Pi_Insurance_Service.Send_Payout_Batch");
   }
 
@@ -182,7 +184,7 @@ public class SFondBatch {
   // ------------------------------------------------------------------
 
   private JSONObject runImport(String jsonData, String table, Set<String> cols,
-                               String requiredCol, String batchProc) throws Exception {
+                               List<String> requiredCols, String batchProc) throws Exception {
     if (jsonData == null || jsonData.isBlank()) {
       throw new IllegalArgumentException("data (JSON) is required.");
     }
@@ -204,13 +206,16 @@ public class SFondBatch {
         Map<String, String> row = rows.get(i);
         int rowNumber = i + 1;
         String err = null;
-        if (!row.containsKey(requiredCol) || row.get(requiredCol) == null) {
-          err = requiredCol + " is empty";
+        for (String req : requiredCols) {
+          if (!row.containsKey(req) || row.get(req) == null) {
+            err = req + " is empty";
+            break;
+          }
         }
         insertRow(conn, table, result.getBatchId(), userId, row, err);
         result.setInsertedRows(result.getInsertedRows() + 1);
         if (err != null) {
-          result.addError(rowNumber, row.get(requiredCol), err);
+          result.addError(rowNumber, row.get(requiredCols.get(0)), err);
         }
       }
 
@@ -246,7 +251,13 @@ public class SFondBatch {
       for (String key : o.keySet()) {
         if (o.isNull(key)) continue;
         String normalized = normalizeKey(key);
-        if (!cols.contains(normalized)) continue;
+        if (!cols.contains(normalized)) {
+          // Aks holda noto'g'ri sarlavha jimgina yo'qoladi va jadvalda bo'sh
+          // ustun qoladi — shuning uchun logga yozamiz.
+          log.warn("Fond batch: '{}' ustuni tanilmadi (normalized='{}'), qator #{} da tashlab yuborildi",
+              key, normalized, i + 1);
+          continue;
+        }
         String v = String.valueOf(o.get(key)).trim();
         if (v.isEmpty()) continue;
         m.put(normalized, v);
@@ -257,16 +268,32 @@ public class SFondBatch {
   }
 
   /**
-   * Excel headers use dot-notation such as
-   * "applicant.person.passportData.pinfl" or "damage[].claimedDamage".
-   * Table columns are lower_snake_case: "applicant_person_passportdata_pinfl".
+   * Excel sarlavhalari nuqtali yozuvda keladi, masalan
+   * "applicant.person.passportData.pinfl" yoki "damage[].claimedDamage".
+   * Jadval ustunlari lower_snake_case: "applicant_person_passportdata_pinfl".
+   *
+   * Qoida: nuqta -> pastki chiziq, "[]" va probel olib tashlanadi, hammasi
+   * kichik harfga o'tadi. camelCase so'zlari AJRATILMAYDI ("polisUuid" ->
+   * "polisuuid"), chunki jadval ustunlari ham shunday nomlangan.
    */
   private String normalizeKey(String k) {
-    return k.toLowerCase(Locale.ROOT)
+    String n = k.toLowerCase(Locale.ROOT)
         .replace(".", "_")
         .replace("[]", "")
         .replace(" ", "");
+    String alias = KEY_ALIASES.get(n);
+    return alias == null ? n : alias;
   }
+
+  /**
+   * Umumiy qoidaga bo'ysunmaydigan kalitlar.
+   *
+   * Ariza shablonida sarlavha "damageType", lekin PI_FOND_CLAIMS'dagi ustun
+   * "damage_type" deb nomlangan (160 ta kalitdan yagona bunday holat).
+   * Alias bo'lmasa qiymat jimgina tashlanib ketardi.
+   */
+  private static final Map<String, String> KEY_ALIASES = Map.of(
+      "damagetype", "damage_type");
 
   // ------------------------------------------------------------------
   // Dynamic INSERT

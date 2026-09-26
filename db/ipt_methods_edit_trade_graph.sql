@@ -318,9 +318,38 @@
             -- Oxirgi qator qoldiqni oladi: yig'indi aynan qarzga teng bo'lsin
             vShare := vDebt - vAllocated;
           else
+            -- Bu KO'PAYTIRISH emas, ULUSH:
+            --
+            --     vShare = vDebt * ( payment_amount / vTotal_Pay )
+            --                       \___ shu qatorning ulushi ___/
+            --
+            -- Ko'paytirish oldinga chiqarilgan: bo'linish avval bajarilsa
+            -- oraliq kasr yaxlitlanib, aniqlik yo'qoladi.
+            --
+            -- NEGA TENG TAQSIMOT EMAS
+            --   Generate_Pay_Graph qarzni qatorlarga TENG bo'ladi
+            --   (floor(iAmount/muddat)) — u yerda to'lovlar ham teng,
+            --   shuning uchun teng va proporsional bir xil chiqadi.
+            --
+            --   Tahrirdan keyin to'lovlar teng bo'lmay qoladi va teng
+            --   taqsimot buziladi. 7 oylik, 7 140 000 qarz, to'lovlar
+            --   1 428 000 x5, 428 000, 1 000 000 bo'lsa:
+            --
+            --     teng          : har qatorga 1 020 000
+            --                     6-qator: 428 000 - 1 020 000 = -592 000
+            --                     7-qator: 1 000 000 - 1 020 000 = -20 000
+            --                     -> ikkala qatorda foiz MANFIY
+            --
+            --     proporsional  : 6-qator 356 666 -> foiz  +71 334
+            --                     7-qator 833 334 -> foiz +166 666
+            --
+            --   Manfiy foizda Add_Paid_Amounts "if vIncome > 0" sharti
+            --   tufayli foydani umuman taqsimlamaydi — xato bermaydi,
+            --   foyda jimgina yo'qoladi.
+            --
             -- floor: har ulush aniq qiymatdan KICHIK yoki teng, shuning
             -- uchun vAllocated hech qachon qarzdan oshmaydi va oxirgi
-            -- ulush manfiy chiqmaydi
+            -- qatorga qoladigan ulush manfiy chiqmaydi.
             vShare     := floor(vDebt * g.payment_amount / vTotal_Pay);
             vAllocated := vAllocated + vShare;
           end if;

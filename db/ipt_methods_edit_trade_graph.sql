@@ -35,10 +35,22 @@
 --
 --   Shuning uchun yangi qator SHU SDELKANING mavjud id sini oladi.
 --
+-- IKKINCHI XATO: PAYMENT_AMOUNT_WITHOUT_PERC
+--   ORA-01400 shu ustunda ham chiqadi — u ham qo'yilmagan edi.
+--
+--   Bu ustun bezak emas: Add_Paid_Amounts nasiya foydasini
+--   "payment_amount - payment_amount_without_perc" deb hisoblaydi.
+--   Shuning uchun uni 0 qilib qo'yib ketib bo'lmaydi — u holda butun
+--   to'lov foiz deb hisoblanadi.
+--
+--   Yechim sikldan keyin: asosiy qarz to'lov summasiga proporsional
+--   qayta taqsimlanadi. Tafsiloti o'sha joyda.
+--
 -- NIMA O'ZGARDI
---   vGraph_Id o'zgaruvchisi qo'shildi, sikldan oldin bir marta o'qiladi va
---   yangi qatorga o'sha beriladi. Grafik umuman bo'sh bo'lsa (hamma qator
---   o'chirilgan) — o'shanda yangi nextval olinadi.
+--   1. vGraph_Id — sikldan oldin bir marta o'qiladi, yangi qatorga o'sha
+--      beriladi. Grafik umuman bo'sh bo'lsa yangi nextval olinadi.
+--   2. Yangi qatorga without_perc = 0 (NULL bo'lmasin uchun), keyin
+--      butun grafik bo'ylab qayta taqsimlanadi.
 --
 --   Boshqa hech narsa o'zgarmadi.
 --
@@ -236,6 +248,9 @@
         -- (trade_id, order_num) bo'lib ishlaydi. Tafsiloti fayl boshida.
         vTrade_Graph.Id                 := vGraph_Id;
         vTrade_Graph.Trade_Id           := vTrade.Id;
+        -- Vaqtinchalik 0. Haqiqiy qiymat sikldan keyin, butun grafik
+        -- bo'ylab qayta taqsimlanadi — pastdagi izohga qarang.
+        vTrade_Graph.Payment_Amount_Without_Perc := 0;
         vTrade_Graph.Is_Income_Divided  := 0;
         vTrade_Graph.Income_Division_Id := null;
         vTrade_Graph.Cr_By              := vSession_User;
@@ -251,6 +266,72 @@
     delete from ipt_trade_graphs t
      where t.trade_id = vTrade.Id
       and t.order_num > vJson_Rows_Count;
+
+    -- =======================================================================
+    -- ASOSIY QARZNI QATORLARGA QAYTA TAQSIMLASH
+    --
+    -- payment_amount_without_perc — oylik to'lovning FOIZSIZ qismi, ya'ni
+    -- asosiy qarz ulushi. U bezak emas: Add_Paid_Amounts nasiya foydasini
+    -- aynan shundan hisoblaydi —
+    --
+    --     vIncome := vGraph.Payment_Amount - vGraph.Payment_Amount_Without_Perc;
+    --
+    -- Shuning uchun bitta shart BUZILMASLIGI kerak:
+    --
+    --     sum(payment_amount_without_perc) = remaining_debt
+    --
+    -- Generate_Pay_Graph uni shunday qo'yadi. Grafik tahrirlanganda esa
+    -- eski kod bu ustunga umuman tegmasdi va ikki xil buzilish chiqardi:
+    --
+    --   - yangi qator qo'shilsa qiymat NULL bo'lardi (ORA-01400)
+    --   - qatorning to'lovi kamaytirilsa foiz MANFIY chiqardi
+    --     (masalan to'lov 1 428 000 dan 428 000 ga tushsa, without_perc esa
+    --      eski holicha qolsa). Add_Paid_Amounts da "if vIncome > 0" bor,
+    --      ya'ni xato bermaydi — foyda jimgina taqsimlanmay qoladi.
+    --
+    -- Endi qarz to'lov summasiga PROPORSIONAL taqsimlanadi, yaxlitlash
+    -- qoldig'i oxirgi qatorga beriladi — Generate_Pay_Graph dagi naqsh.
+    --
+    -- DIQQAT: bu MAVJUD qatorlarning without_perc ini ham qayta yozadi.
+    -- Boshqacha bo'lishi mumkin emas: qator qo'shilsa yoki summa o'zgarsa,
+    -- eski taqsimot baribir noto'g'ri bo'lib qoladi.
+    -- =======================================================================
+    declare
+      vTotal_Pay number;
+      vLast_Ord  number;
+      vDebt      number := nvl(vTrade.Remaining_Debt, 0);
+      vAllocated number := 0;
+      vShare     number;
+    begin
+      select sum(t.payment_amount), max(t.order_num)
+        into vTotal_Pay, vLast_Ord
+        from ipt_trade_graphs t
+       where t.trade_id = vTrade.Id;
+
+      if nvl(vTotal_Pay, 0) > 0 and vDebt > 0 then
+        for g in (select t.order_num, t.payment_amount
+                    from ipt_trade_graphs t
+                   where t.trade_id = vTrade.Id
+                   order by t.order_num)
+        loop
+          if g.order_num = vLast_Ord then
+            -- Oxirgi qator qoldiqni oladi: yig'indi aynan qarzga teng bo'lsin
+            vShare := vDebt - vAllocated;
+          else
+            -- floor: har ulush aniq qiymatdan KICHIK yoki teng, shuning
+            -- uchun vAllocated hech qachon qarzdan oshmaydi va oxirgi
+            -- ulush manfiy chiqmaydi
+            vShare     := floor(vDebt * g.payment_amount / vTotal_Pay);
+            vAllocated := vAllocated + vShare;
+          end if;
+
+          update ipt_trade_graphs t
+             set t.payment_amount_without_perc = vShare
+           where t.trade_id  = vTrade.Id
+             and t.order_num = g.order_num;
+        end loop;
+      end if;
+    end;
 
     -- begin_date / end_date ni yangi grafik bo'yicha yangilaymiz
     select sum(t.payment_amount),
@@ -288,3 +369,40 @@
 
     oResponse := vResponse.To_String;
   end;
+
+-- =============================================================================
+-- TEKSHIRISH
+--
+-- 1. Shart buzilmaganmi: without_perc yig'indisi qarzga teng bo'lishi kerak
+--
+--    select t.id trade_id,
+--           t.remaining_debt / 100                       qarz,
+--           sum(g.payment_amount_without_perc) / 100     taqsimlangan,
+--           (t.remaining_debt
+--            - sum(g.payment_amount_without_perc)) / 100 farq
+--      from ipt_trades t
+--      join ipt_trade_graphs g on g.trade_id = t.id
+--     where t.state in ('01', '02')
+--     group by t.id, t.remaining_debt
+--    having t.remaining_debt <> sum(g.payment_amount_without_perc)
+--     order by abs(t.remaining_debt - sum(g.payment_amount_without_perc)) desc;
+--
+--    Bo'sh chiqishi kerak. Qator chiqsa — o'sha sdelkalar ilgari
+--    tahrirlangan va foydasi noto'g'ri hisoblanayotgan bo'lishi mumkin.
+--    Ularni tuzatish uchun grafikni shu procedura orqali qayta saqlash
+--    yetarli: taqsimot o'z-o'zidan to'g'rilanadi.
+--
+-- 2. Manfiy foizli qatorlar bormi
+--
+--    select g.trade_id, g.order_num,
+--           g.payment_amount / 100               tolov,
+--           g.payment_amount_without_perc / 100  asosiy,
+--           (g.payment_amount
+--            - g.payment_amount_without_perc) / 100 foiz
+--      from ipt_trade_graphs g
+--     where g.payment_amount < g.payment_amount_without_perc
+--     order by (g.payment_amount - g.payment_amount_without_perc);
+--
+--    Bunday qatorda Add_Paid_Amounts foydani umuman taqsimlamaydi
+--    ("if vIncome > 0" sharti) — xato bermaydi, foyda jimgina yo'qoladi.
+-- =============================================================================
